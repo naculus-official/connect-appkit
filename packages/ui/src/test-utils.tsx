@@ -42,7 +42,7 @@ function createMockRegistry(): ComponentRegistry {
 export function renderWithRegistry(
   ui: React.ReactElement,
   options?: Parameters<typeof render>[1],
-) {
+): ReturnType<typeof render> {
   return render(
     <Web3ComponentProvider components={createMockRegistry()}>
       {ui}

@@ -72,7 +72,7 @@ function DialogContent({
             <Button
               variant="ghost"
               className="absolute top-4 end-4"
-              size="icon-sm"
+              size="icon"
             >
               <XIcon
               />
