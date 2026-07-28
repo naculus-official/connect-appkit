@@ -1,0 +1,71 @@
+{
+  "name": "connect-appkit",
+  "private": true,
+  "packageManager": "pnpm@11.1.2",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "pnpm -r clean",
+    "publish:local": "pnpm -r publish --no-git-checks --registry http://localhost:4873",
+    "publish:npm": "pnpm -r publish --no-git-checks --registry https://registry.npmjs.org",
+    "release": "node -e \"const v=require('./packages/react/package.json').version; console.log(v);\"",
+    "lint": "biome lint",
+    "spell-check": "cspell lint \"**/*.{ts,tsx,md}\"",
+    "spell-fix": "cspell lint --fix \"**/*.{ts,tsx,md}\"",
+    "storybook": "storybook dev -p 61000",
+    "build-storybook": "storybook build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.4",
+    "@changesets/cli": "^2.31.1",
+    "@microsoft/api-extractor": "^7.58.12",
+    "@storybook/react-vite": "^10.5.5",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^26.1.1",
+    "@vitest/coverage-v8": "^4.1.9",
+    "cspell": "^10.0.1",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.9.3",
+    "viem": "^2.54.6",
+    "vitest": "^4.1.9",
+    "wagmi": "^3.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@naculus/connect-core": "workspace:*",
+    "@naculus/connect-ui": "link:packages/ui",
+    "@naculus/connector-embedded": "workspace:*",
+    "@naculus/connector-evm-injected": "workspace:*",
+    "@naculus/connector-passkeys": "workspace:*",
+    "@naculus/connector-walletconnect": "workspace:*",
+    "@naculus/siwx": "workspace:*",
+    "@naculus/wallet-engine": "workspace:*",
+    "@radix-ui/react-accordion": "^1.2.16",
+    "@radix-ui/react-avatar": "^1.2.2",
+    "@radix-ui/react-checkbox": "^1.3.7",
+    "@radix-ui/react-collapsible": "^1.1.16",
+    "@radix-ui/react-dropdown-menu": "^2.1.20",
+    "@radix-ui/react-label": "^2.1.11",
+    "@radix-ui/react-popover": "^1.1.19",
+    "@radix-ui/react-progress": "^1.1.12",
+    "@radix-ui/react-scroll-area": "^1.2.14",
+    "@radix-ui/react-select": "^2.3.3",
+    "@radix-ui/react-separator": "^1.1.11",
+    "@radix-ui/react-switch": "^1.3.3",
+    "@radix-ui/react-tabs": "^1.1.17",
+    "@radix-ui/react-toggle-group": "^1.1.15",
+    "@radix-ui/react-tooltip": "^1.2.12"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "19.0.0",
+      "react-dom": "19.0.0"
+    }
+  }
+}

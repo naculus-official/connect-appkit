@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@naculus/connect-core": ["../connect-lib/packages/core/src"],
+      "@naculus/connect-appkit-react": ["packages/react/src"],
+      "@naculus/connect-ui": ["packages/ui/src"],
+      "@naculus/connector-walletconnect": ["../connect-lib/packages/connector-walletconnect/src"],
+      "@naculus/connector-embedded": ["../connect-lib/packages/connector-embedded/src"],
+      "@naculus/connector-evm-injected": ["../connect-lib/packages/connector-evm-injected/src"],
+      "@naculus/connector-solana": ["../connect-lib/packages/connector-solana/src"],
+      "@naculus/connector-xrpl": ["../connect-lib/packages/connector-xrpl/src"],
+      "@naculus/connector-passkeys": ["../connect-lib/packages/connector-passkeys/src"],
+      "@naculus/siwx": ["../connect-lib/packages/siwx/src"],
+      "@naculus/wallet-engine": ["../connect-lib/packages/wallet-engine/src"]
+    }
+  },
+  "include": ["packages/*/src"],
+  "exclude": ["node_modules", "dist"]
+}
