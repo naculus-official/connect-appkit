@@ -9,8 +9,7 @@ export default defineConfig({
   clean: true,
   minify: true,
   external: [
-    "@naculus/connect-appkit-react",
-    "@naculus/connect-core",
+    /^@naculus\//,
     "lucide-react",
     "react",
   ],
