@@ -1,13 +1,11 @@
 packages:
   - 'packages/*'
-  # Link connect-lib packages for local dev
-  - '../connect-lib/packages/*'
 link-workspace-packages: true
 prefer-workspace-packages: true
 shamefullyHoist: true
 minimumReleaseAge: 0
 allowBuilds:
-  '@reown/appkit': true
+  '@reown/appkit': set this to true or false
   '@swc/core': true
   bufferutil: true
   esbuild: true
@@ -18,15 +16,3 @@ allowBuilds:
   unrs-resolver: true
   utf-8-validate: true
   workerd: true
-overrides:
-  '@naculus/connect': link:../connect-lib/packages/connect-lib
-  '@naculus/connect-ui': link:../connect-appkit/packages/ui
-  '@naculus/connect-core': link:../connect-lib/packages/core
-  '@naculus/connector-walletconnect': link:../connect-lib/packages/connector-walletconnect
-  '@naculus/connector-evm-injected': link:../connect-lib/packages/connector-evm-injected
-  '@naculus/connector-embedded': link:../connect-lib/packages/connector-embedded
-  '@naculus/connector-passkeys': link:../connect-lib/packages/connector-passkeys
-  '@naculus/siwx': link:../connect-lib/packages/siwx
-  '@naculus/wallet-engine': link:../connect-lib/packages/wallet-engine
-  '@naculus/connector-solana': link:../connect-lib/packages/connector-solana
-  '@naculus/connector-xrpl': link:../connect-lib/packages/connector-xrpl

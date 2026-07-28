@@ -1,36 +1,39 @@
-import type { StoryDefault, Story } from "@ladle/react"
-import { AccountButton } from "./AccountButton"
+import type { Meta, StoryObj } from "@storybook/react";
+import { AccountButton } from "./AccountButton";
 
-export default {
+const meta: Meta<typeof AccountButton> = {
   title: "AccountButton",
-} satisfies StoryDefault
+  component: AccountButton,
+  tags: ["autodocs"],
+};
 
-export const Default: Story = () => <AccountButton key="default" />
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-export const WithAddress: Story = () => (
-  <AccountButton key="with-address" address="0x1234567890abcdef1234567890abcdef12345678" />
-)
+export const Default: Story = {};
 
-export const WithBalance: Story = () => (
-  <AccountButton
-    key="with-balance"
-    address="0x1234567890abcdef1234567890abcdef12345678"
-    balance="1.234"
-    balanceSymbol="ETH"
-    showBalance
-  />
-)
+export const WithAddress: Story = {
+  args: { address: "0x1234567890abcdef1234567890abcdef12345678" },
+};
 
-export const BalanceLoading: Story = () => (
-  <AccountButton
-    key="balance-loading"
-    address="0x1234567890abcdef1234567890abcdef12345678"
-    balance={null}
-    balanceSymbol="ETH"
-    showBalance
-  />
-)
+export const WithBalance: Story = {
+  args: {
+    address: "0x1234567890abcdef1234567890abcdef12345678",
+    balance: "1.234",
+    balanceSymbol: "ETH",
+    showBalance: true,
+  },
+};
 
-export const WithoutAddress: Story = () => (
-  <AccountButton key="without-address" showBalance={false} />
-)
+export const BalanceLoading: Story = {
+  args: {
+    address: "0x1234567890abcdef1234567890abcdef12345678",
+    balance: null,
+    balanceSymbol: "ETH",
+    showBalance: true,
+  },
+};
+
+export const WithoutAddress: Story = {
+  args: { showBalance: false },
+};

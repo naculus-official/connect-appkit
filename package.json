@@ -38,14 +38,6 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@naculus/connect-core": "workspace:*",
-    "@naculus/connect-ui": "link:packages/ui",
-    "@naculus/connector-embedded": "workspace:*",
-    "@naculus/connector-evm-injected": "workspace:*",
-    "@naculus/connector-passkeys": "workspace:*",
-    "@naculus/connector-walletconnect": "workspace:*",
-    "@naculus/siwx": "workspace:*",
-    "@naculus/wallet-engine": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.16",
     "@radix-ui/react-avatar": "^1.2.2",
     "@radix-ui/react-checkbox": "^1.3.7",
