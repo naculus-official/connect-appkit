@@ -1,15 +1,11 @@
-// stub for CI — returns vi.fn() for any accessed property
-var handler = {
-  get: function(target, prop) {
-    if (prop === "__esModule" || prop === "then") return undefined;
-    try {
-      var vi = require("vitest");
-      return vi.fn();
-    } catch (e) {
-      return function() {};
-    }
-  }
-};
-
-module.exports = new Proxy({}, handler);
-module.exports.default = new Proxy({}, handler);
+// stub for CI — connector packages not available
+module.exports = {};
+module.exports.default = {};
+// Common exports used in tests and client code
+module.exports.createWalletConnectConnector = function() { return null; };
+module.exports.createEIP6963Connector = function() { return null; };
+module.exports.createEmbeddedConnector = function() { return null; };
+module.exports.createPasskeyConnector = function() { return null; };
+module.exports.createSolanaConnector = function() { return null; };
+module.exports.createCoinbaseConnector = function() { return null; };
+module.exports.createWagmiConnector = function() { return null; };
