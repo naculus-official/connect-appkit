@@ -5607,7 +5607,7 @@ class AppkitAccountButton {
     }; }
 }
 
-const alertDialogCss = () => `:host{display:contents}.footer{display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem}.description{font-size:0.875rem;color:hsl(var(--muted-foreground));margin:0.25rem 0 0}.overlay{display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center}.overlay.open{display:flex}.backdrop{position:absolute;inset:0;background-color:rgba(0, 0, 0, 0.8)}.panel{position:relative;z-index:10;max-width:28rem;width:calc(100vw - 2rem);max-height:85vh;overflow-y:auto;border-radius:calc(var(--radius, 0.5rem) - 2px);border:1px solid hsl(var(--border));background-color:hsl(var(--card));color:hsl(var(--card-foreground));box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.25);padding:1.5rem;font-family:inherit}.title{font-size:1.125rem;font-weight:600;margin:0 0 0.25rem;color:hsl(var(--foreground))}.close{position:absolute;top:1rem;right:1rem;display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:0.375rem;border:none;background:transparent;color:hsl(var(--muted-foreground));cursor:pointer;font-size:1rem}.close:hover{background-color:hsl(var(--muted));color:hsl(var(--foreground))}`;
+const alertDialogCss = () => `:host{display:contents}.footer{display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem}.description{font-size:0.875rem;color:hsl(var(--muted-foreground));margin:0.25rem 0 0}.overlay{display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center}.overlay.open{display:flex}.backdrop{position:absolute;inset:0;background-color:rgba(0, 0, 0, 0.8)}.panel{position:relative;z-index:10;max-width:28rem;width:calc(100vw - 2rem);max-height:85vh;overflow-y:auto;border-radius:calc(var(--radius, 0.5rem) - 2px);border:none;background-color:hsl(var(--card));color:hsl(var(--card-foreground));box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.25);padding:1.5rem;font-family:inherit}.title{font-size:1.125rem;font-weight:600;margin:0 0 0.25rem;color:hsl(var(--foreground))}.close{position:absolute;top:1rem;right:1rem;display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:0.375rem;border:none;background:transparent;color:hsl(var(--muted-foreground));cursor:pointer;font-size:1rem}.close:hover{background-color:hsl(var(--muted));color:hsl(var(--foreground))}`;
 
 class AppkitAlertDialog {
     constructor(hostRef) {
@@ -5730,7 +5730,7 @@ class AppkitBadge {
     }; }
 }
 
-const cardCss = () => `:host{display:block}.card{border-radius:calc(var(--radius, 0.5rem) - 2px);border:1px solid hsl(var(--border));background-color:hsl(var(--card));color:hsl(var(--card-foreground));box-shadow:0 1px 2px rgba(0, 0, 0, 0.05)}.header{display:flex;flex-direction:column;gap:0.375rem;padding:1.5rem}.title{font-size:1.5rem;font-weight:600;line-height:1;letter-spacing:-0.025em}.description{font-size:0.875rem;color:hsl(var(--muted-foreground))}.content{padding:1.5rem;padding-top:0}.footer{display:flex;align-items:center;padding:1.5rem;padding-top:0}`;
+const cardCss = () => `:host{display:block}.card{border-radius:calc(var(--radius, 0.5rem) - 2px);border:1px solid hsl(var(--border));background-color:hsl(var(--card));color:hsl(var(--card-foreground));box-shadow:0 1px 2px rgba(0, 0, 0, 0.05)}.header{display:flex;flex-direction:column;gap:0.375rem;padding:1.5rem}.title{font-size:1.5rem;font-weight:600;line-height:1;letter-spacing:-0.025em}.description{font-size:0.875rem;color:hsl(var(--muted-foreground))}.content{padding:1.5rem;padding-top:0}.footer{display:flex;align-items:center;padding:1.5rem;padding-top:0;gap:0.5rem}`;
 
 class AppkitCard {
     constructor(hostRef) {
@@ -8004,7 +8004,7 @@ class AppkitSeparator {
     }; }
 }
 
-const skeletonCss = () => `:host{display:block}.skeleton{border-radius:calc(var(--radius, 0.5rem) - 2px);background-color:hsl(var(--muted));animation:skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}@keyframes skeleton-pulse{0%,100%{opacity:1}50%{opacity:0.5}}`;
+const skeletonCss = () => `:host{display:block}.skeleton{width:100%;height:100%;border-radius:calc(var(--radius, 0.5rem) - 2px);background-color:hsl(var(--muted));animation:skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}@keyframes skeleton-pulse{0%,100%{opacity:1}50%{opacity:0.5}}`;
 
 class AppkitSkeleton {
     constructor(hostRef) {
