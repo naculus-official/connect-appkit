@@ -7955,7 +7955,7 @@ class AppkitSelect {
         }
     }
     render() {
-        return (hAsync(Host, { key: '47595ac58bfdac340344a60c6bf1571626395ca4' }, hAsync("button", { key: '79e3ccbeb2bcfbc08a98fe2999677f393919acf2', class: "trigger", disabled: this.disabled, "aria-haspopup": "listbox", "aria-expanded": this.open ? "true" : "false", onClick: () => { this.open = !this.open; this.focusIdx = 0; }, onKeyDown: (e) => this.handleKeyDown(e), role: "combobox" }, hAsync("span", { key: '220b4f3135a7849f1a5d3e30e5634e91a674b96d', class: { placeholder: !this.value } }, this.label || this.placeholder), hAsync("svg", { key: '5f81a591a5303a9198e9e638e4bf71008e1a3eaf', class: "chevron", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { key: '8d21905be81fea004989c413f301486cd2530d24', points: "6 9 12 15 18 9" }))), hAsync("div", { key: 'c169e656259ccee674ce0022349c8184457a6c30', class: { options: true, open: this.open }, role: "listbox" }, this.options.map((opt, i) => (hAsync("button", { class: { option: true, selected: opt.value === this.value, focused: i === this.focusIdx }, role: "option", "aria-selected": opt.value === this.value ? "true" : "false", disabled: opt.disabled, onClick: () => this.select(opt.value), onMouseEnter: () => (this.focusIdx = i) }, opt.label, hAsync("svg", { class: "check", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { points: "20 6 9 17 4 12" }))))))));
+        return (hAsync(Host, { key: '230642d7ccfb5b6768b685add9d69e7e3c14717c' }, hAsync("button", { key: '480932dcbfd21e724b70eddb4a5630abe2b6810e', class: "trigger", disabled: this.disabled, "aria-haspopup": "listbox", "aria-expanded": this.open ? "true" : "false", onClick: () => { this.open = !this.open; this.focusIdx = 0; }, onKeyDown: (e) => this.handleKeyDown(e), role: "combobox" }, hAsync("span", { key: '69d7be6b68919be95ec91a03722e1ef67daa3c89', class: { placeholder: !this.value } }, this.options.find(o => o.value === this.value)?.icon && (hAsync("span", { key: 'fe9fccea231a4ee911fd35e368c0aceada0dbb94', class: "option-icon" }, this.options.find(o => o.value === this.value)?.icon)), this.label || this.placeholder), hAsync("svg", { key: '950d674c8fc071855f9f11dcad672eecf4c761e1', class: "chevron", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { key: 'f45891ce7804f085236a0c4d4932f72ad6fe67e1', points: "6 9 12 15 18 9" }))), hAsync("div", { key: 'e3b9b65091b0e4cb924fdd34b0b0e13b6078bd4a', class: { options: true, open: this.open }, role: "listbox" }, this.options.map((opt, i) => (hAsync("button", { class: { option: true, selected: opt.value === this.value, focused: i === this.focusIdx }, role: "option", "aria-selected": opt.value === this.value ? "true" : "false", disabled: opt.disabled, onClick: () => this.select(opt.value), onMouseEnter: () => (this.focusIdx = i) }, opt.icon && hAsync("span", { class: "option-icon" }, opt.icon), opt.label, hAsync("svg", { class: "check", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { points: "20 6 9 17 4 12" }))))))));
     }
     get el() { return getElement(this); }
     static get style() { return selectCss(); }
@@ -8009,7 +8009,7 @@ class AppkitSkeleton {
         registerInstance(this, hostRef);
     }
     render() {
-        return (hAsync(Host, { key: 'd8ae8d07213c65c3c62a90f5457ec97482a722d3' }, hAsync("div", { key: '8a146e7d1095ba1bff167d99cd0133f373f87b97', class: "skeleton" }, hAsync("slot", { key: '84197ea07fe5568eb5dc5bce2161dadfe373da49' }))));
+        return (hAsync(Host, { key: 'f7f7716996df1893d5c33bded15838f8cdf69cbc' }, hAsync("div", { key: '18ab536210bb13b8e57359ac4da2eeb5d44f8677', class: "skeleton" }, hAsync("slot", { key: '20a126bb0bce6d3e6872a71fdfa512a95673c1ce' }))));
     }
     static get style() { return skeletonCss(); }
     static get cmpMeta() { return {
@@ -8038,7 +8038,7 @@ class AppkitSwitch {
         };
     }
     render() {
-        return (hAsync(Host, { key: '44527f9a3c22de9d0d04114248320a97c333de95' }, hAsync("label", { key: '7cf8960a604c1ebeba2f55b202583b6d0b3a259b', class: "container" }, hAsync("input", { key: 'a3125dc14f8a663f9c0255ee309acd5ad0d5927e', class: "switch", type: "checkbox", role: "switch", checked: this.checked, disabled: this.disabled, onChange: this.handleChange, "aria-label": this.label || undefined, "aria-checked": this.checked }), this.label && hAsync("span", { key: '843ca6e8aea081517ea0fea133d89b8aadafdd49', class: "label" }, this.label))));
+        return (hAsync(Host, { key: '69ad9b4443ecfab09d878588e9c5a85ca9bb3c1a' }, hAsync("label", { key: 'd64128f6aebc14d8a4263eb420479162897476ae', class: "container" }, hAsync("input", { key: '7bf828c0ad948e91607b97ced0ef2cbbd2bf641c', class: "switch", type: "checkbox", role: "switch", checked: this.checked, disabled: this.disabled, onChange: this.handleChange, "aria-label": this.label || undefined, "aria-checked": this.checked }), this.label && hAsync("span", { key: '94a211f794cb9157738d9c5cfc3bdad61e410aef', class: "label" }, this.label))));
     }
     static get style() { return switchCss(); }
     static get cmpMeta() { return {
@@ -8120,7 +8120,7 @@ class AppkitTabs {
     }
     render() {
         const active = this.activeTab;
-        return (hAsync(Host, { key: '993a241340a0a33ab9f877d998c050982314dd39', role: "tablist", "aria-orientation": "horizontal" }, hAsync("div", { key: 'dd0eb1911c01616f4cf3928e0aae7139de468070', class: "tablist" }, this.tabs.map((tab, i) => (hAsync("button", { class: { tab: true, selected: tab.id === active }, role: "tab", "aria-selected": tab.id === active ? "true" : "false", "aria-controls": `panel-${tab.id}`, disabled: tab.disabled, tabIndex: tab.id === active ? 0 : -1, onClick: () => this.selectTab(tab.id), onKeyDown: (e) => this.handleKeyDown(e, i) }, tab.label)))), hAsync("div", { key: 'ec3bed5e0aaa9aca4041d85569609dd2686bee4d', class: "panel", role: "tabpanel", "aria-labelledby": active }, hAsync("slot", { key: 'cc6258677753bc1e5e526d593d78698f26456a1b', name: active }), hAsync("div", { key: '2be4d12cd1a8610ed93b4bce1073e3e7db507834', style: { display: "none" } }, hAsync("slot", { key: 'e084d42ed5f3b549a1d8363d84f0474985e3d591' })))));
+        return (hAsync(Host, { key: '394c298c863e1b66ce5b26fe8fbfdc199fbd2820', role: "tablist", "aria-orientation": "horizontal" }, hAsync("div", { key: 'b515b4b9c24fc31b7ca538505fb0eda3db5c3d95', class: "tablist" }, this.tabs.map((tab, i) => (hAsync("button", { class: { tab: true, selected: tab.id === active }, role: "tab", "aria-selected": tab.id === active ? "true" : "false", "aria-controls": `panel-${tab.id}`, disabled: tab.disabled, tabIndex: tab.id === active ? 0 : -1, onClick: () => this.selectTab(tab.id), onKeyDown: (e) => this.handleKeyDown(e, i) }, tab.label)))), hAsync("div", { key: 'da13039cf95146329690842376fffa27c1b5ce5f', class: "panel", role: "tabpanel", "aria-labelledby": active }, hAsync("slot", { key: 'df41a411840a0ccb8c9d3c4d979c131ebefb173d', name: active }), hAsync("div", { key: '3e00c4ce8d8a87b357d72954e0c43bd58b368854', style: { display: "none" } }, hAsync("slot", { key: '9b81ec06ed5d5c2844a71f26a5be873d173007c8' })))));
     }
     static get style() { return tabsCss(); }
     static get cmpMeta() { return {
@@ -8169,7 +8169,7 @@ class AppkitToggleGroup {
         this.appkitChange.emit(this.selected);
     }
     render() {
-        return (hAsync(Host, { key: '3d9eeb5391a984fdfe76f84f9acbf2a2082aaab8', role: "group" }, this.items.map(item => (hAsync("button", { key: item.id, class: { item: true, pressed: this.selected.includes(item.id) }, role: "checkbox", "aria-checked": this.selected.includes(item.id) ? "true" : "false", disabled: item.disabled, onClick: () => this.toggle(item.id) }, item.label)))));
+        return (hAsync(Host, { key: '9a616dbd5c414449b56746c478725fd28aefb34e', role: "group" }, this.items.map(item => (hAsync("button", { key: item.id, class: { item: true, pressed: this.selected.includes(item.id) }, role: "checkbox", "aria-checked": this.selected.includes(item.id) ? "true" : "false", disabled: item.disabled, onClick: () => this.toggle(item.id) }, item.label)))));
     }
     static get style() { return toggleGroupCss(); }
     static get cmpMeta() { return {
@@ -8236,7 +8236,7 @@ class AppkitTooltip {
         return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     }
     render() {
-        return (hAsync(Host, { key: '0754d21c94d016c588db5c1a8a7e1489dddf8bcf', onMouseEnter: this.show, onMouseLeave: this.hide, onFocus: this.show, onBlur: this.hide }, hAsync("span", { key: '4aae0d230d1bc8f47d234f642b75783de1599c67', ref: (el) => (this.triggerEl = el) }, hAsync("slot", { key: 'b98723cd79cbfe9c1fd6b8abe36fd2436d830fe4' })), hAsync("div", { key: '60bb83d7659fc8637154c249a909f54dca038e67', class: { tooltip: true, visible: this.visible }, ref: (el) => (this.tooltipEl = el), role: "tooltip", onMouseEnter: this.cancelHide, onMouseLeave: this.hide }, hAsync("div", { key: 'a3e05e5a7debb422b74ace22161ea2886cd6da8b', class: "arrow", ref: (el) => (this.arrowEl = el) }), this.content)));
+        return (hAsync(Host, { key: '95db637f6ed0e1ef1ee72d3e0107d0afcb78e655', onMouseEnter: this.show, onMouseLeave: this.hide, onFocus: this.show, onBlur: this.hide }, hAsync("span", { key: 'd0bac56640e0899a538c5d4b27ae1958678581ea', ref: (el) => (this.triggerEl = el) }, hAsync("slot", { key: 'e80d5adf71c0ba99fc77e940df7f1c930c073188' })), hAsync("div", { key: 'a572279401dc8b89349eb9e15855ff355db90241', class: { tooltip: true, visible: this.visible }, ref: (el) => (this.tooltipEl = el), role: "tooltip", onMouseEnter: this.cancelHide, onMouseLeave: this.hide }, hAsync("div", { key: '6dc1d296f45f5f1635087031b890582f41aea01c', class: "arrow", ref: (el) => (this.arrowEl = el) }), this.content)));
     }
     get el() { return getElement(this); }
     static get style() { return tooltipCss(); }

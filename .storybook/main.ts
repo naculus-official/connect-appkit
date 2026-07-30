@@ -36,6 +36,7 @@ const config: StorybookConfig = {
         "@radix-ui/react-scroll-area", "@radix-ui/react-popover",
         "@radix-ui/react-separator", "@radix-ui/react-select",
         "lucide-react", "qrcode",
+        "@floating-ui/dom",
         "../packages/wc/dist/components/index.js",
       ],
     },

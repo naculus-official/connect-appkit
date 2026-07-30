@@ -4,6 +4,7 @@ export interface SelectOption {
   value: string
   label: string
   disabled?: boolean
+  icon?: string
 }
 
 @Component({
@@ -79,7 +80,12 @@ export class AppkitSelect {
           onKeyDown={(e) => this.handleKeyDown(e)}
           role="combobox"
         >
-          <span class={{ placeholder: !this.value }}>{this.label || this.placeholder}</span>
+          <span class={{ placeholder: !this.value }}>
+            {this.options.find(o => o.value === this.value)?.icon && (
+              <span class="option-icon">{this.options.find(o => o.value === this.value)?.icon}</span>
+            )}
+            {this.label || this.placeholder}
+          </span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="6 9 12 15 18 9" />
           </svg>
@@ -94,6 +100,7 @@ export class AppkitSelect {
               onClick={() => this.select(opt.value)}
               onMouseEnter={() => (this.focusIdx = i)}
             >
+              {opt.icon && <span class="option-icon">{opt.icon}</span>}
               {opt.label}
               <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20 6 9 17 4 12" />
