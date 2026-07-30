@@ -27,6 +27,9 @@ export class AppkitInput {
   /** Autocomplete hint */
   @Prop() autocomplete = "off"
 
+  /** Max character length */
+  @Prop() maxLength?: number
+
   private handleInput = (e: Event) => {
     const target = e.target as HTMLInputElement
     this.value = target.value
@@ -41,6 +44,7 @@ export class AppkitInput {
           placeholder={this.placeholder}
           value={this.value}
           disabled={this.disabled}
+          maxlength={this.maxLength}
           aria-invalid={this.invalid ? "true" : undefined}
           name={this.name}
           autocomplete={this.autocomplete}

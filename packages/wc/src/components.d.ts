@@ -270,6 +270,10 @@ export namespace Components {
          */
         "invalid": boolean;
         /**
+          * Max character length
+         */
+        "maxLength"?: number;
+        /**
           * Name attribute (for forms)
           * @default ""
          */
@@ -1063,6 +1067,10 @@ declare namespace LocalJSX {
          */
         "invalid"?: boolean;
         /**
+          * Max character length
+         */
+        "maxLength"?: number;
+        /**
           * Name attribute (for forms)
           * @default ""
          */
@@ -1280,6 +1288,7 @@ declare namespace LocalJSX {
         "invalid": boolean;
         "name": string;
         "autocomplete": string;
+        "maxLength": number;
     }
     interface AppkitPopoverAttributes {
         "open": boolean;

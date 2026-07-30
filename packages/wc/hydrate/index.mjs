@@ -7710,7 +7710,7 @@ class AppkitInput {
         };
     }
     render() {
-        return (hAsync(Host, { key: '8297e1a46e3cb0f2ab5c0cfe780e486e0b87e9d0' }, hAsync("input", { key: '01b40e91202b05c8bccd89af512635f27076078e', class: "input", type: this.type, placeholder: this.placeholder, value: this.value, disabled: this.disabled, "aria-invalid": this.invalid ? "true" : undefined, name: this.name, autocomplete: this.autocomplete, onInput: this.handleInput })));
+        return (hAsync(Host, { key: 'e3c55cb46e2cbae66d9f1781f973e9ce7246f473' }, hAsync("input", { key: 'efca17fa30669e885d5408250bcb9810059595a8', class: "input", type: this.type, placeholder: this.placeholder, value: this.value, disabled: this.disabled, maxlength: this.maxLength, "aria-invalid": this.invalid ? "true" : undefined, name: this.name, autocomplete: this.autocomplete, onInput: this.handleInput })));
     }
     static get style() { return inputCss(); }
     static get cmpMeta() { return {
@@ -7723,7 +7723,8 @@ class AppkitInput {
             "disabled": [4],
             "invalid": [4],
             "name": [1],
-            "autocomplete": [1]
+            "autocomplete": [1],
+            "maxLength": [2, "max-length"]
         },
         "$listeners$": undefined,
         "$lazyBundleId$": "-",
