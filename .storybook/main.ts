@@ -23,6 +23,7 @@ const config: StorybookConfig = {
         ],
       },
     define: { ...config.define, "process.env": "{}" },
+    esbuild: { jsx: "automatic" },
     optimizeDeps: {
       include: [
         "react", "react-dom", "react/jsx-dev-runtime",
