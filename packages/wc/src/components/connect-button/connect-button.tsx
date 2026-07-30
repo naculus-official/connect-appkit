@@ -298,6 +298,7 @@ export class AppkitConnectButton {
     const handler = (e: MouseEvent) => {
       if (!el.contains(e.target as Node) && !this.el.contains(e.target as Node)) {
         this.dropdownOpen = false
+        document.removeEventListener("click", handler)
       }
     }
     requestAnimationFrame(() => document.addEventListener("click", handler))

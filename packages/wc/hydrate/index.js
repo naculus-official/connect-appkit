@@ -6059,6 +6059,7 @@ class AppkitConnectButton {
         const handler = (e) => {
             if (!el.contains(e.target) && !this.el.contains(e.target)) {
                 this.dropdownOpen = false;
+                document.removeEventListener("click", handler);
             }
         };
         requestAnimationFrame(() => document.addEventListener("click", handler));
@@ -8117,7 +8118,7 @@ class AppkitTabs {
     }
     render() {
         const active = this.activeTab;
-        return (hAsync(Host, { key: '394c298c863e1b66ce5b26fe8fbfdc199fbd2820', role: "tablist", "aria-orientation": "horizontal" }, hAsync("div", { key: 'b515b4b9c24fc31b7ca538505fb0eda3db5c3d95', class: "tablist" }, this.tabs.map((tab, i) => (hAsync("button", { class: { tab: true, selected: tab.id === active }, role: "tab", "aria-selected": tab.id === active ? "true" : "false", "aria-controls": `panel-${tab.id}`, disabled: tab.disabled, tabIndex: tab.id === active ? 0 : -1, onClick: () => this.selectTab(tab.id), onKeyDown: (e) => this.handleKeyDown(e, i) }, tab.label)))), hAsync("div", { key: 'da13039cf95146329690842376fffa27c1b5ce5f', class: "panel", role: "tabpanel", "aria-labelledby": active }, hAsync("slot", { key: 'df41a411840a0ccb8c9d3c4d979c131ebefb173d', name: active }), hAsync("div", { key: '3e00c4ce8d8a87b357d72954e0c43bd58b368854', style: { display: "none" } }, hAsync("slot", { key: '9b81ec06ed5d5c2844a71f26a5be873d173007c8' })))));
+        return (hAsync(Host, { key: '394c298c863e1b66ce5b26fe8fbfdc199fbd2820', role: "tablist", "aria-orientation": "horizontal" }, hAsync("div", { key: 'b515b4b9c24fc31b7ca538505fb0eda3db5c3d95', class: "tablist" }, this.tabs.map((tab, i) => (hAsync("button", { class: { tab: true, selected: tab.id === active }, role: "tab", "aria-selected": tab.id === active ? "true" : "false", "aria-controls": `panel-${tab.id}`, disabled: tab.disabled, tabIndex: tab.id === active ? 0 : -1, onClick: () => this.selectTab(tab.id), onKeyDown: (e) => this.handleKeyDown(e, i) }, tab.label)))), hAsync("div", { key: 'b663ec989de82a2afe8a075d77eba11d03a673e8', class: "panel", role: "tabpanel", id: `panel-${active}`, "aria-labelledby": active }, hAsync("slot", { key: '19ea9c44234b0874e39c7302b9e81c2ef7912ca3', name: active }), hAsync("div", { key: 'e5021f4badf4eed82c54d7faef25ae7c24b7cac9', style: { display: "none" } }, hAsync("slot", { key: '145cbe82a4053dcac45ee9309f6dbc222763ec8a' })))));
     }
     static get style() { return tabsCss(); }
     static get cmpMeta() { return {

@@ -90,7 +90,7 @@ export class AppkitTabs {
             </button>
           ))}
         </div>
-        <div class="panel" role="tabpanel" aria-labelledby={active}>
+        <div class="panel" role="tabpanel" id={`panel-${active}`} aria-labelledby={active}>
           <slot name={active} />
           {/* Default slot shows when no named slot matches */}
           <div style={{ display: "none" }}><slot /></div>
