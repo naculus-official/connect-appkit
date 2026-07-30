@@ -59,7 +59,7 @@ describe("ComponentRegistry", () => {
     const allKeys = Object.keys(DEFAULT_COMPONENTS)
     const size = parseInt(screen.getByTestId("registry-size").textContent!, 10)
     expect(size).toBe(allKeys.length)
-    expect(size).toBeGreaterThanOrEqual(20)
+    expect(size).toBeGreaterThanOrEqual(8)
   })
 
   it("overrides defaults with custom components", () => {
@@ -113,19 +113,19 @@ describe("ComponentRegistry", () => {
   })
 
   it("useComponent returns default for unregistered keys", () => {
-    function DialogRender() {
-      const Dialog = useComponent("Dialog")
-      if (!Dialog) return <div data-testid="no-dialog">No dialog</div>
-      return <div data-testid="has-default-dialog">Default dialog</div>
+    function ConnectRender() {
+      const ConnectButton = useComponent("ConnectButton")
+      if (!ConnectButton) return <div data-testid="no-connect">No connect</div>
+      return <div data-testid="has-default-connect">Default connect</div>
     }
 
     render(
       <Web3ComponentProvider components={{}}>
-        <DialogRender />
+        <ConnectRender />
       </Web3ComponentProvider>
     )
 
-    expect(screen.getByTestId("has-default-dialog")).toBeDefined()
+    expect(screen.getByTestId("has-default-connect")).toBeDefined()
   })
 
   it("returns stable reference when components don't change", () => {
@@ -155,8 +155,8 @@ describe("ComponentRegistry", () => {
           <div data-testid="override-button">
             {registry.Button === CustomButton ? "true" : "false"}
           </div>
-          <div data-testid="default-tooltip">
-            {registry.Tooltip !== undefined ? "true" : "false"}
+          <div data-testid="default-connect">
+            {registry.ConnectButton !== undefined ? "true" : "false"}
           </div>
         </div>
       )
@@ -169,7 +169,7 @@ describe("ComponentRegistry", () => {
     )
 
     expect(screen.getByTestId("override-button").textContent).toBe("true")
-    expect(screen.getByTestId("default-tooltip").textContent).toBe("true")
+    expect(screen.getByTestId("default-connect").textContent).toBe("true")
   })
 
   it("provides all Layer 2 business components from DEFAULT_COMPONENTS", () => {

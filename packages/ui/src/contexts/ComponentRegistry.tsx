@@ -1,20 +1,6 @@
 import React, { createContext, useContext, useMemo } from 'react'
 
-// ── Layer 1: Base UI components (from local shadcn) ──────────────
-import { Button as ShadcnButton } from '../components/ui/button'
-import {
-  Dialog as ShadcnDialog,
-  DialogContent as ShadcnDialogContent,
-  DialogHeader as ShadcnDialogHeader,
-  DialogTitle as ShadcnDialogTitle,
-} from '../components/ui/dialog'
-import { DropdownMenu as ShadcnDropdownMenu } from '../components/ui/dropdown-menu'
-import { Tooltip as ShadcnTooltip } from '../components/ui/tooltip'
-import { Popover as ShadcnPopover } from '../components/ui/popover'
-import { Select as ShadcnSelect } from '../components/ui/select'
-import { Sheet as ShadcnSheet } from '../components/ui/sheet'
-
-// ── Layer 2: Business components ─────────────────────────────────
+// ── Business components ──────────────────────────────────
 import { ConnectButton as BizConnectButton } from '../components/ConnectButton'
 import { AccountButton as BizAccountButton } from '../components/AccountButton'
 import { ChainSelector as BizChainSelector } from '../components/ChainSelector'
@@ -69,28 +55,7 @@ export interface ComponentRegistry {
 }
 
 export const DEFAULT_COMPONENTS: ComponentRegistry = {
-  // ── Layer 1: Base UI defaults (shadcn primitives) ───────────────
-  Button: ShadcnButton,
-  Dialog: ShadcnDialog,
-  DialogContent: ShadcnDialogContent,
-  DialogHeader: ShadcnDialogHeader,
-  DialogTitle: ShadcnDialogTitle,
-  DropdownMenu: ShadcnDropdownMenu,
-  Tooltip: ShadcnTooltip,
-  Popover: ShadcnPopover,
-  Select: ShadcnSelect,
-  Sheet: ShadcnSheet,
-  // The following are now available as Stencil WCs via
-  // @naculus/connect-appkit-wc — consumers can inject them via
-  // <Web3ComponentProvider components={{
-  //   Badge: AppkitBadge,
-  //   Input: AppkitInput,
-  //   ...
-  // }}>
-  // Card, Badge, Switch, Checkbox, Tabs*, Avatar, Skeleton,
-  // Progress, Separator, ScrollArea, Input, Label — no default
-
-  // ── Layer 2: Business defaults ──────────────────────────────────
+  // Business defaults
   ConnectButton: BizConnectButton,
   AccountButton: BizAccountButton,
   ChainSelector: BizChainSelector,

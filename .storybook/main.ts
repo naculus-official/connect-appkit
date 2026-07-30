@@ -6,7 +6,6 @@ const root = process.cwd();
 
 const config: StorybookConfig = {
   stories: [
-    "../packages/ui/src/components/**/*.stories.@(ts|tsx)",
     "../packages/wc/src/components/**/*.stories.@(ts|tsx)",
   ],
   addons: [],
