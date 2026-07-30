@@ -5,7 +5,6 @@ prefer-workspace-packages: true
 shamefullyHoist: true
 minimumReleaseAge: 0
 allowBuilds:
-  '@reown/appkit': set this to true or false
   '@swc/core': true
   bufferutil: true
   esbuild: true

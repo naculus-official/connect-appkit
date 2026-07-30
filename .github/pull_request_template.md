@@ -12,5 +12,5 @@
 - [ ] `pnpm lint` passes
 - [ ] `pnpm test:run` passes
 - [ ] `pnpm typecheck` passes
-- [ ] `pnpm ladle:build` passes
+- [ ] `pnpm build-storybook` passes
 - [ ] New code has tests if it could break under unexpected input

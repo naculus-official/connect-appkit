@@ -26,9 +26,12 @@
       "@naculus/connector-xrpl": ["../connect-lib/packages/connector-xrpl/src"],
       "@naculus/connector-passkeys": ["../connect-lib/packages/connector-passkeys/src"],
       "@naculus/siwx": ["../connect-lib/packages/siwx/src"],
-      "@naculus/wallet-engine": ["../connect-lib/packages/wallet-engine/src"]
+      "@naculus/wallet-engine": ["../connect-lib/packages/wallet-engine/src"],
+      "@naculus/connect-appkit-wc": ["packages/wc/dist/types/components"],
+      "@naculus/connect-appkit-wc/dist/components": ["packages/wc/dist/types/components"],
+      "@naculus/connect-appkit-wc/dist/*": ["packages/wc/dist/*"]
     }
   },
   "include": ["packages/*/src"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "packages/wc"]
 }

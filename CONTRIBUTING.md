@@ -55,11 +55,11 @@ pnpm test           # vitest (watch mode)
 pnpm tsc --noEmit   # type check
 ```
 
-Component stories via Ladle:
+Component stories via Storybook:
 
 ```sh
-pnpm ladle          # Start storybook at localhost:61000
-pnpm ladle:build    # Build static storybook
+pnpm storybook          # Start Storybook at localhost:61000
+pnpm build-storybook    # Build static Storybook
 ```
 
 ## Releasing

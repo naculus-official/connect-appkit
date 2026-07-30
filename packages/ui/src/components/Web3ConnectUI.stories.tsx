@@ -1,12 +1,16 @@
-import React from "react"
-import type { Web3ConnectConfig } from "@naculus/connect-appkit-react"
+import type { Meta, StoryObj } from "@storybook/react"
 import { Web3ConnectUI } from "./Web3ConnectUI"
 
-export default {
+const meta: Meta<typeof Web3ConnectUI> = {
   title: "Web3ConnectUI",
+  component: Web3ConnectUI,
+  tags: ["autodocs"],
 }
 
-const mockConfig: Web3ConnectConfig = {
+export default meta
+type Story = StoryObj<typeof meta>
+
+const mockConfig = {
   projectId: "mock-project-id",
   metadata: {
     name: "Test App",
@@ -16,28 +20,36 @@ const mockConfig: Web3ConnectConfig = {
   },
 }
 
-export const EIP6963Only = () => (
-  <Web3ConnectUI config={mockConfig} detectionMode="eip6963">
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      <p style={{ marginBottom: "1rem", color: "var(--foreground)" }}>
-        Web3ConnectUI — EIP-6963 mode
-      </p>
-      <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
-        WalletConnect relay skipped (wallet detection only)
-      </p>
-    </div>
-  </Web3ConnectUI>
-)
+export const EIP6963Only: Story = {
+  args: {
+    config: mockConfig,
+    detectionMode: "eip6963",
+    children: (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        <p style={{ marginBottom: "1rem", color: "var(--foreground)" }}>
+          Web3ConnectUI — EIP-6963 mode
+        </p>
+        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+          WalletConnect relay skipped (wallet detection only)
+        </p>
+      </div>
+    ),
+  },
+}
 
-export const WalletConnectMode = () => (
-  <Web3ConnectUI config={mockConfig} detectionMode="walletconnect">
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      <p style={{ marginBottom: "1rem", color: "var(--foreground)" }}>
-        Web3ConnectUI — WalletConnect mode
-      </p>
-      <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
-        WalletConnect relay enabled
-      </p>
-    </div>
-  </Web3ConnectUI>
-)
+export const WalletConnectMode: Story = {
+  args: {
+    config: mockConfig,
+    detectionMode: "walletconnect",
+    children: (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        <p style={{ marginBottom: "1rem", color: "var(--foreground)" }}>
+          Web3ConnectUI — WalletConnect mode
+        </p>
+        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+          WalletConnect relay enabled
+        </p>
+      </div>
+    ),
+  },
+}

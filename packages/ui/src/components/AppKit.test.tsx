@@ -24,10 +24,16 @@ vi.mock("@naculus/connect-appkit-react", () => ({
   useChain: () => mockUseChain(),
   useEmbeddedWallet: () => mockUseEmbeddedWallet(),
   useDisconnect: () => mockUseDisconnect(),
+  useBalance: () => ({ formatted: null }),
   Web3ConnectProvider: ({ children, config, autoConnect }: any) => {
     mockWeb3ConnectProvider({ config, autoConnect })
     return <div data-testid="web3-connect-provider">{children}</div>
   },
+  AppkitConnectButton: (props: any) => (
+    <div data-testid="wc-connect-button">
+      {!props.isConnected && <span>Connect Wallet</span>}
+    </div>
+  ),
 }))
 
 // Mock useEIP6963 hook
@@ -243,13 +249,16 @@ describe("AppKit", () => {
       mockUseWallet.mockReturnValue({ isConnected: true, isConnecting: false })
       mockUseAccount.mockReturnValue({ primaryAccount: "0x1234" })
 
-      // We can't directly test context values, but we can verify the
-      // AppKitButton component renders correctly based on context
       render(
         <AppKit {...defaultConfig}>
           <AppKitButton />
         </AppKit>
       )
+
+      // The WC wrapper is rendered within the provider tree
+      expect(screen.getByTestId("component-provider")).toBeTruthy()
+      expect(screen.getByTestId("theme-provider")).toBeTruthy()
+      expect(screen.getByTestId("web3-connect-provider")).toBeTruthy()
     })
   })
 
@@ -343,7 +352,7 @@ describe("AppKit", () => {
         </AppKit>
       )
 
-      // The ConnectButton renders (we can see "Connect Wallet" aria-label from DOM)
+      // WC renders "Connect Wallet" via the mock
       expect(screen.getByText("Connect Wallet")).toBeTruthy()
     })
   })

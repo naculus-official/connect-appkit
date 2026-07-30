@@ -33,7 +33,7 @@ tmp/
 temp/
 debug-storybook*.log
 *.header
-ladle-build/
+storybook-static/
 # Test error output
 test_err*
 # Nested lockfiles in workspace sub-packages

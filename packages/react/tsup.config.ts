@@ -11,7 +11,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   minify: true,
-  external: ["react", "viem", "@walletconnect/sign-client", "@noble/hashes", "@noble/curves", /^@naculus\//],
+  external: ["react", "viem", "@walletconnect/sign-client", "@noble/hashes", "@noble/curves", /^@naculus\//, "@stencil/react-output-target"],
   onSuccess: () => {
     console.log("React SDK built successfully");
   }

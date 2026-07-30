@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react"
-import { useAccount, useWallet, useChain, useEmbeddedWallet, useDisconnect } from "@naculus/connect-appkit-react"
+import { useAccount, useWallet, useChain, useEmbeddedWallet, useDisconnect, useBalance } from "@naculus/connect-appkit-react"
 import type { Web3ConnectConfig } from "@naculus/connect-appkit-react"
 import { Web3ConnectUI, type Web3ConnectUIProps } from "./Web3ConnectUI"
 import { ConnectButton } from "./ConnectButton"
@@ -133,7 +133,8 @@ function AppKitInner({
   const embedded = useEmbeddedWallet()
   const { disconnect } = useDisconnect()
   const { wallets, hasWallets } = useEIP6963()
-  const [balance, setBalance] = useState<string | null>(null)
+  const { formatted: balanceRaw } = useBalance()
+  const balance = balanceRaw ?? null
 
   const handleDisconnect = useCallback(async () => {
     await disconnect()

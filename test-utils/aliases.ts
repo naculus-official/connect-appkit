@@ -7,6 +7,7 @@ export function getAliases(root: string) {
   return {
     "@naculus/connect-appkit-react": r("packages/react/src"),
     "@naculus/connect-appkit-ui": r("packages/ui/src"),
+    "@naculus/connect-appkit-wc": r("packages/wc/dist"),
     // connect-lib — workspace links resolved at runtime
     starknet: stub,
     "@cosmjs/amino": stub,

@@ -1,9 +1,16 @@
 import { defineConfig } from 'vitest/config'
+import path from "path"
 import { getAliases } from './test-utils/aliases'
+
+const root = __dirname
+const wcDist = path.join(root, "packages/wc/dist")
 
 export default defineConfig({
   resolve: {
-    alias: getAliases(__dirname),
+    alias: [
+      { find: /^@naculus\/connect-appkit-wc\/dist\/(.*)/, replacement: `${wcDist}/$1` },
+      ...Object.entries(getAliases(root)).map(([find, replacement]) => ({ find, replacement: replacement as string })),
+    ],
     conditions: ['import', 'node'],
   },
   test: {

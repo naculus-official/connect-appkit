@@ -1,0 +1,63 @@
+{
+  "name": "@naculus/connect-appkit-wc",
+  "version": "0.1.2",
+  "type": "module",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.js",
+  "collection": "dist/collection/collection-manifest.json",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/components.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs.js"
+    },
+    "./components/*": {
+      "types": "./dist/types/components/*.d.ts",
+      "import": "./dist/components/*.js"
+    },
+    "./dist/components/*": {
+      "types": "./dist/types/components/*.d.ts",
+      "import": "./dist/components/*"
+    },
+    "./dist/*": {
+      "types": "./dist/types/*",
+      "import": "./dist/*"
+    },
+    "./i18n": {
+      "types": "./dist/types/i18n/index.d.ts",
+      "import": "./dist/i18n/index.js"
+    },
+    "./styles/tokens": "./dist/styles/tokens.css",
+    "./loader": {
+      "types": "./loader/index.d.ts",
+      "import": "./loader/index.js",
+      "require": "./loader/index.cjs"
+    }
+  },
+  "files": [
+    "dist/",
+    "loader/",
+    "hydrate/"
+  ],
+  "scripts": {
+    "build": "stencil build --docs",
+    "dev": "stencil build --dev --watch --serve",
+    "start": "stencil build --dev --watch --serve",
+    "generate": "stencil generate"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.6.0",
+    "qrcode": "^1.5.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@stencil/core": "^4.43.5",
+    "@stencil/react-output-target": "^1.6.1",
+    "@stencil/vue-output-target": "^0.14.1",
+    "typescript": "^5.9.3"
+  },
+  "sideEffects": false
+}

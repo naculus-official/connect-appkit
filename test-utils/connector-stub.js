@@ -1,5 +1,5 @@
-// Ladle stub — connector-evm-injected
-// In Ladle (story-only mode) we don't need real wallet connectors.
+// Storybook stub — connector-evm-injected
+// In Storybook (story-only mode) we don't need real wallet connectors.
 // The components that use EIP6963 types handle the import gracefully
 // when the connector returns empty data.
 

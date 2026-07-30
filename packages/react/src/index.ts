@@ -13,8 +13,6 @@ export type { SendCallsStatus } from "./hooks/useSendCalls";
 export { useBalance } from "./hooks/useBalance";
 export { useTokenBalance } from "./hooks/useTokenBalance";
 export type { TokenInfo, UseTokenBalanceOptions, TokenBalanceResult } from "./hooks/useTokenBalance";
-
-// ── ERC-20 Hooks ──────────────────────────────────────────────────
 export { useERC20Transfer } from "./hooks/useERC20Transfer";
 export type { UseERC20TransferOptions, UseERC20TransferReturn } from "./hooks/useERC20Transfer";
 export { useERC20Approve } from "./hooks/useERC20Approve";
@@ -24,16 +22,10 @@ export type { UseERC20AllowanceOptions, UseERC20AllowanceReturn } from "./hooks/
 export { useViemClient } from "./hooks/useViemClient";
 export { useEmbeddedWallet } from "./hooks/useEmbeddedWallet";
 export type { UseEmbeddedWalletReturn } from "./hooks/useEmbeddedWallet";
-
-// ── Address Validation ────────────────────────────────────────────
 export { useValidateDestination, validateDestination } from "./hooks/useValidateDestination";
 export type { UseValidateDestinationOptions, UseValidateDestinationReturn, AddressValidationLevel, AddressValidationResult } from "./hooks/useValidateDestination";
-
-// ── i18n ──────────────────────────────────────────────────────────
 export { t, setLocale, getLocale } from "./utils/i18n";
 export type { Locale } from "./utils/i18n";
-
-// ── SIWx Hooks ──────────────────────────────────────────────────
 export { useSignInWithX } from "./hooks/useSignInWithX";
 export type { UseSignInWithXOptions, UseSignInWithXReturn } from "./hooks/useSignInWithX";
 export { useSignInWithEthereum } from "./hooks/useSignInWithEthereum";
@@ -44,28 +36,19 @@ export { useSIWxLogin } from "./hooks/useSIWxLogin";
 export type { UseSIWxLoginOptions, UseSIWxLoginReturn } from "./hooks/useSIWxLogin";
 export { useSIWxSession } from "./hooks/useSIWxSession";
 export type { UseSIWxSessionOptions, UseSIWxSessionReturn } from "./hooks/useSIWxSession";
-
-// ── Session Keys Hooks ─────────────────────────────────────────────
 export { useSessionKeys, useCreateSessionKey, useRevokeSession, useSendWithSession, resetSessionKeyManager } from "./hooks/useSessionKeys";
 export type { UseSessionKeysReturn, UseCreateSessionKeyReturn, UseRevokeSessionReturn, UseSendWithSessionReturn } from "./hooks/useSessionKeys";
-
-// ── Name Resolution Hooks ────────────────────────────────────────
 export { useResolveName } from "./hooks/useResolveName";
 export type { UseResolveNameOptions, UseResolveNameResult } from "./hooks/useResolveName";
 export { useLookupAddress } from "./hooks/useLookupAddress";
 export type { UseLookupAddressOptions, UseLookupAddressResult } from "./hooks/useLookupAddress";
-
-// ── Session Hooks (SRS-009) ─────────────────────────────────────
 export { useSession } from "./hooks/useSession";
 export type { UseSessionReturn } from "./hooks/useSession";
 export { useSwitchChain } from "./hooks/useSwitchChain";
 export type { UseSwitchChainReturn } from "./hooks/useSwitchChain";
-
 export { createClient, getClient, clearClient } from "./client";
 export type { ClientConfig, Web3Client } from "./client";
-
 export { DEFAULT_EVM_CHAINS, getDefaultChains, getChainById } from "./utils/chains";
-
 export type {
   WalletChain,
   ConnectionStatus,
@@ -78,16 +61,11 @@ export type {
   SIWxConfig,
 } from "./types";
 export { Web3Context } from "./provider/Web3ConnectProvider";
-
 export { useWeb3ErrorHandler } from "./hooks/useWeb3ErrorHandler";
-
-// ── TxMonitor Hooks (SRS-008) ──────────────────────────────────
 export { useTxMonitor, TxMonitorContext } from "./hooks/useTxMonitor";
 export type { UseTxMonitorResult, TxMonitorLike, TxStatus, TxStatusEntry } from "./hooks/useTxMonitor";
 export { useTxHistory } from "./hooks/useTxHistory";
 export type { UseTxHistoryResult } from "./hooks/useTxHistory";
-
-// ── Transaction Simulation Hooks ──────────────────────────────────
 export { useTransactionSimulation } from "./hooks/useTransactionSimulation";
 export type {
   UseTransactionSimulationReturn,
@@ -111,30 +89,22 @@ export {
   WALLET_ERROR_TITLES,
   WALLET_ERROR_DESCRIPTIONS,
 } from "./utils/errorMessages";
-
-// ── Account Abstraction (ERC-4337) Hooks ───────────────────────────
 export { useSmartAccount } from "./hooks/useSmartAccount";
 export type { UseSmartAccountOptions, UseSmartAccountReturn } from "./hooks/useSmartAccount";
 export { useSendUserOperation } from "./hooks/useSendUserOperation";
 export type { UseSendUserOperationOptions, UseSendUserOperationReturn } from "./hooks/useSendUserOperation";
 export { useUserOpStatus } from "./hooks/useUserOpStatus";
 export type { UseUserOpStatusOptions, UseUserOpStatusReturn, UserOpStatus } from "./hooks/useUserOpStatus";
-
-// ── Token List Hooks ────────────────────────────────────────────────
 export { useTokenList, useTokenSearch, TokenSelector } from "./token-list";
 export type { UseTokenListOptions, UseTokenListReturn } from "./token-list";
 export type { UseTokenSearchReturn } from "./token-list";
 export type { TokenSelectorProps } from "./token-list";
-
-// ── Notification Hook ───────────────────────────────────────────────
 export { useNotification } from "./hooks/useNotification";
 export { useSimulateTransfer } from "./hooks/useSimulateTransfer";
 export type {
   UseSimulateTransferOptions,
   UseSimulateTransferReturn,
 } from "./hooks/useSimulateTransfer";
-
-// ── Chain Abstraction Hooks ─────────────────────────────────────────
 export { useRouteQuote, useExecuteRoute, useCompareCosts } from "./chain-abstraction";
 export type {
   UseRouteQuoteInput,
@@ -151,3 +121,66 @@ export type {
   CostComparisonOperation,
   CostComparisonOptions,
 } from "./chain-abstraction";
+
+// ── Stencil WC React wrappers ───────────────────────────────────
+
+export {
+  AppkitAccordion,
+  AppkitAccountButton,
+  AppkitAlertDialog,
+  AppkitAvatar,
+  AppkitBadge,
+  AppkitButton,
+  AppkitCard,
+  AppkitCardContent,
+  AppkitCardDescription,
+  AppkitCardFooter,
+  AppkitCardHeader,
+  AppkitCardTitle,
+  AppkitCheckbox,
+  AppkitCollapsible,
+  AppkitConnectButton,
+  AppkitDialog,
+  AppkitDropdownMenu,
+  AppkitInput,
+  AppkitPopover,
+  AppkitProgress,
+  AppkitScrollArea,
+  AppkitSelect,
+  AppkitSeparator,
+  AppkitSkeleton,
+  AppkitSwitch,
+  AppkitTabs,
+  AppkitToggleGroup,
+  AppkitTooltip,
+} from "./wc-generated/components"
+export type {
+  AppkitAccordionEvents,
+  AppkitAccountButtonEvents,
+  AppkitAlertDialogEvents,
+  AppkitAvatarEvents,
+  AppkitBadgeEvents,
+  AppkitButtonEvents,
+  AppkitCardEvents,
+  AppkitCardContentEvents,
+  AppkitCardDescriptionEvents,
+  AppkitCardFooterEvents,
+  AppkitCardHeaderEvents,
+  AppkitCardTitleEvents,
+  AppkitCheckboxEvents,
+  AppkitCollapsibleEvents,
+  AppkitConnectButtonEvents,
+  AppkitDialogEvents,
+  AppkitDropdownMenuEvents,
+  AppkitInputEvents,
+  AppkitPopoverEvents,
+  AppkitProgressEvents,
+  AppkitScrollAreaEvents,
+  AppkitSelectEvents,
+  AppkitSeparatorEvents,
+  AppkitSkeletonEvents,
+  AppkitSwitchEvents,
+  AppkitTabsEvents,
+  AppkitToggleGroupEvents,
+  AppkitTooltipEvents,
+} from "./wc-generated/components"

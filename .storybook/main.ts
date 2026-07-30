@@ -1,23 +1,28 @@
 import type { StorybookConfig } from "@storybook/react-vite";
+import path from "path";
 import { getAliases } from "../test-utils/aliases";
+
+const root = process.cwd();
 
 const config: StorybookConfig = {
   stories: [
     "../packages/ui/src/components/**/*.stories.@(ts|tsx)",
-    "../packages/react/src/**/*.stories.@(ts|tsx)",
+    "../packages/wc/src/components/**/*.stories.@(ts|tsx)",
   ],
   addons: [],
   framework: { name: "@storybook/react-vite", options: {} },
-  viteFinal: (config) => ({
-    ...config,
-    resolve: {
-      ...config.resolve,
-      alias: {
-        ...(config.resolve?.alias as Record<string, string>),
-        ...getAliases(process.cwd()),
-        "@": `${process.cwd()}/packages/ui/src`,
+  viteFinal: (config) => {
+    const existingAlias = (config.resolve?.alias || {}) as Record<string, string>;
+    return {
+      ...config,
+      resolve: {
+        ...config.resolve,
+        alias: [
+          // Prefix alias for WC dist imports
+          { find: /^@naculus\/connect-appkit-wc\/dist\/(.*)/, replacement: `${path.resolve(root, "packages/wc/dist")}/$1` },
+          ...Object.entries({ ...getAliases(root), ...existingAlias }).map(([find, replacement]) => ({ find, replacement })),
+        ],
       },
-    },
     define: { ...config.define, "process.env": "{}" },
     optimizeDeps: {
       include: [
@@ -34,7 +39,7 @@ const config: StorybookConfig = {
       ],
     },
     ssr: { noExternal: ["react", "react-dom"] },
-  }),
+  };
 };
 
 export default config;

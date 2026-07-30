@@ -40,45 +40,43 @@ export function WalletConnectProvider({ children }: WalletConnectProviderProps) 
     setError(null);
   }, []);
 
-  const retryQR = useCallback(() => {
-    setQrUri(null);
-    setError(null);
-    setQrStatus("loading");
-  }, []);
-
-  const connectWalletConnect = useCallback(async () => {
+  const connectRef = useRef<() => Promise<void>>(undefined)
+  connectRef.current = async () => {
     if (!web3.startPairing || !web3.completePairing) {
-      setError("WalletConnect pairing not available");
-      setQrStatus("error");
-      return;
+      setError("WalletConnect pairing not available")
+      setQrStatus("error")
+      return
     }
-
-    setQrStatus("loading");
-    setError(null);
-    setShowQR(true);
-
+    setQrStatus("loading")
+    setError(null)
+    setShowQR(true)
     try {
-      const uri = await web3.startPairing();
-      setQrUri(uri);
-      setQrStatus("ready");
-
-      // H13: Await completePairing instead of fire-and-forget
+      const uri = await web3.startPairing()
+      setQrUri(uri)
+      setQrStatus("ready")
       try {
-        await web3.completePairing();
-        setTimeout(() => {
-          setShowQR(false);
-          setQrUri(null);
-          setQrStatus("idle");
-        }, 1000);
+        await web3.completePairing()
+        setTimeout(() => { setShowQR(false); setQrUri(null); setQrStatus("idle") }, 1000)
       } catch (err) {
-        setQrStatus("error");
-        setError(err instanceof Error ? err.message : "Connection failed");
+        setQrStatus("error")
+        setError(err instanceof Error ? err.message : "Connection failed")
       }
     } catch (err) {
-      setQrStatus("error");
-      setError(err instanceof Error ? err.message : "Failed to start pairing");
+      setQrStatus("error")
+      setError(err instanceof Error ? err.message : "Failed to generate QR code")
     }
-  }, [web3]);
+  }
+
+  const connectWalletConnect = useCallback(async () => {
+    connectRef.current?.()
+  }, [])
+
+  const retryQR = useCallback(() => {
+    setQrUri(null)
+    setError(null)
+    setQrStatus("loading")
+    connectRef.current?.()
+  }, [])
 
   const state = useMemo<WalletConnectState>(
     () => ({
