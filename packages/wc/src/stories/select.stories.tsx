@@ -9,19 +9,15 @@ const meta: Meta<typeof AppkitSelect> = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const networks = JSON.stringify([
-  { value: "eth", label: "Ethereum", icon: "⟠" },
-  { value: "polygon", label: "Polygon", icon: "⬡" },
-  { value: "arbitrum", label: "Arbitrum", icon: "🔷" },
-  { value: "optimism", label: "Optimism", icon: "🔴" },
-])
+const networks = [{ value: "eth", label: "Ethereum", icon: "⟠" }, { value: "polygon", label: "Polygon", icon: "⬡" }, { value: "arbitrum", label: "Arbitrum", icon: "🔷" }, { value: "optimism", label: "Optimism", icon: "🔴" }]
+const noIcons = [{ value: "usd", label: "US Dollar" }, { value: "eur", label: "Euro" }, { value: "jpy", label: "Japanese Yen" }]
 
-const noIcons = JSON.stringify([
-  { value: "usd", label: "US Dollar" },
-  { value: "eur", label: "Euro" },
-  { value: "jpy", label: "Japanese Yen" },
-])
-
-export const Default: Story = { args: { optionsJson: networks, placeholder: "Select a network" } }
-export const NoIcon: Story = { args: { optionsJson: noIcons, placeholder: "Select currency" } }
-export const Selected: Story = { args: { optionsJson: networks, value: "eth" } }
+export const Default: Story = {
+  render: () => <AppkitSelect optionsJson={JSON.stringify(networks)} placeholder="Select a network" />,
+}
+export const NoIcon: Story = {
+  render: () => <AppkitSelect optionsJson={JSON.stringify(noIcons)} placeholder="Select currency" />,
+}
+export const Selected: Story = {
+  render: () => <AppkitSelect optionsJson={JSON.stringify(networks)} value="eth" />,
+}
