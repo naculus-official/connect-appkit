@@ -5789,7 +5789,7 @@ class AppkitCardFooter {
         registerInstance(this, hostRef);
     }
     render() {
-        return (hAsync(Host, { key: 'a76d97e875b1c1787d4d1c57257f9487d593e3cc' }, hAsync("div", { key: '8619b6decbb74e37c1f934fa55b321c035ca74d3', style: { display: "flex", alignItems: "center", padding: "1.5rem", paddingTop: "0" } }, hAsync("slot", { key: '5c65e909cf4201a3d508a6bc877e79fd715ca349' }))));
+        return (hAsync(Host, { key: 'a76d97e875b1c1787d4d1c57257f9487d593e3cc' }, hAsync("div", { key: '1175b2cf99e31461aba00d90bf620ad61899aef6', style: { display: "flex", alignItems: "center", padding: "1.5rem", paddingTop: "0", gap: "0.5rem" } }, hAsync("slot", { key: '1973bde3c5eba4459d2254cefc4ba63ca838a884' }))));
     }
     static get cmpMeta() { return {
         "$flags$": 265,

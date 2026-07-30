@@ -5,7 +5,7 @@ export class AppkitCardFooter {
   render() {
     return (
       <Host>
-        <div style={{ display: "flex", alignItems: "center", padding: "1.5rem", paddingTop: "0" }}>
+        <div style={{ display: "flex", alignItems: "center", padding: "1.5rem", paddingTop: "0", gap: "0.5rem" }}>
           <slot />
         </div>
       </Host>
