@@ -5918,10 +5918,7 @@ class AppkitConnectButton {
         this.isBalanceLoading = false;
         this.tokenBalancesJson = "[]";
         this.explorerUrl = "";
-        this.explorerLabel = "";
         this.walletsJson = "[]";
-        this.isMobile = false;
-        this.mobileWalletName = "";
         this.qrUri = null;
         this.qrLoading = false;
         this.qrError = null;
@@ -6078,10 +6075,7 @@ class AppkitConnectButton {
             "isBalanceLoading": [4, "is-balance-loading"],
             "tokenBalancesJson": [1, "token-balances-json"],
             "explorerUrl": [1, "explorer-url"],
-            "explorerLabel": [1, "explorer-label"],
             "walletsJson": [1, "wallets-json"],
-            "isMobile": [4, "is-mobile"],
-            "mobileWalletName": [1, "mobile-wallet-name"],
             "qrUri": [1, "qr-uri"],
             "qrLoading": [4, "qr-loading"],
             "qrError": [1, "qr-error"],
