@@ -2,7 +2,7 @@
   display: inline-flex;
   gap: 0;
   border-radius: calc(var(--radius, 0.5rem) - 2px);
-  border: 1px solid hsl(var(--border));
+  border: none;
   overflow: hidden;
 }
 
