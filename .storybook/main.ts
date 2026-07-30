@@ -40,6 +40,7 @@ const config: StorybookConfig = {
     },
     ssr: { noExternal: ["react", "react-dom"] },
   };
+}
 };
 
 export default config;
