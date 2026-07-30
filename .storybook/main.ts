@@ -6,7 +6,7 @@ const root = process.cwd();
 
 const config: StorybookConfig = {
   stories: [
-    "../packages/wc/src/components/**/*.stories.@(ts|tsx)",
+    "../packages/wc/src/stories/**/*.stories.@(ts|tsx)",
   ],
   addons: [],
   framework: { name: "@storybook/react-vite", options: {} },
