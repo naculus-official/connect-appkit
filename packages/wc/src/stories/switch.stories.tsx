@@ -9,6 +9,12 @@ const meta: Meta<typeof AppkitSwitch> = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Off: Story = { args: { label: "Dark mode" } }
-export const On: Story = { args: { checked: true, label: "Dark mode" } }
-export const Disabled: Story = { args: { label: "Disabled", disabled: true } }
+export const Off: Story = {
+  render: () => <AppkitSwitch label="Dark mode" />,
+}
+export const On: Story = {
+  render: () => <AppkitSwitch checked label="Dark mode" />,
+}
+export const Disabled: Story = {
+  render: () => <AppkitSwitch label="Disabled" disabled />,
+}
