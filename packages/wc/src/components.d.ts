@@ -424,6 +424,10 @@ export interface AppkitDropdownMenuCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLAppkitDropdownMenuElement;
 }
+export interface AppkitInputCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLAppkitInputElement;
+}
 export interface AppkitPopoverCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLAppkitPopoverElement;
@@ -631,7 +635,18 @@ declare global {
         prototype: HTMLAppkitDropdownMenuElement;
         new (): HTMLAppkitDropdownMenuElement;
     };
+    interface HTMLAppkitInputElementEventMap {
+        "appkitChange": string;
+    }
     interface HTMLAppkitInputElement extends Components.AppkitInput, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLAppkitInputElementEventMap>(type: K, listener: (this: HTMLAppkitInputElement, ev: AppkitInputCustomEvent<HTMLAppkitInputElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLAppkitInputElementEventMap>(type: K, listener: (this: HTMLAppkitInputElement, ev: AppkitInputCustomEvent<HTMLAppkitInputElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLAppkitInputElement: {
         prototype: HTMLAppkitInputElement;
@@ -1051,6 +1066,7 @@ declare namespace LocalJSX {
           * @default ""
          */
         "name"?: string;
+        "onAppkitChange"?: (event: AppkitInputCustomEvent<string>) => void;
         /**
           * Placeholder text
           * @default ""

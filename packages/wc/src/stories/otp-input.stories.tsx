@@ -4,19 +4,23 @@ import { useState, useRef, type KeyboardEvent } from "react"
 
 const OtpDemo = ({ length = 4 }: { length?: number }) => {
   const [values, setValues] = useState<string[]>(Array(length).fill(""))
-  const refs = useRef<(HTMLInputElement | null)[]>([])
+  const refs = useRef<(HTMLElement | null)[]>([])
+  const focusInput = (el: HTMLElement | null) => {
+    const input = el?.shadowRoot?.querySelector('input') as HTMLInputElement | null
+    input?.focus()
+  }
 
   const handleChange = (idx: number, val: string) => {
     if (!/^[0-9]?$/.test(val)) return
     const next = [...values]
     next[idx] = val
     setValues(next)
-    if (val && idx < length - 1) refs.current[idx + 1]?.focus()
+    if (val && idx < length - 1) focusInput(refs.current[idx + 1])
   }
 
   const handleKeyDown = (idx: number, e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !values[idx] && idx > 0) {
-      refs.current[idx - 1]?.focus()
+      focusInput(refs.current[idx - 1])
     }
   }
 

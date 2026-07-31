@@ -25,7 +25,7 @@ export class AppkitConnectButton {
   @Prop() walletsJson = "[]"
   @Prop() qrUri: string | null = null
   @Prop() qrLoading = false
-  @Prop() qrError: string | null = null
+  @Prop({ mutable: true }) qrError: string | null = null
 
   // ── Events ─────────────────────────────────────────────────────
   @Event() appkitConnect!: EventEmitter<{ kind: string; walletId?: string }>
@@ -43,7 +43,6 @@ export class AppkitConnectButton {
   @State() dropdownOpen = false
   @State() uriCopied = false
   @State() addressCopied = false
-  @State() qrErr: string | null = null
 
   private dialogEl?: HTMLDialogElement
   private canvasEl?: HTMLCanvasElement
@@ -75,14 +74,14 @@ export class AppkitConnectButton {
 
   // ── Modal methods ──────────────────────────────────────────────
   private openModal() {
-    this.view = "menu"; this.search = ""; this.qrErr = null
+    this.view = "menu"; this.search = ""; this.qrError = null
     this.modalOpen = true
     setTimeout(() => this.dialogEl?.showModal(), 0)
   }
   private closeModal() { this.modalOpen = false; this.dialogEl?.close() }
 
   private goToWC() {
-    this.view = "loading-qr"; this.qrErr = null
+    this.view = "loading-qr"; this.qrError = null
     this.appkitStartPairing.emit()
   }
 
@@ -116,8 +115,6 @@ export class AppkitConnectButton {
     if (this.view === "qr-ready" && this.qrUri && this.canvasEl && !this.qrRendered) {
       this.renderQR()
     }
-    // Track qrError from prop
-    if (this.qrError) this.qrErr = this.qrError
   }
 
   private async renderQR() {
@@ -137,14 +134,7 @@ export class AppkitConnectButton {
     if (this.qrUri && this.view === "loading-qr") {
       this.view = "qr-ready"
       this.qrRendered = false
-      this.qrErr = null
-    }
-    if (this.qrError && this.qrError !== this.qrErr) {
-      this.view = "qr-error"
-      this.qrErr = this.qrError
-    }
-    if (this.connected && this.dropdownOpen) {
-      // Click outside dropdown
+      this.qrError = null
     }
   }
 
@@ -173,7 +163,7 @@ export class AppkitConnectButton {
             ) : null}
           </appkit-button>
           {this.dropdownOpen && (
-            <div class="dropdown" ref={(el: any) => this.setupDropdownClose(el)}>
+            <div class="dropdown" role="region" aria-label="Wallet details" ref={(el: any) => this.setupDropdownClose(el)}>
               <div class="dd-status"><span class="dot" /> Connected</div>
               <div class="dd-addr-row">
                 <span class="dd-addr">{this.fullAddr.slice(0, 8)}...{this.fullAddr.slice(-6)}</span>
@@ -228,7 +218,7 @@ export class AppkitConnectButton {
             <div class="modal">
               <div class="modal-header">
                 {this.view !== "menu" ? (
-                  <appkit-button variant="ghost" size="sm" onClick={() => { this.view = "menu"; this.qrErr = null }}>
+                  <appkit-button variant="ghost" size="sm" onClick={() => { this.view = "menu"; this.qrError = null }}>
                     ← Back
                   </appkit-button>
                 ) : <div />}
@@ -242,7 +232,7 @@ export class AppkitConnectButton {
               {this.view === "menu" && (
                 <div class="menu-body">
                   {this.wallets.length > 3 && (
-                    <appkit-input placeholder="Search wallets..." value={this.search} onInput={(e: any) => this.search = e.target?.value || ""} />
+                    <appkit-input placeholder="Search wallets..." value={this.search} onAppkitChange={(e: CustomEvent) => this.search = e.detail} />
                   )}
                   {this.filteredWallets.length === 0 ? (
                     <div class="no-wallets">No wallets detected</div>
@@ -282,7 +272,7 @@ export class AppkitConnectButton {
               )}
               {this.view === "qr-error" && (
                 <div class="qr-center">
-                  <div class="qr-error-text">{this.qrErr || "Connection failed"}</div>
+                  <div class="qr-error-text">{this.qrError || "Connection failed"}</div>
                   <appkit-button variant="default" size="sm" onClick={() => this.appkitRetry.emit()}>Retry</appkit-button>
                 </div>
               )}

@@ -92,10 +92,10 @@ export function TokenSelector({
   return (
     <div
       style={{
-        background: "#1a1a2e",
+        background: "hsl(var(--background))",
         borderRadius: "12px",
         padding: "16px",
-        color: "#fff",
+        color: "hsl(var(--foreground))",
         minWidth: "320px",
         maxWidth: "400px",
         fontFamily: "system-ui, sans-serif",
@@ -118,7 +118,7 @@ export function TokenSelector({
           style={{
             background: "none",
             border: "none",
-            color: "#888",
+            color: "hsl(var(--muted-foreground))",
             cursor: "pointer",
             fontSize: "18px",
             padding: "4px 8px",
@@ -139,8 +139,8 @@ export function TokenSelector({
           padding: "10px 12px",
           borderRadius: "8px",
           border: "1px solid #333",
-          background: "#16213e",
-          color: "#fff",
+          background: "hsl(var(--card))",
+          color: "hsl(var(--foreground))",
           fontSize: "14px",
           outline: "none",
           boxSizing: "border-box",
@@ -151,7 +151,7 @@ export function TokenSelector({
 
       {/* Loading / Error States */}
       {isLoading && !isSearching && (
-        <div style={{ textAlign: "center", padding: "20px", color: "#888" }}>
+        <div style={{ textAlign: "center", padding: "20px", color: "hsl(var(--muted-foreground))" }}>
           Loading tokens...
         </div>
       )}
@@ -160,7 +160,7 @@ export function TokenSelector({
           style={{
             textAlign: "center",
             padding: "12px",
-            color: "#f44336",
+            color: "hsl(var(--destructive))",
             fontSize: "13px",
           }}
         >
@@ -174,7 +174,7 @@ export function TokenSelector({
           <div
             style={{
               fontSize: "11px",
-              color: "#888",
+              color: "hsl(var(--muted-foreground))",
               textTransform: "uppercase",
               letterSpacing: "0.5px",
               marginBottom: "8px",
@@ -188,11 +188,11 @@ export function TokenSelector({
                 key={`${token.chainId}:${token.address}`}
                 onClick={() => handleSelect(token)}
                 style={{
-                  background: "#16213e",
+                  background: "hsl(var(--card))",
                   border: "1px solid #333",
                   borderRadius: "20px",
                   padding: "6px 14px",
-                  color: "#fff",
+                  color: "hsl(var(--foreground))",
                   cursor: "pointer",
                   fontSize: "13px",
                   display: "flex",
@@ -222,7 +222,7 @@ export function TokenSelector({
         <div
           style={{
             fontSize: "11px",
-            color: "#888",
+            color: "hsl(var(--muted-foreground))",
             marginBottom: "8px",
           }}
         >
@@ -259,14 +259,14 @@ export function TokenSelector({
               background: "transparent",
               border: "none",
               borderRadius: "8px",
-              color: "#fff",
+              color: "hsl(var(--foreground))",
               cursor: "pointer",
               textAlign: "left",
               width: "100%",
               fontSize: "14px",
             }}
             onMouseEnter={(e) => {
-              (e.target as HTMLElement).style.background = "#16213e";
+              (e.target as HTMLElement).style.background = "hsl(var(--card))";
             }}
             onMouseLeave={(e) => {
               (e.target as HTMLElement).style.background = "transparent";
@@ -278,7 +278,7 @@ export function TokenSelector({
                 width: "32px",
                 height: "32px",
                 borderRadius: "50%",
-                background: "#333",
+                background: "hsl(var(--border))",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -321,7 +321,7 @@ export function TokenSelector({
               <div
                 style={{
                   fontSize: "12px",
-                  color: "#888",
+                  color: "hsl(var(--muted-foreground))",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",

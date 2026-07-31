@@ -1,4 +1,4 @@
-import { Component, Prop, h, Host } from "@stencil/core"
+import { Component, Prop, h, Host, Event, EventEmitter } from "@stencil/core"
 
 @Component({
   tag: "appkit-input",
@@ -30,9 +30,12 @@ export class AppkitInput {
   /** Max character length */
   @Prop() maxLength?: number
 
+  @Event() appkitChange!: EventEmitter<string>
+
   private handleInput = (e: Event) => {
     const target = e.target as HTMLInputElement
     this.value = target.value
+    this.appkitChange.emit(this.value)
   }
 
   render() {
