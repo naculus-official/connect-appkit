@@ -51,6 +51,7 @@ const OtpDemo = ({ length = 4 }: { length?: number }) => {
           onAppkitChange={(e: CustomEvent<string>) => handleChange(i, e.detail)}
           onKeyDown={handleKeyDown.bind(null, i)}
           maxLength={1}
+          data-centered
           style={{ width: "3rem", fontSize: "1.5rem" }}
         />
       ))}
