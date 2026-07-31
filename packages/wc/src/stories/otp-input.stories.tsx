@@ -27,17 +27,29 @@ const OtpDemo = ({ length = 4 }: { length?: number }) => {
     if (e.key === "Backspace") {
       e.preventDefault()
       if (idx === 0) {
-        // first field: clear all
-        setValues(Array(length).fill(""))
+        if (!values[0]) {
+          // first field empty → clear all
+          setValues(Array(length).fill(""))
+        } else {
+          // clear current only
+          const next = [...values]
+          next[0] = ""
+          setValues(next)
+        }
         focusInput(refs.current[0])
         return
       }
       // clear current + move back
       const next = [...values]
       next[idx] = ""
-      next[idx - 1] = ""
       setValues(next)
       requestAnimationFrame(() => focusInput(refs.current[idx - 1]))
+    } else if (e.key === "ArrowLeft" && idx > 0) {
+      e.preventDefault()
+      requestAnimationFrame(() => focusInput(refs.current[idx - 1]))
+    } else if (e.key === "ArrowRight" && idx < length - 1) {
+      e.preventDefault()
+      requestAnimationFrame(() => focusInput(refs.current[idx + 1]))
     }
   }
 
