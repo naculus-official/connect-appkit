@@ -11,7 +11,7 @@ import type { EventName, StencilReactComponent } from '@stencil/react-output-tar
 import { createComponent } from '@stencil/react-output-target/runtime';
 import React from 'react';
 
-import { type AppkitAccordionCustomEvent, type AppkitAlertDialogCustomEvent, type AppkitCheckboxCustomEvent, type AppkitCollapsibleCustomEvent, type AppkitConnectButtonCustomEvent, type AppkitDialogCustomEvent, type AppkitDropdownMenuCustomEvent, type AppkitPopoverCustomEvent, type AppkitSelectCustomEvent, type AppkitSwitchCustomEvent, type AppkitTabsCustomEvent, type AppkitToggleGroupCustomEvent } from "@naculus/connect-appkit-wc";
+import { type AppkitAccordionCustomEvent, type AppkitAlertDialogCustomEvent, type AppkitCheckboxCustomEvent, type AppkitCollapsibleCustomEvent, type AppkitConnectButtonCustomEvent, type AppkitDialogCustomEvent, type AppkitDropdownMenuCustomEvent, type AppkitInputCustomEvent, type AppkitPopoverCustomEvent, type AppkitSelectCustomEvent, type AppkitSwitchCustomEvent, type AppkitTabsCustomEvent, type AppkitToggleGroupCustomEvent } from "@naculus/connect-appkit-wc";
 import type { Components } from "@naculus/connect-appkit-wc/dist/components";
 import { AppkitAccordion as AppkitAccordionElement, defineCustomElement as defineAppkitAccordion } from "@naculus/connect-appkit-wc/dist/components/appkit-accordion.js";
 import { AppkitAccountButton as AppkitAccountButtonElement, defineCustomElement as defineAppkitAccountButton } from "@naculus/connect-appkit-wc/dist/components/appkit-account-button.js";
@@ -255,14 +255,14 @@ export const AppkitDropdownMenu: StencilReactComponent<AppkitDropdownMenuElement
     defineCustomElement: defineAppkitDropdownMenu
 });
 
-export type AppkitInputEvents = NonNullable<unknown>;
+export type AppkitInputEvents = { onAppkitChange: EventName<AppkitInputCustomEvent<string>> };
 
 export const AppkitInput: StencilReactComponent<AppkitInputElement, AppkitInputEvents, Components.AppkitInput> = /*@__PURE__*/ createComponent<AppkitInputElement, AppkitInputEvents, Components.AppkitInput>({
     tagName: 'appkit-input',
     elementClass: AppkitInputElement,
     // @ts-ignore - ignore potential React type mismatches between the Stencil Output Target and your project.
     react: React,
-    events: {} as AppkitInputEvents,
+    events: { onAppkitChange: 'appkitChange' } as AppkitInputEvents,
     defineCustomElement: defineAppkitInput
 });
 

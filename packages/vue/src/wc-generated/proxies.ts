@@ -159,7 +159,10 @@ export const AppkitInput: StencilVueComponent<JSX.AppkitInput> = /*@__PURE__*/ d
   'invalid',
   'name',
   'autocomplete',
-  'maxLength'
+  'maxLength',
+  'appkitChange'
+], [
+  'appkitChange'
 ]);
 
 

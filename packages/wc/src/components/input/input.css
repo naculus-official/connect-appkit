@@ -22,6 +22,10 @@
   box-sizing: border-box;
 }
 
+:host([data-centered]) .input {
+  text-align: center;
+}
+
 .input::placeholder {
   color: hsl(var(--muted-foreground));
 }

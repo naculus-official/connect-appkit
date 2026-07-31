@@ -1,26 +1,43 @@
 import type { Meta, StoryObj } from "@storybook/react"
 import { AppkitInput } from "@naculus/connect-appkit-react"
-import { useState, useRef, type KeyboardEvent } from "react"
+import { useState, useRef, useCallback } from "react"
 
 const OtpDemo = ({ length = 4 }: { length?: number }) => {
   const [values, setValues] = useState<string[]>(Array(length).fill(""))
   const refs = useRef<(HTMLElement | null)[]>([])
-  const focusInput = (el: HTMLElement | null) => {
-    const input = el?.shadowRoot?.querySelector('input') as HTMLInputElement | null
+
+  const focusInput = useCallback((el: HTMLElement | null) => {
+    const input = el?.shadowRoot?.querySelector("input") as HTMLInputElement | null
     input?.focus()
-  }
+  }, [])
 
   const handleChange = (idx: number, val: string) => {
-    if (!/^[0-9]?$/.test(val)) return
+    if (val.length > 1) return
+    if (val && !/^[0-9]$/.test(val)) return
     const next = [...values]
-    next[idx] = val
+    next[idx] = val.slice(-1)
     setValues(next)
-    if (val && idx < length - 1) focusInput(refs.current[idx + 1])
+    if (val && idx < length - 1) {
+      // advance to next
+      requestAnimationFrame(() => focusInput(refs.current[idx + 1]))
+    }
   }
 
-  const handleKeyDown = (idx: number, e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !values[idx] && idx > 0) {
-      focusInput(refs.current[idx - 1])
+  const handleKeyDown = (idx: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace") {
+      e.preventDefault()
+      if (idx === 0) {
+        // first field: clear all
+        setValues(Array(length).fill(""))
+        focusInput(refs.current[0])
+        return
+      }
+      // clear current + move back
+      const next = [...values]
+      next[idx] = ""
+      next[idx - 1] = ""
+      setValues(next)
+      requestAnimationFrame(() => focusInput(refs.current[idx - 1]))
     }
   }
 
@@ -31,10 +48,10 @@ const OtpDemo = ({ length = 4 }: { length?: number }) => {
           key={i}
           ref={(el: any) => (refs.current[i] = el)}
           value={v}
-          onChange={(e: any) => handleChange(i, String(e.target?.value ?? ""))}
-          onKeyDown={(e: any) => handleKeyDown(i, e)}
+          onAppkitChange={(e: CustomEvent<string>) => handleChange(i, e.detail)}
+          onKeyDown={handleKeyDown.bind(null, i)}
           maxLength={1}
-          style={{ width: "3rem", textAlign: "center", fontSize: "1.5rem" }}
+          style={{ width: "3rem", fontSize: "1.5rem" }}
         />
       ))}
     </div>

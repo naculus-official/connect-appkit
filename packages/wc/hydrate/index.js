@@ -5607,7 +5607,7 @@ class AppkitAccountButton {
     }; }
 }
 
-const alertDialogCss = () => `:host{display:contents}.footer{display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem}.description{font-size:0.875rem;color:hsl(var(--muted-foreground));margin:0.25rem 0 0}.overlay{display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center}.overlay.open{display:flex}.backdrop{position:absolute;inset:0;background-color:rgba(0, 0, 0, 0.8)}.panel{position:relative;z-index:10;max-width:28rem;width:calc(100vw - 2rem);max-height:85vh;overflow-y:auto;border-radius:calc(var(--radius, 0.5rem) - 2px);border:none;background-color:hsl(var(--card));color:hsl(var(--card-foreground));box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.25);padding:1.5rem;font-family:inherit}.title{font-size:1.125rem;font-weight:600;margin:0 0 0.25rem;color:hsl(var(--foreground))}.close{position:absolute;top:1rem;right:1rem;display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:0.375rem;border:none;background:transparent;color:hsl(var(--muted-foreground));cursor:pointer;font-size:1rem}.close:hover{background-color:hsl(var(--muted));color:hsl(var(--foreground))}`;
+const alertDialogCss = () => `:host{display:none}:host([open]){display:block}dialog{border:none;border-radius:calc(var(--radius, 0.5rem) - 2px);background-color:hsl(var(--card));color:hsl(var(--card-foreground));box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.25);padding:1.5rem;max-width:28rem;width:calc(100vw - 2rem);max-height:85vh;overflow-y:auto;margin:auto;font-family:var(--font-sans, inherit)}dialog::backdrop{background-color:rgba(0, 0, 0, 0.8);backdrop-filter:blur(2px)}.title{font-size:1.125rem;font-weight:600;color:hsl(var(--foreground));margin:0 0 0.5rem}.description{font-size:0.875rem;color:hsl(var(--muted-foreground));margin:0 0 1rem}.footer{display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem}`;
 
 class AppkitAlertDialog {
     constructor(hostRef) {
@@ -5932,7 +5932,6 @@ class AppkitConnectButton {
         this.dropdownOpen = false;
         this.uriCopied = false;
         this.addressCopied = false;
-        this.qrErr = null;
         this.qrRendered = false;
     }
     // ── Computed ───────────────────────────────────────────────────
@@ -5975,14 +5974,14 @@ class AppkitConnectButton {
     openModal() {
         this.view = "menu";
         this.search = "";
-        this.qrErr = null;
+        this.qrError = null;
         this.modalOpen = true;
         setTimeout(() => this.dialogEl?.showModal(), 0);
     }
     closeModal() { this.modalOpen = false; this.dialogEl?.close(); }
     goToWC() {
         this.view = "loading-qr";
-        this.qrErr = null;
+        this.qrError = null;
         this.appkitStartPairing.emit();
     }
     selectWallet(id) {
@@ -6012,9 +6011,6 @@ class AppkitConnectButton {
         if (this.view === "qr-ready" && this.qrUri && this.canvasEl && !this.qrRendered) {
             this.renderQR();
         }
-        // Track qrError from prop
-        if (this.qrError)
-            this.qrErr = this.qrError;
     }
     async renderQR() {
         if (!this.canvasEl || !this.qrUri)
@@ -6034,11 +6030,7 @@ class AppkitConnectButton {
         if (this.qrUri && this.view === "loading-qr") {
             this.view = "qr-ready";
             this.qrRendered = false;
-            this.qrErr = null;
-        }
-        if (this.qrError && this.qrError !== this.qrErr) {
-            this.view = "qr-error";
-            this.qrErr = this.qrError;
+            this.qrError = null;
         }
     }
     disconnectedCallback() {
@@ -6048,10 +6040,10 @@ class AppkitConnectButton {
     render() {
         // Connected state
         if (this.connected && this.address) {
-            return (hAsync(Host, null, hAsync("appkit-button", { variant: "ghost", size: "sm", class: "wallet-badge", onClick: () => (this.dropdownOpen = !this.dropdownOpen) }, hAsync("span", { class: "dot", slot: "" }), hAsync("span", { class: "addr-text" }, this.shortAddr), this.isBalanceLoading ? (hAsync("span", { class: "load-skel" })) : this.fmtBalance ? (hAsync("span", { class: "bal-text" }, this.fmtBalance)) : null), this.dropdownOpen && (hAsync("div", { class: "dropdown", ref: (el) => this.setupDropdownClose(el) }, hAsync("div", { class: "dd-status" }, hAsync("span", { class: "dot" }), " Connected"), hAsync("div", { class: "dd-addr-row" }, hAsync("span", { class: "dd-addr" }, this.fullAddr.slice(0, 8), "...", this.fullAddr.slice(-6)), hAsync("appkit-button", { variant: "ghost", size: "sm", onClick: () => this.copyAddress() }, this.addressCopied ? "✓" : "📋"), this.explorerUrl && (hAsync("a", { href: `${this.explorerUrl}/address/${this.fullAddr}`, target: "_blank", class: "expl-link" }, "\u2197"))), hAsync("div", { class: "dd-balance" }, hAsync("div", { class: "dd-label" }, "Balance"), this.isBalanceLoading ? (hAsync("div", { class: "load-skel-lg" })) : this.fmtBalance ? (hAsync("div", { class: "dd-bal-val" }, this.fmtBalance)) : hAsync("div", { class: "dd-bal-val" }, "\u2014")), this.tokenBalances.length > 0 && (hAsync("div", { class: "dd-tokens" }, hAsync("div", { class: "dd-label" }, "Tokens"), this.tokenBalances.map(tb => (hAsync("div", { class: "dd-token-row" }, hAsync("span", null, tb.name || tb.symbol), hAsync("span", null, tb.formatted ?? "—")))))), hAsync("appkit-button", { variant: "ghost", class: "dd-disconnect", onClick: () => { this.appkitDisconnect.emit(); this.dropdownOpen = false; } }, "Disconnect")))));
+            return (hAsync(Host, null, hAsync("appkit-button", { variant: "ghost", size: "sm", class: "wallet-badge", onClick: () => (this.dropdownOpen = !this.dropdownOpen) }, hAsync("span", { class: "dot", slot: "" }), hAsync("span", { class: "addr-text" }, this.shortAddr), this.isBalanceLoading ? (hAsync("span", { class: "load-skel" })) : this.fmtBalance ? (hAsync("span", { class: "bal-text" }, this.fmtBalance)) : null), this.dropdownOpen && (hAsync("div", { class: "dropdown", role: "region", "aria-label": "Wallet details", ref: (el) => this.setupDropdownClose(el) }, hAsync("div", { class: "dd-status" }, hAsync("span", { class: "dot" }), " Connected"), hAsync("div", { class: "dd-addr-row" }, hAsync("span", { class: "dd-addr" }, this.fullAddr.slice(0, 8), "...", this.fullAddr.slice(-6)), hAsync("appkit-button", { variant: "ghost", size: "sm", onClick: () => this.copyAddress() }, this.addressCopied ? "✓" : "📋"), this.explorerUrl && (hAsync("a", { href: `${this.explorerUrl}/address/${this.fullAddr}`, target: "_blank", class: "expl-link" }, "\u2197"))), hAsync("div", { class: "dd-balance" }, hAsync("div", { class: "dd-label" }, "Balance"), this.isBalanceLoading ? (hAsync("div", { class: "load-skel-lg" })) : this.fmtBalance ? (hAsync("div", { class: "dd-bal-val" }, this.fmtBalance)) : hAsync("div", { class: "dd-bal-val" }, "\u2014")), this.tokenBalances.length > 0 && (hAsync("div", { class: "dd-tokens" }, hAsync("div", { class: "dd-label" }, "Tokens"), this.tokenBalances.map(tb => (hAsync("div", { class: "dd-token-row" }, hAsync("span", null, tb.name || tb.symbol), hAsync("span", null, tb.formatted ?? "—")))))), hAsync("appkit-button", { variant: "ghost", class: "dd-disconnect", onClick: () => { this.appkitDisconnect.emit(); this.dropdownOpen = false; } }, "Disconnect")))));
         }
         // Disconnected
-        return (hAsync(Host, null, hAsync("appkit-button", { onClick: () => this.openModal(), disabled: this.connecting, ariaLabel: this.connecting ? "Connecting" : "Connect Wallet" }, this.connecting ? "Connecting..." : "Connect Wallet"), this.modalOpen && (hAsync("dialog", { ref: el => (this.dialogEl = el), onClose: () => this.closeModal() }, hAsync("div", { class: "modal" }, hAsync("div", { class: "modal-header" }, this.view !== "menu" ? (hAsync("appkit-button", { variant: "ghost", size: "sm", onClick: () => { this.view = "menu"; this.qrErr = null; } }, "\u2190 Back")) : hAsync("div", null), hAsync("div", { class: "modal-title" }, this.view === "menu" ? "Connect a wallet" : "Scan QR Code"), hAsync("appkit-button", { variant: "ghost", size: "sm", onClick: () => this.closeModal() }, "\u2715")), this.view === "menu" && (hAsync("div", { class: "menu-body" }, this.wallets.length > 3 && (hAsync("appkit-input", { placeholder: "Search wallets...", value: this.search, onInput: (e) => this.search = e.target?.value || "" })), this.filteredWallets.length === 0 ? (hAsync("div", { class: "no-wallets" }, "No wallets detected")) : (this.filteredWallets.map(w => (hAsync("appkit-button", { variant: "outline", class: "wc-opt", onClick: () => this.selectWallet(w.id) }, hAsync("span", { class: "wc-name" }, w.name), hAsync("span", { class: "wc-desc" }, "Browser extension"))))), hAsync("div", { class: "divider" }, hAsync("span", null, "WalletConnect")), hAsync("appkit-button", { variant: "outline", class: "wc-opt", onClick: () => this.goToWC() }, hAsync("span", { class: "wc-name" }, "WalletConnect"), hAsync("span", { class: "wc-desc" }, "Scan QR with any wallet")))), this.view === "loading-qr" && (hAsync("div", { class: "qr-center" }, hAsync("div", { class: "qr-spinner" }), hAsync("div", null, "Waiting for connection..."))), this.view === "qr-ready" && (hAsync("div", { class: "qr-center" }, this.selectedWallet && (hAsync("div", { class: "qr-wallet-name" }, this.selectedWallet.name)), hAsync("canvas", { ref: el => (this.canvasEl = el), width: "200", height: "200", class: "qr-canvas" }), hAsync("appkit-button", { variant: "outline", size: "sm", onClick: () => this.copyUri() }, this.uriCopied ? "✓ Copied" : "Copy link"))), this.view === "qr-error" && (hAsync("div", { class: "qr-center" }, hAsync("div", { class: "qr-error-text" }, this.qrErr || "Connection failed"), hAsync("appkit-button", { variant: "default", size: "sm", onClick: () => this.appkitRetry.emit() }, "Retry"))))))));
+        return (hAsync(Host, null, hAsync("appkit-button", { onClick: () => this.openModal(), disabled: this.connecting, ariaLabel: this.connecting ? "Connecting" : "Connect Wallet" }, this.connecting ? "Connecting..." : "Connect Wallet"), this.modalOpen && (hAsync("dialog", { ref: el => (this.dialogEl = el), onClose: () => this.closeModal() }, hAsync("div", { class: "modal" }, hAsync("div", { class: "modal-header" }, this.view !== "menu" ? (hAsync("appkit-button", { variant: "ghost", size: "sm", onClick: () => { this.view = "menu"; this.qrError = null; } }, "\u2190 Back")) : hAsync("div", null), hAsync("div", { class: "modal-title" }, this.view === "menu" ? "Connect a wallet" : "Scan QR Code"), hAsync("appkit-button", { variant: "ghost", size: "sm", onClick: () => this.closeModal() }, "\u2715")), this.view === "menu" && (hAsync("div", { class: "menu-body" }, this.wallets.length > 3 && (hAsync("appkit-input", { placeholder: "Search wallets...", value: this.search, onAppkitChange: (e) => this.search = e.detail })), this.filteredWallets.length === 0 ? (hAsync("div", { class: "no-wallets" }, "No wallets detected")) : (this.filteredWallets.map(w => (hAsync("appkit-button", { variant: "outline", class: "wc-opt", onClick: () => this.selectWallet(w.id) }, hAsync("span", { class: "wc-name" }, w.name), hAsync("span", { class: "wc-desc" }, "Browser extension"))))), hAsync("div", { class: "divider" }, hAsync("span", null, "WalletConnect")), hAsync("appkit-button", { variant: "outline", class: "wc-opt", onClick: () => this.goToWC() }, hAsync("span", { class: "wc-name" }, "WalletConnect"), hAsync("span", { class: "wc-desc" }, "Scan QR with any wallet")))), this.view === "loading-qr" && (hAsync("div", { class: "qr-center" }, hAsync("div", { class: "qr-spinner" }), hAsync("div", null, "Waiting for connection..."))), this.view === "qr-ready" && (hAsync("div", { class: "qr-center" }, this.selectedWallet && (hAsync("div", { class: "qr-wallet-name" }, this.selectedWallet.name)), hAsync("canvas", { ref: el => (this.canvasEl = el), width: "200", height: "200", class: "qr-canvas" }), hAsync("appkit-button", { variant: "outline", size: "sm", onClick: () => this.copyUri() }, this.uriCopied ? "✓ Copied" : "Copy link"))), this.view === "qr-error" && (hAsync("div", { class: "qr-center" }, hAsync("div", { class: "qr-error-text" }, this.qrError || "Connection failed"), hAsync("appkit-button", { variant: "default", size: "sm", onClick: () => this.appkitRetry.emit() }, "Retry"))))))));
     }
     setupDropdownClose(el) {
         if (!el)
@@ -6081,15 +6073,14 @@ class AppkitConnectButton {
             "walletsJson": [1, "wallets-json"],
             "qrUri": [1, "qr-uri"],
             "qrLoading": [4, "qr-loading"],
-            "qrError": [1, "qr-error"],
+            "qrError": [1025, "qr-error"],
             "modalOpen": [32],
             "view": [32],
             "search": [32],
             "selectedWalletId": [32],
             "dropdownOpen": [32],
             "uriCopied": [32],
-            "addressCopied": [32],
-            "qrErr": [32]
+            "addressCopied": [32]
         },
         "$listeners$": undefined,
         "$lazyBundleId$": "-",
@@ -7682,11 +7673,12 @@ class AppkitDropdownMenu {
     }; }
 }
 
-const inputCss = () => `:host{display:block;width:100%}.input{width:100%;min-width:0;height:2.25rem;border-radius:calc(var(--radius, 0.5rem) - 2px);border:1px solid hsl(var(--input));background-color:transparent;padding:0 0.625rem;padding-top:0.25rem;padding-bottom:0.25rem;font-size:0.875rem;font-family:inherit;color:hsl(var(--foreground));box-shadow:0 1px 2px rgba(0, 0, 0, 0.05);transition:color 150ms, box-shadow 150ms;outline:none;box-sizing:border-box}.input::placeholder{color:hsl(var(--muted-foreground))}.input:focus-visible{border-color:hsl(var(--ring));box-shadow:0 0 0 3px hsl(var(--ring) / 0.5)}.input:disabled{pointer-events:none;cursor:not-allowed;opacity:0.5}.input[aria-invalid="true"]{border-color:hsl(var(--destructive));box-shadow:0 0 0 3px hsl(var(--destructive) / 0.2)}`;
+const inputCss = () => `:host{display:block;width:100%}.input{width:100%;min-width:0;height:2.25rem;border-radius:calc(var(--radius, 0.5rem) - 2px);border:1px solid hsl(var(--input));background-color:transparent;padding:0 0.625rem;padding-top:0.25rem;padding-bottom:0.25rem;font-size:0.875rem;font-family:inherit;color:hsl(var(--foreground));box-shadow:0 1px 2px rgba(0, 0, 0, 0.05);transition:color 150ms, box-shadow 150ms;outline:none;box-sizing:border-box}:host([data-centered]) .input{text-align:center}.input::placeholder{color:hsl(var(--muted-foreground))}.input:focus-visible{border-color:hsl(var(--ring));box-shadow:0 0 0 3px hsl(var(--ring) / 0.5)}.input:disabled{pointer-events:none;cursor:not-allowed;opacity:0.5}.input[aria-invalid="true"]{border-color:hsl(var(--destructive));box-shadow:0 0 0 3px hsl(var(--destructive) / 0.2)}`;
 
 class AppkitInput {
     constructor(hostRef) {
         registerInstance(this, hostRef);
+        this.appkitChange = createEvent(this, "appkitChange");
         /** Input type */
         this.type = "text";
         /** Placeholder text */
@@ -7704,10 +7696,11 @@ class AppkitInput {
         this.handleInput = (e) => {
             const target = e.target;
             this.value = target.value;
+            this.appkitChange.emit(this.value);
         };
     }
     render() {
-        return (hAsync(Host, { key: 'e3c55cb46e2cbae66d9f1781f973e9ce7246f473' }, hAsync("input", { key: 'efca17fa30669e885d5408250bcb9810059595a8', class: "input", type: this.type, placeholder: this.placeholder, value: this.value, disabled: this.disabled, maxlength: this.maxLength, "aria-invalid": this.invalid ? "true" : undefined, name: this.name, autocomplete: this.autocomplete, onInput: this.handleInput })));
+        return (hAsync(Host, { key: '5a37df346d5392af4d7b9ce425d975ef6c141683' }, hAsync("input", { key: 'f0677481dc26bc6d12daf3fb390a9c06020b3bd0', class: "input", type: this.type, placeholder: this.placeholder, value: this.value, disabled: this.disabled, maxlength: this.maxLength, "aria-invalid": this.invalid ? "true" : undefined, name: this.name, autocomplete: this.autocomplete, onInput: this.handleInput })));
     }
     static get style() { return inputCss(); }
     static get cmpMeta() { return {
