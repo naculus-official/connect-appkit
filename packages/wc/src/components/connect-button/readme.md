@@ -14,11 +14,8 @@
 | `balanceSymbol`     | `balance-symbol`      |             | `string`         | `"ETH"` |
 | `connected`         | `connected`           |             | `boolean`        | `false` |
 | `connecting`        | `connecting`          |             | `boolean`        | `false` |
-| `explorerLabel`     | `explorer-label`      |             | `string`         | `""`    |
 | `explorerUrl`       | `explorer-url`        |             | `string`         | `""`    |
 | `isBalanceLoading`  | `is-balance-loading`  |             | `boolean`        | `false` |
-| `isMobile`          | `is-mobile`           |             | `boolean`        | `false` |
-| `mobileWalletName`  | `mobile-wallet-name`  |             | `string`         | `""`    |
 | `qrError`           | `qr-error`            |             | `null \| string` | `null`  |
 | `qrLoading`         | `qr-loading`          |             | `boolean`        | `false` |
 | `qrUri`             | `qr-uri`              |             | `null \| string` | `null`  |
