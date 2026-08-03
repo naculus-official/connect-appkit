@@ -52,5 +52,3 @@ jobs:
           else
             pnpm -r publish --access public --no-git-checks
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
