@@ -17,5 +17,9 @@
   },
   "devDependencies": {
     "vue": "^3.5.40"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naculus-official/connect-appkit.git"
   }
 }

@@ -59,5 +59,9 @@
     "@stencil/vue-output-target": "^0.14.1",
     "typescript": "^5.9.3"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naculus-official/connect-appkit.git"
+  }
 }
