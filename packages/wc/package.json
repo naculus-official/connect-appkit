@@ -1,6 +1,6 @@
 {
   "name": "@naculus/connect-appkit-wc",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "main": "./dist/index.cjs.js",
   "module": "./dist/index.js",
@@ -65,5 +65,16 @@
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
   "license": "MIT",
-  "description": "Stencil Web Components for Naculus Connect — framework-agnostic UI kit with 24 components"
+  "description": "Stencil Web Components for Naculus Connect \u2014 framework-agnostic UI kit with 24 components",
+  "homepage": "https://github.com/naculus-official/connect-appkit#readme",
+  "bugs": "https://github.com/naculus-official/connect-appkit/issues",
+  "keywords": [
+    "web3",
+    "wallet",
+    "connect",
+    "ui",
+    "components",
+    "stencil",
+    "web-components"
+  ]
 }

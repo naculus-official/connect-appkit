@@ -1,6 +1,6 @@
 {
   "name": "@naculus/connect-appkit-react",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -41,5 +41,15 @@
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
   "license": "MIT",
-  "description": "React hooks and components for Naculus Connect — auto-generated wrappers for Stencil Web Components"
+  "description": "React hooks and components for Naculus Connect \u2014 auto-generated wrappers for Stencil Web Components",
+  "homepage": "https://github.com/naculus-official/connect-appkit#readme",
+  "bugs": "https://github.com/naculus-official/connect-appkit/issues",
+  "keywords": [
+    "web3",
+    "wallet",
+    "connect",
+    "ui",
+    "components",
+    "react"
+  ]
 }
