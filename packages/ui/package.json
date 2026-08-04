@@ -67,5 +67,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/naculus-official/connect-appkit.git"
-  }
+  },
+  "license": "MIT"
 }
