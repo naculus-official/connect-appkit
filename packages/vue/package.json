@@ -22,5 +22,6 @@
     "type": "git",
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "description": "Vue component wrappers for Naculus Connect Web Components — auto-generated proxies"
 }

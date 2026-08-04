@@ -40,5 +40,6 @@
     "type": "git",
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "description": "React hooks and components for Naculus Connect — auto-generated wrappers for Stencil Web Components"
 }
