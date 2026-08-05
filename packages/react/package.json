@@ -53,6 +53,6 @@
     "react"
   ],
   "optionalDependencies": {
-    "@naculus/connect-appkit-ui": "^0.1.6"
+    "@naculus/connect-appkit-ui": "workspace:*"
   }
 }
