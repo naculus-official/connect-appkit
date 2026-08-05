@@ -1,6 +1,6 @@
 {
   "name": "@naculus/connect-appkit-react",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -51,5 +51,8 @@
     "ui",
     "components",
     "react"
-  ]
+  ],
+  "optionalDependencies": {
+    "@naculus/connect-appkit-ui": "^0.1.6"
+  }
 }

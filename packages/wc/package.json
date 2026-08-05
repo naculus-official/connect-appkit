@@ -1,6 +1,6 @@
 {
   "name": "@naculus/connect-appkit-wc",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "main": "./dist/index.cjs.js",
   "module": "./dist/index.js",
@@ -76,5 +76,8 @@
     "components",
     "stencil",
     "web-components"
-  ]
+  ],
+  "optionalDependencies": {
+    "@naculus/connect-appkit-ui": "^0.1.6"
+  }
 }
