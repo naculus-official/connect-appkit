@@ -245,13 +245,13 @@ export class AppkitConnectButton {
                     ))
                   )}
                   <div class="divider"><span>WalletConnect</span></div>
-                  <appkit-button variant="outline" class="wc-opt" onClick={() => this.goToWC()}>
+                  <button class="wc-btn" onClick={() => this.goToWC()}>
                     <span class="wc-name">WalletConnect</span>
                     <span class="wc-desc">Scan QR with any wallet</span>
-                  </appkit-button>
-                  <appkit-button variant="outline" class="wc-opt" onClick={() => this.closeModal()}>
+                  </button>
+                  <button class="wc-btn" onClick={() => this.closeModal()}>
                     Close
-                  </appkit-button>
+                  </button>
                 </div>
               )}
 
