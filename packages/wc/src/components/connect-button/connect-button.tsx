@@ -225,7 +225,7 @@ export class AppkitConnectButton {
                 <div class="modal-title">
                   {this.view === "menu" ? "Connect a wallet" : "Scan QR Code"}
                 </div>
-                <appkit-button variant="ghost" size="sm" onClick={() => this.closeModal()}>✕</appkit-button>
+                {this.view !== "menu" ? <div /> : null}
               </div>
 
               {/* Menu view */}
@@ -248,6 +248,9 @@ export class AppkitConnectButton {
                   <appkit-button variant="outline" class="wc-opt" onClick={() => this.goToWC()}>
                     <span class="wc-name">WalletConnect</span>
                     <span class="wc-desc">Scan QR with any wallet</span>
+                  </appkit-button>
+                  <appkit-button variant="outline" class="wc-opt" onClick={() => this.closeModal()}>
+                    Close
                   </appkit-button>
                 </div>
               )}
@@ -277,6 +280,7 @@ export class AppkitConnectButton {
                 </div>
               )}
             </div>
+            <div class="modal-footer">Powered by Naculus</div>
           </dialog>
         )}
       </Host>
