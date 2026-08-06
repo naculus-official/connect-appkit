@@ -84,6 +84,8 @@ export class AppkitConnectButton {
     return parseFloat(this.balance).toLocaleString(undefined, { maximumFractionDigits: 4 }) + " " + this.balanceSymbol
   }
 
+  @State() qrTimeout: ReturnType<typeof setTimeout> | null = null
+
   // ── Modal methods ──────────────────────────────────────────────
   private openModal() {
     this.view = "menu"; this.search = ""; this.qrError = null
@@ -91,11 +93,22 @@ export class AppkitConnectButton {
     this.modalOpen = true
     setTimeout(() => this.dialogEl?.showModal(), 0)
   }
-  private closeModal() { this.modalOpen = false; this.dialogEl?.close() }
+  private closeModal() {
+    this.modalOpen = false; this.dialogEl?.close()
+    if (this.qrTimeout) { clearTimeout(this.qrTimeout); this.qrTimeout = null }
+  }
 
   private goToWC() {
     this.view = "loading-qr"; this.qrError = null
     this.appkitStartPairing.emit()
+    // Fallback: if adapter doesn't set qrUri within 8s, show error
+    if (this.qrTimeout) clearTimeout(this.qrTimeout)
+    this.qrTimeout = setTimeout(() => {
+      if (this.view === "loading-qr") {
+        this.qrError = "WalletConnect pairing unavailable. Check your projectId or network."
+        this.view = "qr-error"
+      }
+    }, 8000)
   }
 
   private selectWallet(id: string) {
@@ -288,7 +301,7 @@ export class AppkitConnectButton {
               <img src={this.logoUrl} alt="Naculus" class="footer-logo" onError={(e) => (e.target as HTMLImageElement).style.display = "none"} />
               <div class="footer-lang">
                 <appkit-button variant="ghost" size="sm" onClick={() => this.locale = this.locale === "en" ? "zh" : this.locale === "zh" ? "ja" : "en"}>
-                  {this.locale.toUpperCase()}
+                  {(this.locale || "en").toUpperCase()}
                 </appkit-button>
               </div>
               <div class="footer-nav">

@@ -42,9 +42,11 @@ packages/*/pnpm-lock.yaml
 # TypeScript incremental build cache
 *.tsbuildinfo
 
-# Stencil generated wrappers
+# Stencil generated wrappers + build output
 packages/react/src/wc-generated/
 packages/vue/src/wc-generated/
+packages/wc/hydrate/
+packages/wc/loader/
 
 # Turborepo cache
 .turbo/
