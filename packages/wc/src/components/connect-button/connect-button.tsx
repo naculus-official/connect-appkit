@@ -26,6 +26,8 @@ export class AppkitConnectButton {
   @Prop() qrUri: string | null = null
   @Prop() qrLoading = false
   @Prop({ mutable: true }) qrError: string | null = null
+  @Prop() logoUrl = "https://static.naculus.com/static/logo.svg"
+  @Prop({ mutable: true }) locale: string = "en"
 
   // ── Events ─────────────────────────────────────────────────────
   @Event() appkitConnect!: EventEmitter<{ kind: string; walletId?: string }>
@@ -75,6 +77,7 @@ export class AppkitConnectButton {
   // ── Modal methods ──────────────────────────────────────────────
   private openModal() {
     this.view = "menu"; this.search = ""; this.qrError = null
+    if (!this.locale && typeof navigator !== "undefined") this.locale = navigator.language.slice(0, 2)
     this.modalOpen = true
     setTimeout(() => this.dialogEl?.showModal(), 0)
   }
@@ -217,15 +220,9 @@ export class AppkitConnectButton {
           <dialog ref={el => (this.dialogEl = el as HTMLDialogElement)} onClose={() => this.closeModal()}>
             <div class="modal">
               <div class="modal-header">
-                {this.view !== "menu" ? (
-                  <appkit-button variant="ghost" size="sm" onClick={() => { this.view = "menu"; this.qrError = null }}>
-                    ← Back
-                  </appkit-button>
-                ) : <div />}
                 <div class="modal-title">
                   {this.view === "menu" ? "Connect a wallet" : "Scan QR Code"}
                 </div>
-                {this.view !== "menu" ? <div /> : null}
               </div>
 
               {/* Menu view */}
@@ -248,9 +245,6 @@ export class AppkitConnectButton {
                   <button class="wc-btn" onClick={() => this.goToWC()}>
                     <span class="wc-name">WalletConnect</span>
                     <span class="wc-desc">Scan QR with any wallet</span>
-                  </button>
-                  <button class="wc-btn" onClick={() => this.closeModal()}>
-                    Close
                   </button>
                 </div>
               )}
@@ -280,7 +274,24 @@ export class AppkitConnectButton {
                 </div>
               )}
             </div>
-            <div class="modal-footer">Powered by Naculus</div>
+            <div class="modal-footer">
+              <img src={this.logoUrl} alt="Naculus" class="footer-logo" onError={(e) => (e.target as HTMLImageElement).style.display = "none"} />
+              <div class="footer-lang">
+                <appkit-button variant="ghost" size="sm" onClick={() => this.locale = this.locale === "en" ? "zh" : this.locale === "zh" ? "ja" : "en"}>
+                  {this.locale.toUpperCase()}
+                </appkit-button>
+              </div>
+              <div class="footer-nav">
+                {this.view !== "menu" && (
+                  <appkit-button variant="ghost" size="sm" onClick={() => { this.view = "menu"; this.qrError = null }}>
+                    ← Back
+                  </appkit-button>
+                )}
+                <appkit-button variant="ghost" size="sm" onClick={() => this.closeModal()}>
+                  Close
+                </appkit-button>
+              </div>
+            </div>
           </dialog>
         )}
       </Host>

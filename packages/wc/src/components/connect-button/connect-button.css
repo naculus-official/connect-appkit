@@ -90,4 +90,13 @@ dialog::backdrop { background-color: rgba(0,0,0,.8); }
 .qr-canvas { border-radius: 0.5rem; border: 1px solid hsl(var(--border)); }
 .qr-wallet-name { font-weight: 600; font-size: 0.9375rem; }
 .qr-error-text { color: hsl(var(--destructive)); font-size: 0.875rem; margin-bottom: 0.5rem; }
-.modal-footer { padding: 0.75rem 1.25rem; border-top: 1px solid hsl(var(--border)); text-align: center; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+.modal-footer {
+  padding: 0.625rem 1.25rem;
+  border-top: 1px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.footer-logo { height: 1.25rem; width: auto; opacity: 0.6; }
+.footer-lang { margin-left: auto; }
+.footer-nav { display: flex; align-items: center; gap: 0.25rem; }
