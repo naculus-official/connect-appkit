@@ -8,6 +8,7 @@ import { useIsMobile } from "../hooks/useIsMobile"
 
 export interface ConnectButtonProps {
   className?: string
+  locale?: string
   isConnected?: boolean
   isConnecting?: boolean
   onConnect?: (walletKind: "injected" | "walletconnect", closeModal: () => void, walletId?: string) => void
@@ -30,6 +31,7 @@ export interface ConnectButtonProps {
  */
 export function ConnectButtonAdapter({
   className,
+  locale,
   isConnected: extConnected,
   isConnecting: extConnecting,
   onConnect,
@@ -100,7 +102,8 @@ export function ConnectButtonAdapter({
       tokenBalancesJson={JSON.stringify(tokenBalances ?? [])}
       explorerUrl={explorerUrl ?? ""}
       explorerLabel={explorerLabel ?? ""}
-      walletsJson={JSON.stringify(wallets)}
+      walletsJson={JSON.stringify(wallets.map(({ provider, ...rest }) => rest))}
+      locale={locale}
       isMobile={isMobile}
       mobileWalletName={mobileWalletName ?? ""}
       qrUri={qrUri}

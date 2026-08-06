@@ -29,6 +29,16 @@ export class AppkitConnectButton {
   @Prop() logoUrl = "https://static.naculus.com/static/logo.svg"
   @Prop({ mutable: true }) locale: string = "en"
 
+  // ── i18n ──────────────────────────────────────────────────────────
+  private readonly t = {
+    en: { connectWallet: "Connect a wallet", scanQR: "Scan QR Code", noWallets: "No wallets detected", walletConnect: "WalletConnect", scanDesc: "Scan QR with any wallet", browserExt: "Browser extension", waiting: "Waiting for connection...", copyLink: "Copy link", copied: "✓ Copied", retry: "Retry", close: "Close", back: "← Back", search: "Search wallets...", connFailed: "Connection failed" },
+    zh: { connectWallet: "連接錢包", scanQR: "掃描 QR 碼", noWallets: "未檢測到錢包", walletConnect: "WalletConnect", scanDesc: "掃描 QR 碼連接任何錢包", browserExt: "瀏覽器擴充", waiting: "等待連接...", copyLink: "複製連結", copied: "✓ 已複製", retry: "重試", close: "關閉", back: "← 返回", search: "搜尋錢包...", connFailed: "連接失敗" },
+    ja: { connectWallet: "ウォレット接続", scanQR: "QRコード読み取り", noWallets: "ウォレットが見つかりません", walletConnect: "WalletConnect", scanDesc: "QRコードで接続", browserExt: "ブラウザ拡張", waiting: "接続待機中...", copyLink: "リンクをコピー", copied: "✓ コピー済み", retry: "再試行", close: "閉じる", back: "← 戻る", search: "ウォレット検索...", connFailed: "接続失敗" }
+  }
+  private _(key: string): string {
+    return (this.t as any)[this.locale]?.[key] || (this.t as any)["en"]?.[key] || key
+  }
+
   // ── Events ─────────────────────────────────────────────────────
   @Event() appkitConnect!: EventEmitter<{ kind: string; walletId?: string }>
   @Event() appkitDisconnect!: EventEmitter<void>
@@ -221,7 +231,7 @@ export class AppkitConnectButton {
             <div class="modal">
               <div class="modal-header">
                 <div class="modal-title">
-                  {this.view === "menu" ? "Connect a wallet" : "Scan QR Code"}
+                  {this.view === "menu" ? this._("connectWallet") : this._("scanQR")}
                 </div>
               </div>
 
@@ -229,22 +239,22 @@ export class AppkitConnectButton {
               {this.view === "menu" && (
                 <div class="menu-body">
                   {this.wallets.length > 3 && (
-                    <appkit-input placeholder="Search wallets..." value={this.search} onAppkitChange={(e: CustomEvent) => this.search = e.detail} />
+                    <appkit-input placeholder={this._("search")} value={this.search} onAppkitChange={(e: CustomEvent) => this.search = e.detail} />
                   )}
                   {this.filteredWallets.length === 0 ? (
-                    <div class="no-wallets">No wallets detected</div>
+                    <div class="no-wallets">{this._("noWallets")}</div>
                   ) : (
                     this.filteredWallets.map(w => (
                       <appkit-button variant="outline" class="wc-opt" onClick={() => this.selectWallet(w.id)}>
                         <span class="wc-name">{w.name}</span>
-                        <span class="wc-desc">Browser extension</span>
+                        <span class="wc-desc">{this._("browserExt")}</span>
                       </appkit-button>
                     ))
                   )}
-                  <div class="divider"><span>WalletConnect</span></div>
+                  <div class="divider"><span>{this._("walletConnect")}</span></div>
                   <button class="wc-btn" onClick={() => this.goToWC()}>
-                    <span class="wc-name">WalletConnect</span>
-                    <span class="wc-desc">Scan QR with any wallet</span>
+                    <span class="wc-name">{this._("walletConnect")}</span>
+                    <span class="wc-desc">{this._("scanDesc")}</span>
                   </button>
                 </div>
               )}
@@ -253,7 +263,7 @@ export class AppkitConnectButton {
               {this.view === "loading-qr" && (
                 <div class="qr-center">
                   <div class="qr-spinner" />
-                  <div>Waiting for connection...</div>
+                  <div>{this._("waiting")}</div>
                 </div>
               )}
               {this.view === "qr-ready" && (
@@ -263,14 +273,14 @@ export class AppkitConnectButton {
                   )}
                   <canvas ref={el => (this.canvasEl = el as HTMLCanvasElement)} width="200" height="200" class="qr-canvas" />
                   <appkit-button variant="outline" size="sm" onClick={() => this.copyUri()}>
-                    {this.uriCopied ? "✓ Copied" : "Copy link"}
+                    {this.uriCopied ? this._("copied") : this._("copyLink")}
                   </appkit-button>
                 </div>
               )}
               {this.view === "qr-error" && (
                 <div class="qr-center">
-                  <div class="qr-error-text">{this.qrError || "Connection failed"}</div>
-                  <appkit-button variant="default" size="sm" onClick={() => this.appkitRetry.emit()}>Retry</appkit-button>
+                  <div class="qr-error-text">{this.qrError || this._("connFailed")}</div>
+                  <appkit-button variant="default" size="sm" onClick={() => this.appkitRetry.emit()}>{this._("retry")}</appkit-button>
                 </div>
               )}
             </div>
@@ -284,11 +294,11 @@ export class AppkitConnectButton {
               <div class="footer-nav">
                 {this.view !== "menu" && (
                   <appkit-button variant="ghost" size="sm" onClick={() => { this.view = "menu"; this.qrError = null }}>
-                    ← Back
+                    {this._("back")}
                   </appkit-button>
                 )}
                 <appkit-button variant="ghost" size="sm" onClick={() => this.closeModal()}>
-                  Close
+                  {this._("close")}
                 </appkit-button>
               </div>
             </div>

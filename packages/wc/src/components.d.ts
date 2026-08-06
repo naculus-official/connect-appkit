@@ -204,6 +204,14 @@ export namespace Components {
          */
         "isBalanceLoading": boolean;
         /**
+          * @default "en"
+         */
+        "locale": string;
+        /**
+          * @default "https://static.naculus.com/static/logo.svg"
+         */
+        "logoUrl": string;
+        /**
           * @default null
          */
         "qrError": string | null;
@@ -991,6 +999,14 @@ declare namespace LocalJSX {
           * @default false
          */
         "isBalanceLoading"?: boolean;
+        /**
+          * @default "en"
+         */
+        "locale"?: string;
+        /**
+          * @default "https://static.naculus.com/static/logo.svg"
+         */
+        "logoUrl"?: string;
         "onAppkitConnect"?: (event: AppkitConnectButtonCustomEvent<{ kind: string; walletId?: string }>) => void;
         "onAppkitCopyAddress"?: (event: AppkitConnectButtonCustomEvent<string>) => void;
         "onAppkitDisconnect"?: (event: AppkitConnectButtonCustomEvent<void>) => void;
@@ -1261,6 +1277,8 @@ declare namespace LocalJSX {
         "qrUri": string | null;
         "qrLoading": boolean;
         "qrError": string | null;
+        "logoUrl": string;
+        "locale": string;
     }
     interface AppkitDialogAttributes {
         "open": boolean;

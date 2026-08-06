@@ -116,6 +116,8 @@ export const AppkitConnectButton: StencilVueComponent<JSX.AppkitConnectButton> =
   'qrUri',
   'qrLoading',
   'qrError',
+  'logoUrl',
+  'locale',
   'appkitConnect',
   'appkitDisconnect',
   'appkitStartPairing',
