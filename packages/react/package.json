@@ -15,7 +15,7 @@
     "@naculus/connect-core": "^0.1.2",
     "@naculus/connector-walletconnect": "^0.1.2",
     "@naculus/connector-evm-injected": "^0.1.2",
-    "@naculus/connector-embedded": "^0.1.2",
+    "@naculus/connector-embedded": "^0.1.6",
     "@naculus/connector-passkeys": "^0.1.2",
     "@naculus/connector-solana": "^0.1.2",
     "@naculus/siwx": "^0.1.2",
