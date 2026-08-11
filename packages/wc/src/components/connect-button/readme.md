@@ -16,7 +16,7 @@
 | `connecting`        | `connecting`          |             | `boolean`        | `false`                                        |
 | `explorerUrl`       | `explorer-url`        |             | `string`         | `""`                                           |
 | `isBalanceLoading`  | `is-balance-loading`  |             | `boolean`        | `false`                                        |
-| `locale`            | `locale`              |             | `string`         | `"en"`                                         |
+| `locale`            | `locale`              |             | `string`         | `""`                                           |
 | `logoUrl`           | `logo-url`            |             | `string`         | `"https://static.naculus.com/static/logo.svg"` |
 | `qrError`           | `qr-error`            |             | `null \| string` | `null`                                         |
 | `qrLoading`         | `qr-loading`          |             | `boolean`        | `false`                                        |

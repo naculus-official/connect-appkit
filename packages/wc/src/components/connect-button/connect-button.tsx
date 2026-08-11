@@ -27,7 +27,7 @@ export class AppkitConnectButton {
   @Prop() qrLoading = false
   @Prop({ mutable: true }) qrError: string | null = null
   @Prop() logoUrl = "https://static.naculus.com/static/logo.svg"
-  @Prop({ mutable: true }) locale: string = "en"
+  @Prop({ mutable: true }) locale: string = ""
 
   // ── i18n ──────────────────────────────────────────────────────────
   private readonly t = {
@@ -84,8 +84,6 @@ export class AppkitConnectButton {
     return parseFloat(this.balance).toLocaleString(undefined, { maximumFractionDigits: 4 }) + " " + this.balanceSymbol
   }
 
-  @State() qrTimeout: ReturnType<typeof setTimeout> | null = null
-
   // ── Modal methods ──────────────────────────────────────────────
   private openModal() {
     this.view = "menu"; this.search = ""; this.qrError = null
@@ -93,22 +91,11 @@ export class AppkitConnectButton {
     this.modalOpen = true
     setTimeout(() => this.dialogEl?.showModal(), 0)
   }
-  private closeModal() {
-    this.modalOpen = false; this.dialogEl?.close()
-    if (this.qrTimeout) { clearTimeout(this.qrTimeout); this.qrTimeout = null }
-  }
+  private closeModal() { this.modalOpen = false; this.dialogEl?.close() }
 
   private goToWC() {
     this.view = "loading-qr"; this.qrError = null
     this.appkitStartPairing.emit()
-    // Fallback: if adapter doesn't set qrUri within 8s, show error
-    if (this.qrTimeout) clearTimeout(this.qrTimeout)
-    this.qrTimeout = setTimeout(() => {
-      if (this.view === "loading-qr") {
-        this.qrError = "WalletConnect pairing unavailable. Check your projectId or network."
-        this.view = "qr-error"
-      }
-    }, 8000)
   }
 
   private selectWallet(id: string) {

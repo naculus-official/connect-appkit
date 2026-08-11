@@ -57,6 +57,7 @@ export function WalletConnectProvider({ children }: WalletConnectProviderProps) 
         new Promise<string>((_, reject) => setTimeout(() => reject(new Error("WalletConnect pairing timed out after 15s")), 15000)),
       ])
       console.log("[WalletConnect] got URI:", uri?.slice(0, 20))
+      setQrUri(uri)
       setQrStatus("ready")
       try {
         await web3.completePairing()

@@ -204,7 +204,7 @@ export namespace Components {
          */
         "isBalanceLoading": boolean;
         /**
-          * @default "en"
+          * @default ""
          */
         "locale": string;
         /**
@@ -1000,7 +1000,7 @@ declare namespace LocalJSX {
          */
         "isBalanceLoading"?: boolean;
         /**
-          * @default "en"
+          * @default ""
          */
         "locale"?: string;
         /**
