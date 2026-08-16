@@ -33,8 +33,11 @@ jobs:
       - name: Audit dependencies
         run: pnpm audit --audit-level=critical
 
-      - name: Build all packages
-        run: pnpm -r build
+      - name: Build wc (generates React/Vue wrappers)
+        run: pnpm --filter @naculus/connect-appkit-wc build
+
+      - name: Build remaining packages
+        run: pnpm --filter @naculus/connect-appkit-react --filter @naculus/connect-appkit-ui --filter @naculus/connect-appkit-vue build
 
       - name: Run tests
         run: pnpm test:run
