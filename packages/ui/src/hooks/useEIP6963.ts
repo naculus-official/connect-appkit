@@ -50,6 +50,37 @@ export function useEIP6963(): UseEIP6963Result {
     }
 
     window.addEventListener("eip6963:announceProvider", handleAnnounce)
+
+    // Fallback: EIP-6963 announcements race React's useEffect — a wallet can
+    // announce (or only inject a provider, never announcing) before we listen,
+    // so it is silently missed. Catch injected providers directly.
+    const addFallback = (id: string, name: string, provider: unknown) => {
+      if (seenRef.current.has(id)) return
+      seenRef.current.add(id)
+      setWallets((prev) =>
+        prev.some((w) => w.id === id)
+          ? prev
+          : [...prev, { id, name, icon: "", rdns: id, provider }],
+      )
+    }
+
+    const win = window as unknown as {
+      ethereum?: { isMetaMask?: boolean }
+      phantom?: unknown
+      solana?: { isPhantom?: boolean }
+    }
+    if (win.ethereum?.isMetaMask) {
+      addFallback("io.metamask", "MetaMask", win.ethereum)
+    }
+    // Phantom injects window.phantom (and window.solana.isPhantom) but does NOT
+    // EIP-6963 announce on non-secure (http://) origins — its phantom.js has a
+    // protocol check. Catch the injected provider so it is still detected.
+    if (win.phantom) {
+      addFallback("app.phantom", "Phantom", win.phantom)
+    } else if (win.solana?.isPhantom) {
+      addFallback("app.phantom", "Phantom", win.solana)
+    }
+
     window.dispatchEvent(new Event("eip6963:requestProvider"))
 
     // Give wallets time to announce, then mark done
