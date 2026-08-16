@@ -22,7 +22,10 @@ export class AppkitConnectButton {
   @Prop() isBalanceLoading = false
   @Prop() tokenBalancesJson = "[]"
   @Prop() explorerUrl = ""
+  @Prop() explorerLabel = ""
   @Prop() walletsJson = "[]"
+  @Prop() isMobile = false
+  @Prop() mobileWalletName = ""
   @Prop() qrUri: string | null = null
   @Prop() qrLoading = false
   @Prop({ mutable: true }) qrError: string | null = null
