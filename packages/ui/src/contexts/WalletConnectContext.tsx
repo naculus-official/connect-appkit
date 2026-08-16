@@ -50,8 +50,13 @@ export function WalletConnectProvider({ children }: WalletConnectProviderProps) 
     setQrStatus("loading")
     setError(null)
     setShowQR(true)
+    console.log("[WalletConnect] calling startPairing...")
     try {
-      const uri = await web3.startPairing()
+      const uri = await Promise.race([
+        web3.startPairing(),
+        new Promise<string>((_, reject) => setTimeout(() => reject(new Error("WalletConnect pairing timed out after 15s")), 15000)),
+      ])
+      console.log("[WalletConnect] got URI:", uri?.slice(0, 20))
       setQrUri(uri)
       setQrStatus("ready")
       try {
@@ -62,8 +67,9 @@ export function WalletConnectProvider({ children }: WalletConnectProviderProps) 
         setError(err instanceof Error ? err.message : "Connection failed")
       }
     } catch (err) {
-      setQrStatus("error")
-      setError(err instanceof Error ? err.message : "Failed to generate QR code")
+        console.error("[WalletConnect] startPairing failed:", err)
+        setQrStatus("error")
+        setError(err instanceof Error ? err.message : "Failed to generate QR code")
     }
   }
 

@@ -1,13 +1,14 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef } from "react"
-import { AppkitConnectButton } from "@naculus/connect-appkit-react"
+import React, { useState, useEffect, useCallback, useRef, useContext } from "react"
+import { AppkitConnectButton, Web3Context } from "@naculus/connect-appkit-react"
 import { useWalletConnectOptional } from "../contexts/WalletConnectContext"
 import { useEIP6963 } from "../hooks/useEIP6963"
 import { useIsMobile } from "../hooks/useIsMobile"
 
 export interface ConnectButtonProps {
   className?: string
+  locale?: string
   isConnected?: boolean
   isConnecting?: boolean
   onConnect?: (walletKind: "injected" | "walletconnect", closeModal: () => void, walletId?: string) => void
@@ -30,6 +31,7 @@ export interface ConnectButtonProps {
  */
 export function ConnectButtonAdapter({
   className,
+  locale,
   isConnected: extConnected,
   isConnecting: extConnecting,
   onConnect,
@@ -48,6 +50,7 @@ export function ConnectButtonAdapter({
 }: ConnectButtonProps) {
   const wcCtx = useWalletConnectOptional()
   const { wallets } = useEIP6963()
+  const web3 = useContext(Web3Context)
   const isMobile = useIsMobile()
 
   const [qrUri, setQrUri] = useState<string | null>(null)
@@ -85,8 +88,16 @@ export function ConnectButtonAdapter({
         return
       }
     }
+    if (kind === "injected") {
+      if (web3?.connectInjected) {
+        web3.connectInjected(walletId)
+        return
+      }
+      onConnect?.(kind as any, () => {}, walletId)
+      return
+    }
     onConnect?.(kind as any, () => {}, walletId)
-  }, [wcCtx, startPairing, completePairing, onConnect])
+  }, [wcCtx, startPairing, completePairing, onConnect, web3])
 
   return (
     <div className={className}>
@@ -100,7 +111,8 @@ export function ConnectButtonAdapter({
       tokenBalancesJson={JSON.stringify(tokenBalances ?? [])}
       explorerUrl={explorerUrl ?? ""}
       explorerLabel={explorerLabel ?? ""}
-      walletsJson={JSON.stringify(wallets)}
+      walletsJson={JSON.stringify(wallets.map(({ provider, ...rest }) => rest))}
+      locale={locale}
       isMobile={isMobile}
       mobileWalletName={mobileWalletName ?? ""}
       qrUri={qrUri}

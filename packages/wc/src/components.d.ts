@@ -198,11 +198,31 @@ export namespace Components {
         /**
           * @default ""
          */
+        "explorerLabel": string;
+        /**
+          * @default ""
+         */
         "explorerUrl": string;
         /**
           * @default false
          */
         "isBalanceLoading": boolean;
+        /**
+          * @default false
+         */
+        "isMobile": boolean;
+        /**
+          * @default ""
+         */
+        "locale": string;
+        /**
+          * @default "https://static.naculus.com/static/logo.svg"
+         */
+        "logoUrl": string;
+        /**
+          * @default ""
+         */
+        "mobileWalletName": string;
         /**
           * @default null
          */
@@ -986,11 +1006,31 @@ declare namespace LocalJSX {
         /**
           * @default ""
          */
+        "explorerLabel"?: string;
+        /**
+          * @default ""
+         */
         "explorerUrl"?: string;
         /**
           * @default false
          */
         "isBalanceLoading"?: boolean;
+        /**
+          * @default false
+         */
+        "isMobile"?: boolean;
+        /**
+          * @default ""
+         */
+        "locale"?: string;
+        /**
+          * @default "https://static.naculus.com/static/logo.svg"
+         */
+        "logoUrl"?: string;
+        /**
+          * @default ""
+         */
+        "mobileWalletName"?: string;
         "onAppkitConnect"?: (event: AppkitConnectButtonCustomEvent<{ kind: string; walletId?: string }>) => void;
         "onAppkitCopyAddress"?: (event: AppkitConnectButtonCustomEvent<string>) => void;
         "onAppkitDisconnect"?: (event: AppkitConnectButtonCustomEvent<void>) => void;
@@ -1257,10 +1297,15 @@ declare namespace LocalJSX {
         "isBalanceLoading": boolean;
         "tokenBalancesJson": string;
         "explorerUrl": string;
+        "explorerLabel": string;
         "walletsJson": string;
+        "isMobile": boolean;
+        "mobileWalletName": string;
         "qrUri": string | null;
         "qrLoading": boolean;
         "qrError": string | null;
+        "logoUrl": string;
+        "locale": string;
     }
     interface AppkitDialogAttributes {
         "open": boolean;

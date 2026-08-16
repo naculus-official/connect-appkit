@@ -1,4 +1,4 @@
-:root {
+:root, :host {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-family: var(--font-sans);
   --background: 0 0% 100%;
@@ -23,7 +23,7 @@
   --radius: 0.5rem;
 }
 
-.dark {
+.dark, :host-context(.dark) {
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
   --card: 222.2 84% 4.9%;
