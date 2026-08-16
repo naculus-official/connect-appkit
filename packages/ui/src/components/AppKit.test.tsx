@@ -25,6 +25,7 @@ vi.mock("@naculus/connect-appkit-react", () => ({
   useEmbeddedWallet: () => mockUseEmbeddedWallet(),
   useDisconnect: () => mockUseDisconnect(),
   useBalance: () => ({ formatted: null }),
+  Web3Context: { Provider: ({ children }: any) => children },
   Web3ConnectProvider: ({ children, config, autoConnect }: any) => {
     mockWeb3ConnectProvider({ config, autoConnect })
     return <div data-testid="web3-connect-provider">{children}</div>

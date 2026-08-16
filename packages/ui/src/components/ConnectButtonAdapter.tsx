@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef } from "react"
-import { AppkitConnectButton } from "@naculus/connect-appkit-react"
+import React, { useState, useEffect, useCallback, useRef, useContext } from "react"
+import { AppkitConnectButton, Web3Context } from "@naculus/connect-appkit-react"
 import { useWalletConnectOptional } from "../contexts/WalletConnectContext"
 import { useEIP6963 } from "../hooks/useEIP6963"
 import { useIsMobile } from "../hooks/useIsMobile"
@@ -50,6 +50,7 @@ export function ConnectButtonAdapter({
 }: ConnectButtonProps) {
   const wcCtx = useWalletConnectOptional()
   const { wallets } = useEIP6963()
+  const web3 = useContext(Web3Context)
   const isMobile = useIsMobile()
 
   const [qrUri, setQrUri] = useState<string | null>(null)
@@ -87,8 +88,16 @@ export function ConnectButtonAdapter({
         return
       }
     }
+    if (kind === "injected") {
+      if (web3?.connectInjected) {
+        web3.connectInjected(walletId)
+        return
+      }
+      onConnect?.(kind as any, () => {}, walletId)
+      return
+    }
     onConnect?.(kind as any, () => {}, walletId)
-  }, [wcCtx, startPairing, completePairing, onConnect])
+  }, [wcCtx, startPairing, completePairing, onConnect, web3])
 
   return (
     <div className={className}>
