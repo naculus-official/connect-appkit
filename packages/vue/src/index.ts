@@ -28,3 +28,7 @@ export {
   AppkitToggleGroup,
   AppkitTooltip,
 } from "./wc-generated/proxies"
+
+// ── Composables ───────────────────────────────────────────────────
+export { usePassphraseGate } from "./usePassphraseGate";
+export type { UsePassphraseGateReturn } from "./usePassphraseGate";

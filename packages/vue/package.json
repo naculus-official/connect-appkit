@@ -1,9 +1,21 @@
 {
   "name": "@naculus/connect-appkit-vue",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run"
@@ -12,11 +24,17 @@
     "@naculus/connect-appkit-wc": "workspace:*",
     "@stencil/vue-output-target": "^0.14.1"
   },
+  "peerDependencies": {
+    "vue": "^3.5.0",
+    "@naculus/connect-core": "^0.2.0"
+  },
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
-    "vue": "^3.5.40"
+    "vue": "^3.5.40",
+    "@naculus/connect-core": "^0.2.0",
+    "vitest": "^4.0.0"
   },
   "repository": {
     "type": "git",
@@ -33,8 +51,5 @@
     "ui",
     "components",
     "vue"
-  ],
-  "optionalDependencies": {
-    "@naculus/connect-appkit-ui": "workspace:*"
-  }
+  ]
 }
