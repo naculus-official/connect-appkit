@@ -7,6 +7,37 @@ export type { ChainSelectorProps } from "./components/ChainSelector";
 export { AccountButton } from "./components/AccountButton";
 export type { AccountButtonProps } from "./components/AccountButton";
 
+export { AccountSelector, AccountSelectorView } from "./components/AccountSelector";
+export type {
+  AccountSelectorProps,
+  AccountSelectorViewProps,
+} from "./components/AccountSelector";
+
+export {
+  WalletSecurityPanel,
+  WalletSecurityPanelView,
+} from "./components/WalletSecurityPanel";
+export type {
+  WalletSecurityPanelProps,
+  WalletSecurityPanelViewProps,
+} from "./components/WalletSecurityPanel";
+
+export {
+  PassphraseDialog,
+  PassphraseDialogView,
+} from "./components/PassphraseDialog";
+export type {
+  PassphraseDialogProps,
+  PassphraseDialogViewProps,
+} from "./components/PassphraseDialog";
+
+export { PasskeySetup, PasskeySetupView } from "./components/PasskeySetup";
+export type {
+  PasskeySetupProps,
+  PasskeySetupViewProps,
+  UnlockSnapshot,
+} from "./components/PasskeySetup";
+
 export { useIsMobile } from "./hooks/useIsMobile";
 export { useEIP6963 } from "./hooks/useEIP6963";
 export type { DiscoveredWallet, UseEIP6963Result } from "./hooks/useEIP6963";

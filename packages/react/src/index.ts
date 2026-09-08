@@ -20,8 +20,29 @@ export type { UseERC20ApproveOptions, UseERC20ApproveReturn } from "./hooks/useE
 export { useERC20Allowance } from "./hooks/useERC20Allowance";
 export type { UseERC20AllowanceOptions, UseERC20AllowanceReturn } from "./hooks/useERC20Allowance";
 export { useViemClient } from "./hooks/useViemClient";
+export { usePassphraseGate } from "./hooks/usePassphraseGate";
+export type { UsePassphraseGateReturn } from "./hooks/usePassphraseGate";
+// Re-exported from connect-core, where it lives so the Vue layer can use the
+// same object. Kept exported here so a React consumer never has to know that.
+export {
+  PassphraseCancelledError,
+  PassphraseGate,
+} from "@naculus/connect-core";
+export type {
+  PassphraseIntent,
+  PassphraseRequest,
+} from "@naculus/connect-core";
 export { useEmbeddedWallet } from "./hooks/useEmbeddedWallet";
 export type { UseEmbeddedWalletReturn } from "./hooks/useEmbeddedWallet";
+// Re-exported so a UI package can name what the hook returns without taking a
+// direct dependency on the connector layer.
+export type {
+  StorageSecurityFinding,
+  StorageSecurityReport,
+  WalletAccount,
+  WalletData,
+  WalletNamespace,
+} from "@naculus/connector-embedded";
 export { useValidateDestination, validateDestination } from "./hooks/useValidateDestination";
 export type { UseValidateDestinationOptions, UseValidateDestinationReturn, AddressValidationLevel, AddressValidationResult } from "./hooks/useValidateDestination";
 export { t, setLocale, getLocale } from "./utils/i18n";

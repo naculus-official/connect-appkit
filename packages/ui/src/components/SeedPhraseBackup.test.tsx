@@ -319,7 +319,7 @@ describe("SeedPhraseBackup", () => {
       vi.useRealTimers()
     })
 
-    it("handles clipboard error gracefully without crashing", async () => {
+    it("tells the user when the clipboard refused, rather than nothing", async () => {
       vi.mocked(navigator.clipboard.writeText).mockRejectedValueOnce(new Error("Clipboard denied"))
 
       render(
@@ -338,9 +338,14 @@ describe("SeedPhraseBackup", () => {
         fireEvent.click(screen.getByText("Copy"))
       })
 
-      // Should not crash, button stays on "Copy"
-      expect(screen.getByText("Copy")).toBeTruthy()
+      // Silence is the dangerous outcome here: a user who sees no change
+      // assumes the phrase reached their password manager, confirms the
+      // backup, and is left relying on one that does not exist.
       expect(screen.queryByText("Copied")).toBeNull()
+      expect(screen.getByText("Copy failed")).toBeTruthy()
+      expect(screen.getByRole("alert").textContent).toContain(
+        "Nothing was copied",
+      )
     })
   })
 

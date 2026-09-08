@@ -29,6 +29,7 @@ export function SignInButton({
 }: SignInButtonProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [copiedSign, setCopiedSign] = useState(false)
+  const [copyFailed, setCopyFailed] = useState(false)
   const registry = useComponentRegistry()
   const Button = registry.Button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }>
   const Dialog = registry.Dialog as React.ComponentType<{ open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }> | undefined
@@ -40,9 +41,14 @@ export function SignInButton({
     if (result?.signature) {
       try {
         await navigator.clipboard.writeText(result.signature)
+        setCopyFailed(false)
         setCopiedSign(true)
         setTimeout(() => setCopiedSign(false), 2000)
-      } catch {}
+      } catch {
+        // A refused clipboard write with no feedback reads as a dead button.
+        setCopiedSign(false)
+        setCopyFailed(true)
+      }
     }
   }
 
@@ -112,8 +118,8 @@ export function SignInButton({
         <Dialog open={true} onOpenChange={(open: boolean) => { if (!open) setShowDetails(false); }}>
           <DialogContent>
             {DialogHeader && DialogTitle
-              ? <><DialogHeader><DialogTitle>Sign-In Details</DialogTitle></DialogHeader><SignInDetails result={result} onClose={() => setShowDetails(false)} copiedSign={copiedSign} onCopy={handleCopySignature} /></>
-              : <><div style={{ fontWeight: 600, fontSize: "1.125rem", marginBottom: "0.75rem" }}>Sign-In Details</div><SignInDetails result={result} onClose={() => setShowDetails(false)} copiedSign={copiedSign} onCopy={handleCopySignature} /></>
+              ? <><DialogHeader><DialogTitle>Sign-In Details</DialogTitle></DialogHeader><SignInDetails result={result} onClose={() => setShowDetails(false)} copiedSign={copiedSign} copyFailed={copyFailed} onCopy={handleCopySignature} /></>
+              : <><div style={{ fontWeight: 600, fontSize: "1.125rem", marginBottom: "0.75rem" }}>Sign-In Details</div><SignInDetails result={result} onClose={() => setShowDetails(false)} copiedSign={copiedSign} copyFailed={copyFailed} onCopy={handleCopySignature} /></>
             }
           </DialogContent>
         </Dialog>
@@ -126,7 +132,7 @@ export function SignInButton({
             borderRadius: "0.75rem", boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
             padding: "1rem",
           }}>
-            <SignInDetails result={result} onClose={() => setShowDetails(false)} copiedSign={copiedSign} onCopy={handleCopySignature} />
+            <SignInDetails result={result} onClose={() => setShowDetails(false)} copiedSign={copiedSign} copyFailed={copyFailed} onCopy={handleCopySignature} />
           </div>
         )
       ))}
@@ -139,11 +145,13 @@ function SignInDetails({
   onClose,
   copiedSign,
   onCopy,
+  copyFailed,
 }: {
   result: SiwxResult | null
   onClose: () => void
   copiedSign: boolean
   onCopy: () => void
+  copyFailed?: boolean
 }) {
   const registry = useComponentRegistry()
   const Button = registry.Button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }>
@@ -203,7 +211,17 @@ function SignInDetails({
       <div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
           <span className="text-xs uppercase tracking-wider text-muted-foreground">Signature</span>
-          <Button variant="ghost" size="icon" onClick={onCopy} title="Copy signature">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCopy}
+            title={
+              copyFailed
+                ? "This browser refused the clipboard — select the signature and copy it"
+                : "Copy signature"
+            }
+            aria-label={copyFailed ? "Copy failed" : "Copy signature"}
+          >
             {copiedSign ? <Check size={12} color="#22c55e" /> : <Copy size={12} />}
           </Button>
         </div>

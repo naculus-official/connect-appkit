@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useCallback, useMemo } from "react"
+import type React from "react"
+import { useState, useCallback, useMemo } from "react"
 import { AlertTriangle, Check, Copy, Download, Eye, EyeOff, SkipForward, ArrowLeft, ArrowRight, Shield, X } from "lucide-react"
 import { useComponentRegistry } from "../contexts/ComponentRegistry"
 import { DefaultDialog } from "../lib/ui-defaults"
@@ -27,10 +28,37 @@ interface ConfirmWord {
   options: string[]
 }
 
+/**
+ * Unbiased index in [0, max) from the platform CSPRNG.
+ *
+ * Rejection sampling rather than `% max`, which skews toward low indices when
+ * max does not divide the range evenly.
+ */
+function randomIndex(max: number): number {
+  const limit = Math.floor(0x100000000 / max) * max
+  const buf = new Uint32Array(1)
+  let value: number
+  do {
+    crypto.getRandomValues(buf)
+    value = buf[0]
+  } while (value >= limit)
+  return value % max
+}
+
+/**
+ * Fisher-Yates over the platform CSPRNG.
+ *
+ * `Math.random` is seeded predictably and is not a security primitive. It does
+ * not leak the phrase — the user already has it — but this file decides which
+ * words a backup is verified against, and every other random draw in this
+ * codebase (passkey challenges, SIWS nonces, storage IVs) already uses
+ * `crypto.getRandomValues`. There is no reason for the seed-phrase path to be
+ * the one exception.
+ */
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = randomIndex(i + 1);
     [a[i], a[j]] = [a[j], a[i]]
   }
   return a
@@ -70,6 +98,7 @@ export function SeedPhraseBackup({
   const [step, setStep] = useState<BackupStep>("reveal")
   const [revealed, setRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [copyFailed, setCopyFailed] = useState(false)
   const [confirmWords, setConfirmWords] = useState<ConfirmWord[]>(() => buildConfirmWords(seedPhrase, 3))
   const [selectedWords, setSelectedWords] = useState<Record<number, string>>({})
   const [confirmErrors, setConfirmErrors] = useState<number[]>([])
@@ -77,6 +106,14 @@ export function SeedPhraseBackup({
   const [exportedKey, setExportedKey] = useState<string | null>(null)
 
   const words = useMemo(() => seedPhrase.trim().split(/\s+/), [seedPhrase])
+  const wordItems = useMemo(() => {
+    const occurrences = new Map<string, number>()
+    return words.map((word) => {
+      const occurrence = occurrences.get(word) ?? 0
+      occurrences.set(word, occurrence + 1)
+      return { word, key: `${word}-${occurrence}` }
+    })
+  }, [words])
   const detectedWordCount = wordCount ?? (words.length === 24 ? 24 : 12)
 
   const handleReveal = useCallback(() => setRevealed(true), [])
@@ -84,9 +121,18 @@ export function SeedPhraseBackup({
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(seedPhrase)
+      setCopyFailed(false)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch {}
+    } catch {
+      // Saying nothing here is the dangerous option. A clipboard write can be
+      // refused — an insecure context, a denied permission, Safari outside a
+      // user gesture — and a user who sees no change reasonably assumes the
+      // phrase reached their password manager. They would then be relying on
+      // a backup that does not exist.
+      setCopied(false)
+      setCopyFailed(true)
+    }
   }, [seedPhrase])
 
   const handleStartConfirm = useCallback(() => {
@@ -156,9 +202,9 @@ export function SeedPhraseBackup({
       ) : (
         <>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {words.map((word, i) => (
+            {wordItems.map(({ word, key }, i) => (
               <div
-                key={i}
+                key={key}
                 className="flex items-center gap-1.5 rounded-md border bg-card px-2.5 py-1.5 text-sm"
               >
                 <span className="text-xs text-muted-foreground w-5 shrink-0 text-right">
@@ -172,7 +218,7 @@ export function SeedPhraseBackup({
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleCopy} variant="outline" size="sm">
               {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? "Copied" : copyFailed ? "Copy failed" : "Copy"}
             </Button>
             {onExportPrivateKey && (
               <Button onClick={handleExportKey} variant="outline" size="sm">
@@ -181,6 +227,17 @@ export function SeedPhraseBackup({
               </Button>
             )}
           </div>
+
+          {copyFailed && (
+            <p
+              role="alert"
+              className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive"
+            >
+              This browser would not let the page write to your clipboard.
+              Nothing was copied — select the words above and copy them
+              yourself, or write them down.
+            </p>
+          )}
 
           {showExportKey && exportedKey && (
             <div className="rounded-lg border border-border bg-muted p-3 space-y-2">
@@ -233,7 +290,11 @@ export function SeedPhraseBackup({
                 const isSelected = selectedWords[cw.index] === opt
                 return (
                   <button
-                    key={opt}
+                    type="button"
+                    // A mnemonic may legitimately repeat a word (for example,
+                    // "abandon"). Include the prompt index so React keys stay
+                    // unique without changing the displayed choices.
+                    key={`${cw.index}-${opt}`}
                     onClick={() => handleSelectWord(cw.index, opt)}
                     className={cn(
                       "rounded-md border px-3 py-2 text-sm font-mono transition-all duration-200 cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",

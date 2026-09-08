@@ -7,6 +7,9 @@ const root = process.cwd();
 const config: StorybookConfig = {
   stories: [
     "../packages/wc/src/stories/**/*.stories.@(ts|tsx)",
+    // The ui package's stories were written but never globbed here, so
+    // Storybook had never loaded one of them.
+    "../packages/ui/src/**/*.stories.@(ts|tsx)",
   ],
   addons: [],
   framework: { name: "@storybook/react-vite", options: {} },
