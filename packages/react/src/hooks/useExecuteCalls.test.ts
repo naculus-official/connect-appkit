@@ -8,6 +8,12 @@ const mockUseCapabilities = vi.fn();
 vi.mock("./useCapabilities", () => ({
   useCapabilities: () => mockUseCapabilities(),
 }));
+const mockUseDelegation = vi.fn<
+  () => { delegated: boolean | null; delegate: string | null }
+>(() => ({ delegated: null, delegate: null }));
+vi.mock("./useDelegation", () => ({
+  useDelegation: () => mockUseDelegation(),
+}));
 const mockSendCalls = vi.fn(async () => "0xbatch");
 vi.mock("./useSendCalls", () => ({
   useSendCalls: () => ({ sendCalls: mockSendCalls }),
@@ -27,6 +33,7 @@ const CALLS = [{ to: "0x1" as const }, { to: "0x2" as const }];
 beforeEach(() => {
   vi.clearAllMocks();
   mockSendCalls.mockResolvedValue("0xbatch");
+  mockUseDelegation.mockReturnValue({ delegated: null, delegate: null });
 });
 
 describe("useExecuteCalls — preview", () => {
@@ -155,5 +162,57 @@ describe("useExecuteCalls — execute", () => {
       );
     });
     expect(result.current.error?.message).toBe("user rejected");
+  });
+});
+
+describe("useExecuteCalls — sponsorship and delegation", () => {
+  it("refuses when sponsored gas is required and unavailable", () => {
+    withAtomic("supported");
+    const { result } = renderHook(() =>
+      useExecuteCalls({ sponsorship: "required" }),
+    );
+    const plan = result.current.preview(2, "required");
+    expect(plan.route).toBeNull();
+    expect(plan.reason).toMatch(/no paymaster/);
+  });
+
+  it("does not mention sponsorship when it was not asked for", () => {
+    withAtomic("supported");
+    const { result } = renderHook(() => useExecuteCalls());
+    expect(result.current.preview(2, "required").route).toBe("wallet-batch");
+  });
+
+  // Delegation is evidence about the account, not about the wallet's RPC
+  // surface. It must not turn a wallet that cannot be asked to batch into one
+  // that can — only explain the difference.
+  it("reports a delegated account without upgrading the route", () => {
+    withAtomic("unsupported");
+    mockUseDelegation.mockReturnValue({
+      delegated: true,
+      delegate: "0xabc",
+    });
+    const { result } = renderHook(() => useExecuteCalls());
+    const plan = result.current.preview(2, "preferred");
+    expect(plan.route).toBe("sequential");
+    expect(plan.atomic).toBe(false);
+    expect(plan.reason).toMatch(/does delegate to 0xabc/);
+  });
+
+  it("says nothing about delegation when the wallet already batches", () => {
+    withAtomic("supported");
+    mockUseDelegation.mockReturnValue({
+      delegated: true,
+      delegate: "0xabc",
+    });
+    const { result } = renderHook(() => useExecuteCalls());
+    expect(result.current.preview(2).reason).not.toMatch(/delegate/);
+  });
+
+  it("says nothing when delegation was never read", () => {
+    withAtomic("unsupported");
+    const { result } = renderHook(() => useExecuteCalls());
+    expect(result.current.preview(2, "preferred").reason).not.toMatch(
+      /delegate/,
+    );
   });
 });

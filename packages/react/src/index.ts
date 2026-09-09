@@ -8,6 +8,8 @@ export { useAccount } from "./hooks/useAccount";
 export { useChain } from "./hooks/useChain";
 export { useSignMessage } from "./hooks/useSignMessage";
 export { useSendTransaction } from "./hooks/useSendTransaction";
+export { useDelegation } from "./hooks/useDelegation";
+export type { UseDelegationReturn } from "./hooks/useDelegation";
 export { useExecuteCalls } from "./hooks/useExecuteCalls";
 export type {
   ExecutionPreview,

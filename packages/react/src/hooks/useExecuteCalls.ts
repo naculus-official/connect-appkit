@@ -5,6 +5,7 @@ import {
   planExecution,
   WalletError,
 } from "@naculus/connect-core";
+import { useDelegation } from "./useDelegation";
 import { useCallback, useState } from "react";
 import { useCapabilities } from "./useCapabilities";
 import { useSendCalls } from "./useSendCalls";
@@ -19,6 +20,15 @@ export interface ExecutionPreview extends ExecutionPlan {
 export interface UseExecuteCallsOptions {
   /** Default requirement for `execute`. Per-call override is also accepted. */
   atomicity?: AtomicityRequirement;
+  /**
+   * Whether gas must be covered by a paymaster.
+   *
+   * A separate axis from atomicity: it answers who pays, not whether the calls
+   * land together, and either can end in a refusal on its own. A route that
+   * executes perfectly but charges a user who was promised sponsored gas is
+   * still the wrong route, and signing is too late to find out.
+   */
+  sponsorship?: AtomicityRequirement;
   /**
    * A smart-account executor, typically `sendUserOp` from
    * `useSendUserOperation`.
@@ -68,12 +78,14 @@ export function useExecuteCalls(
   options: UseExecuteCallsOptions = {},
 ): UseExecuteCallsReturn {
   const { current, atomic } = useCapabilities();
+  const { delegated, delegate } = useDelegation();
   const { sendCalls } = useSendCalls();
   const [isExecuting, setIsExecuting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [lastRoute, setLastRoute] = useState<ExecutionRoute | null>(null);
 
   const defaultAtomicity = options.atomicity ?? "preferred";
+  const defaultSponsorship = options.sponsorship ?? "any";
   const userOperation = options.userOperation;
 
   const preview = useCallback(
@@ -90,27 +102,51 @@ export function useExecuteCalls(
             : { maxBatchSize: current.maxBatchSize }),
         },
         callCount,
-        atomicity,
+        { atomicity, sponsorship: defaultSponsorship },
       );
 
       if (plan.strategy === "atomic-batch") {
         return { ...plan, route: "wallet-batch" };
       }
+      // Delegation is evidence about the account, not about the wallet's RPC
+      // surface, so it never upgrades a capability — a delegated EOA behind a
+      // wallet that does not expose wallet_sendCalls still cannot be asked to
+      // batch. It is said out loud because it is the difference between "this
+      // cannot work" and "this wallet has not wired it up".
+      const delegationNote =
+        delegated && atomic !== "supported"
+          ? ` This account does delegate to ${delegate} under EIP-7702, so it is capable of batching even though the wallet has not offered to.`
+          : "";
       // A UserOperation executes its calls in one transaction, so it rescues
       // both a refusal and a non-atomic fallback the caller did not want.
       if (userOperation && atomicity !== "any" && !plan.atomic) {
         return {
           strategy: "atomic-batch",
           atomic: true,
+          sponsored: plan.sponsored,
           reason:
             "This wallet cannot batch, so the calls are executed as a single UserOperation through the smart account, which lands as one transaction.",
           route: "user-operation",
         };
       }
-      if (plan.strategy === "refuse") return { ...plan, route: null };
-      return { ...plan, route: "sequential" };
+      if (plan.strategy === "refuse") {
+        return { ...plan, reason: plan.reason + delegationNote, route: null };
+      }
+      return {
+        ...plan,
+        reason: plan.reason + delegationNote,
+        route: "sequential",
+      };
     },
-    [atomic, current, userOperation, defaultAtomicity],
+    [
+      atomic,
+      current,
+      userOperation,
+      defaultAtomicity,
+      defaultSponsorship,
+      delegated,
+      delegate,
+    ],
   );
 
   const execute = useCallback(
