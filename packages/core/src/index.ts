@@ -23,6 +23,9 @@ export {
   resolveChain,
 } from "./chain-selection";
 
+export { toViemChain } from "./viem-chain";
+export type { ViemChainShape } from "./viem-chain";
+
 // ── Account abstraction ───────────────────────────────────────────
 export * from "./aa-chain";
 

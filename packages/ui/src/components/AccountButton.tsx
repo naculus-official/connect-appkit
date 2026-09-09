@@ -54,8 +54,13 @@ export function AccountButton({
 
   const shortAddress = address.slice(0, 6) + "..." + address.slice(-4);
 
+  // No `?? "ETH"`. The caller passes null when the chain's native symbol is
+  // unknown, and substituting one here labels MATIC or SOL as ether in the
+  // one place a user actually reads it. An amount with no unit is worse to
+  // look at and better to trust.
   const formattedBalance = externalBalance !== null && externalBalance !== undefined
-    ? parseFloat(externalBalance).toLocaleString(undefined, { maximumFractionDigits: 4 }) + " " + (balanceSymbol ?? "ETH")
+    ? parseFloat(externalBalance).toLocaleString(undefined, { maximumFractionDigits: 4 }) +
+      (balanceSymbol ? ` ${balanceSymbol}` : "")
     : null;
 
   return (

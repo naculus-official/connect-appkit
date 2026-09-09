@@ -1,4 +1,4 @@
-import { chainNumber } from "@naculus/connect-appkit-core";
+import { chainNumber, toViemChain } from "@naculus/connect-appkit-core";
 import { useMemo } from "react";
 import { createPublicClient, http, createWalletClient, type PublicClient, type WalletClient } from "viem";
 import type { WalletChain } from "../types";
@@ -17,57 +17,34 @@ export function useViemClient(): {
   // client built with a stand-in number would address a real chain that is
   // not the one connected.
   const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
+  // Memoised: `toViemChain` builds a fresh object per call, and an unmemoised
+  // one would change identity every render — which drives the client effects
+  // below into a loop that never settles.
+  const viemChain = useMemo(
+    () => (currentChain ? toViemChain(currentChain, evmChainNumber) : null),
+    [currentChain, evmChainNumber],
+  );
 
   const publicClient = useMemo<PublicClient | null>(() => {
-    if (!currentChain?.rpcUrl || evmChainNumber === null) return null;
+    if (!viemChain) return null;
 
     return createPublicClient({
-      transport: http(currentChain.rpcUrl),
-      chain: {
-        id: evmChainNumber,
-        name: currentChain.name,
-        nativeCurrency: {
-          name: currentChain.token ?? "ETH",
-          symbol: currentChain.token ?? "ETH",
-          decimals: 18
-        },
-        rpcUrls: {
-          default: { http: [currentChain.rpcUrl] },
-          public: { http: [currentChain.rpcUrl] }
-        }
-      }
+      transport: http(viemChain.rpcUrls.default.http[0]),
+      chain: viemChain,
     });
-  }, [currentChain, evmChainNumber]);
+  }, [currentChain, viemChain]);
 
   const walletClient = useMemo<WalletClient | null>(() => {
-    if (
-      !isConnected ||
-      !evmAccount ||
-      !currentChain?.rpcUrl ||
-      evmChainNumber === null
-    )
-      return null;
+    if (!isConnected || !evmAccount || !viemChain) return null;
 
     const address = evmAccount.includes(":") ? evmAccount.split(":").pop()! : evmAccount;
 
     return createWalletClient({
-      transport: http(currentChain.rpcUrl),
-      chain: {
-        id: evmChainNumber,
-        name: currentChain.name,
-        nativeCurrency: {
-          name: currentChain.token ?? "ETH",
-          symbol: currentChain.token ?? "ETH",
-          decimals: 18
-        },
-        rpcUrls: {
-          default: { http: [currentChain.rpcUrl] },
-          public: { http: [currentChain.rpcUrl] }
-        }
-      },
+      transport: http(viemChain.rpcUrls.default.http[0]),
+      chain: viemChain,
       account: address as `0x${string}`
     });
-  }, [isConnected, evmAccount, currentChain, evmChainNumber]);
+  }, [isConnected, evmAccount, currentChain, viemChain]);
 
   return {
     publicClient,

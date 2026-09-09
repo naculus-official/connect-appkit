@@ -170,3 +170,31 @@ describe("useViemClient — non-EVM chains", () => {
     expect(result.current.walletClient).toBeNull();
   });
 });
+
+describe("useViemClient — stability", () => {
+  // The chain descriptor is rebuilt on every call, so an unmemoised one
+  // changes identity each render and drives the client effects into a loop
+  // that never settles. The clients holding still is the observable form of
+  // that not happening.
+  it("keeps the same client across renders while nothing changes", () => {
+    const chain = {
+      caip2: "eip155:1",
+      name: "Ethereum",
+      rpcUrl: "https://eth.llamarpc.com",
+      token: "ETH",
+    };
+    mockUseChain.mockReturnValue({ currentChain: chain });
+    mockUseAccount.mockReturnValue({
+      evmAccount: "0x1234567890123456789012345678901234567890",
+      isConnected: true,
+    });
+
+    const { result, rerender } = renderHook(() => useViemClient());
+    const firstPublic = result.current.publicClient;
+    const firstWallet = result.current.walletClient;
+    rerender();
+    rerender();
+    expect(result.current.publicClient).toBe(firstPublic);
+    expect(result.current.walletClient).toBe(firstWallet);
+  });
+});

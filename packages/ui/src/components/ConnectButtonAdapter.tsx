@@ -96,6 +96,9 @@ export function ConnectButtonAdapter({
     onConnect?.(kind as any, () => {}, walletId)
   }, [wcCtx, startPairing, completePairing, onConnect])
 
+  // balanceSymbol falls through as an empty string, never "ETH": the
+  // component renders no unit rather than the wrong one when the chain's
+  // native symbol is unknown.
   return (
     <div className={className}>
       <AppkitConnectButton
@@ -103,7 +106,7 @@ export function ConnectButtonAdapter({
       connecting={extConnecting ?? false}
       address={address ?? ""}
       balance={balance ?? null}
-      balanceSymbol={balanceSymbol ?? "ETH"}
+      balanceSymbol={balanceSymbol ?? ""}
       isBalanceLoading={isBalanceLoading ?? false}
       tokenBalancesJson={JSON.stringify(tokenBalances ?? [])}
       explorerUrl={explorerUrl ?? ""}

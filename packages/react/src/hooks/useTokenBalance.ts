@@ -1,4 +1,8 @@
-import { chainNumber, resolveChain } from "@naculus/connect-appkit-core";
+import {
+  chainNumber,
+  resolveChain,
+  toViemChain,
+} from "@naculus/connect-appkit-core";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { useAccount } from "./useAccount";
@@ -59,34 +63,29 @@ export function useTokenBalance(options: UseTokenBalanceOptions) {
   );
   // Null for a non-EVM chain, and a viem client must not be built for one.
   const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
+  // Memoised: `toViemChain` builds a fresh object per call, and an unmemoised
+  // one would change identity every render — which drives the client effects
+  // below into a loop that never settles.
+  const viemChain = useMemo(
+    () => (currentChain ? toViemChain(currentChain, evmChainNumber) : null),
+    [currentChain, evmChainNumber],
+  );
 
   const [client, setClient] = useState<PublicClient | null>(null);
 
   useEffect(() => {
-    if (!currentChain?.rpcUrl || evmChainNumber === null) {
+    if (!viemChain || !currentChain?.rpcUrl) {
       setClient(null);
       return;
     }
 
     const publicClient = createPublicClient({
       transport: http(currentChain.rpcUrl),
-      chain: {
-        id: evmChainNumber,
-        name: currentChain.name,
-        nativeCurrency: {
-          name: currentChain.token ?? "ETH",
-          symbol: currentChain.token ?? "ETH",
-          decimals: 18,
-        },
-        rpcUrls: {
-          default: { http: [currentChain.rpcUrl] },
-          public: { http: [currentChain.rpcUrl] },
-        },
-      },
+      chain: viemChain,
     });
 
     setClient(publicClient);
-  }, [currentChain, evmChainNumber]);
+  }, [currentChain, viemChain]);
 
   // ERC-20 ABI fragment for balanceOf
   const erc20Abi = [

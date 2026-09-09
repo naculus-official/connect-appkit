@@ -1,5 +1,9 @@
 import type { WalletChain } from "../types";
-import { chainNumber, resolveChain } from "@naculus/connect-appkit-core";
+import {
+  chainNumber,
+  resolveChain,
+  toViemChain,
+} from "@naculus/connect-appkit-core";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { useAccount } from "./useAccount";
@@ -50,6 +54,13 @@ export function useBalance(options?: UseBalanceOptions): UseBalanceResult {
     [chainId, chains],
   );
   const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
+  // Memoised: `toViemChain` builds a fresh object per call, and an unmemoised
+  // one would change identity every render — which drives the client effects
+  // below into a loop that never settles.
+  const viemChain = useMemo(
+    () => (currentChain ? toViemChain(currentChain, evmChainNumber) : null),
+    [currentChain, evmChainNumber],
+  );
 
   // No `?? "ETH"`. This label is rendered directly beside the number, so a
   // fallback shows "1.5 ETH" to someone holding 1.5 MATIC or 1.5 SOL. When
@@ -63,26 +74,14 @@ export function useBalance(options?: UseBalanceOptions): UseBalanceResult {
   const [client, setClient] = useState<PublicClient | null>(null);
 
   useEffect(() => {
-    if (!currentChain?.rpcUrl || evmChainNumber === null) {
+    if (!viemChain || !currentChain?.rpcUrl) {
       setClient(null);
       return;
     }
 
     const publicClient = createPublicClient({
       transport: http(currentChain.rpcUrl),
-      chain: {
-        id: evmChainNumber,
-        name: currentChain.name,
-        nativeCurrency: {
-          name: currentChain.token ?? "ETH",
-          symbol: currentChain.token ?? "ETH",
-          decimals: 18,
-        },
-        rpcUrls: {
-          default: { http: [currentChain.rpcUrl] },
-          public: { http: [currentChain.rpcUrl] },
-        },
-      },
+      chain: viemChain,
     });
 
     setClient(publicClient);
