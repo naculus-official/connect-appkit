@@ -1,6 +1,8 @@
 /// <reference types="vitest" />
 import { describe, expect, it } from "vitest";
 import {
+  chainNamespace,
+  chainNumber,
   chainsForNamespace,
   describeChain,
   resolveChain,
@@ -10,9 +12,9 @@ import type { WalletChain } from "../types";
 const SOLANA_CHAIN = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 
 const CHAINS: WalletChain[] = [
-  { id: 1, namespace: "eip155", name: "Ethereum" },
-  { id: 137, namespace: "eip155", name: "Polygon" },
-  { id: 0, namespace: "solana", name: "Solana" },
+  { caip2: "eip155:1", name: "Ethereum" },
+  { caip2: "eip155:137", name: "Polygon" },
+  { caip2: SOLANA_CHAIN, name: "Solana" },
 ];
 
 describe("resolveChain", () => {
@@ -20,15 +22,16 @@ describe("resolveChain", () => {
     expect(resolveChain(CHAINS, "eip155:137")?.name).toBe("Polygon");
   });
 
-  // The bug: parseInt on a base58 reference answers 5, and an entry with
-  // id 5 would have matched a Solana cluster.
-  it("does not match a Solana chain against a number", () => {
-    expect(resolveChain(CHAINS, SOLANA_CHAIN)).toBeNull();
+  // Now a string comparison. The registry used to be keyed by an integer, so
+  // a Solana cluster could not be represented at all and an entry with id 5
+  // was what `parseInt` on its base58 reference would have matched.
+  it("finds a Solana chain, and does not confuse it with chain 5", () => {
+    expect(resolveChain(CHAINS, SOLANA_CHAIN)?.name).toBe("Solana");
     const withFive: WalletChain[] = [
       ...CHAINS,
-      { id: 5, namespace: "eip155", name: "Goerli" },
+      { caip2: "eip155:5", name: "Goerli" },
     ];
-    expect(resolveChain(withFive, SOLANA_CHAIN)).toBeNull();
+    expect(resolveChain(withFive, SOLANA_CHAIN)?.name).toBe("Solana");
   });
 
   it("is null for an unconfigured or absent chain", () => {
@@ -79,6 +82,7 @@ describe("describeChain", () => {
     const info = describeChain(CHAINS, SOLANA_CHAIN);
     expect(info?.namespace).toBe("solana");
     expect(info?.chainId).toBe(SOLANA_CHAIN);
+    expect(info?.name).toBe("Solana");
   });
 
   it("names an unconfigured EVM chain by its reference", () => {
@@ -94,6 +98,36 @@ describe("describeChain", () => {
 
   it("is null with no chain", () => {
     expect(describeChain(CHAINS, null)).toBeNull();
+  });
+});
+
+describe("chainNumber", () => {
+  it("reads the EIP-155 number for an EVM chain", () => {
+    expect(chainNumber({ caip2: "eip155:137", name: "Polygon" })).toBe(137);
+  });
+
+  // There is no number that means "Solana". A caller needing one has to
+  // handle the null, because any stand-in addresses a real EVM chain.
+  it("is null for a chain that has no EIP-155 number", () => {
+    expect(chainNumber({ caip2: SOLANA_CHAIN, name: "Solana" })).toBeNull();
+    expect(chainNumber({ caip2: "xrpl:0", name: "XRPL" })).toBeNull();
+  });
+});
+
+describe("chainNamespace", () => {
+  it("reads the namespace from the chain's own id", () => {
+    expect(chainNamespace({ caip2: "eip155:1", name: "Ethereum" })).toBe(
+      "eip155",
+    );
+    expect(chainNamespace({ caip2: SOLANA_CHAIN, name: "Solana" })).toBe(
+      "solana",
+    );
+  });
+
+  // A single field cannot disagree with itself. The type used to carry
+  // `namespace` next to `id`, and two fields that must agree eventually do not.
+  it("cannot drift from the chain id, because there is nothing to drift from", () => {
+    expect(chainNamespace({ caip2: "nonsense", name: "?" })).toBeNull();
   });
 });
 

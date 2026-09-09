@@ -50,8 +50,8 @@ describe("ChainSelector", () => {
     mockUseChain.mockReturnValue({
       ...defaultChainState,
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
     })
 
@@ -63,8 +63,8 @@ describe("ChainSelector", () => {
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
       ...defaultChainState,
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
-      availableChains: [{ id: "1", namespace: "eip155", name: "Ethereum" }],
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
+      availableChains: [{ caip2: "eip155:1", name: "Ethereum" }],
       isEvm: true,
     })
 
@@ -77,10 +77,10 @@ describe("ChainSelector", () => {
   it("renders current chain name when connected with multiple chains", () => {
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain: mockSwitchChain,
       isEvm: true,
@@ -94,10 +94,10 @@ describe("ChainSelector", () => {
     const switchChain = vi.fn().mockResolvedValue(undefined)
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain,
       isEvm: true,
@@ -115,10 +115,10 @@ describe("ChainSelector", () => {
     const switchChain = vi.fn().mockResolvedValue(undefined)
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain,
       isEvm: true,
@@ -136,10 +136,10 @@ describe("ChainSelector", () => {
   it("renders active chain with checkmark in dropdown", () => {
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain: mockSwitchChain,
       isEvm: true,
@@ -157,8 +157,8 @@ describe("ChainSelector", () => {
     mockUseChain.mockReturnValue({
       currentChain: null,
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain: mockSwitchChain,
     })
@@ -171,10 +171,10 @@ describe("ChainSelector", () => {
     const switchChain = vi.fn()
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain,
       isEvm: true,
@@ -192,10 +192,10 @@ describe("ChainSelector", () => {
   it("applies custom className to the container", () => {
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain: mockSwitchChain,
       isEvm: true,
@@ -209,10 +209,10 @@ describe("ChainSelector", () => {
   it("renders minimal variant showing just chain name", () => {
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain: mockSwitchChain,
       isEvm: true,
@@ -228,10 +228,10 @@ describe("ChainSelector", () => {
     const switchChain = vi.fn().mockResolvedValue(undefined)
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain,
       isEvm: true,
@@ -248,10 +248,10 @@ describe("ChainSelector", () => {
     const switchChain = vi.fn().mockResolvedValue(undefined)
     mockUseWallet.mockReturnValue({ isConnected: true })
     mockUseChain.mockReturnValue({
-      currentChain: { id: "1", namespace: "eip155", name: "Ethereum" },
+      currentChain: { caip2: "eip155:1", name: "Ethereum" },
       availableChains: [
-        { id: "1", namespace: "eip155", name: "Ethereum", token: "ETH" },
-        { id: "137", namespace: "eip155", name: "Polygon", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", token: "MATIC" },
       ],
       switchChain,
       isEvm: true,

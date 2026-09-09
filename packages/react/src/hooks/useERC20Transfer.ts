@@ -1,13 +1,21 @@
+import { chainNumber } from "../core/chain-selection";
 import { useState, useCallback, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { useAccount } from "./useAccount";
+import { useChain } from "./useChain";
 import { useViemClient } from "./useViemClient";
 import { useSendTransaction } from "./useSendTransaction";
-import { getClient } from "../client";
 import { WalletError, ERC20_MIN_ABI, parseUnits } from "@naculus/connect-core";
 import type { TokenConfig } from "@naculus/connect-core";
 import type { Address, Hex } from "viem";
 import { encodeFunctionData } from "viem";
+import { resolveClient } from "./client-resolver";
+import {
+  createDecimalsCache,
+  readDecimals,
+  writeDecimals,
+} from "../core/token-decimals";
+import { useERC20Context } from "./useERC20Context";
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -43,11 +51,31 @@ export function useERC20Transfer(
 ): UseERC20TransferReturn {
   const { publicClient, walletClient } = useViemClient();
   const { evmAccount, isConnected } = useAccount();
-  const { session } = useWeb3();
-  const { sendTransaction, isSending, error: sendTxError, reset } = useSendTransaction();
+  const { currentChain } = useChain();
+  const { session, client } = useWeb3();
+  const {
+    sendTransaction,
+    isSending,
+    error: sendTxError,
+    reset,
+  } = useSendTransaction();
   const [localError, setLocalError] = useState<Error | null>(null);
+  const { isCurrent, assertCurrent } = useERC20Context({
+    token: options.token,
+    chainId: currentChain ? (chainNumber(currentChain) ?? undefined) : undefined,
+    owner: evmAccount,
+    connected: isConnected,
+    publicClient,
+    walletClient,
+    session,
+    client,
+  });
 
-  const decimalsRef = useRef<number | undefined>(options.token.decimals);
+  // Keyed by token: a bare ref kept the first token's precision when the user
+  // switched tokens, and converted the amount with the wrong scale.
+  const decimalsRef = useRef(
+    createDecimalsCache(options.token, options.token.decimals),
+  );
   const error = localError ?? sendTxError;
 
   const sendTransfer = useCallback(
@@ -56,38 +84,54 @@ export function useERC20Transfer(
       reset();
 
       if (!isConnected || !evmAccount) {
-        const err = new WalletError("wallet_unavailable", "No connected account");
+        const err = new WalletError(
+          "wallet_unavailable",
+          "No connected account",
+        );
         setLocalError(err);
         throw err;
       }
 
       if (!publicClient) {
-        const err = new WalletError("wallet_unavailable", "No public client available");
+        const err = new WalletError(
+          "wallet_unavailable",
+          "No public client available",
+        );
         setLocalError(err);
         throw err;
       }
 
-      const address = toBareAddress(evmAccount);
-
-      // Fetch decimals if not cached
-      let decimals = decimalsRef.current;
-      if (decimals === undefined) {
-        decimals = await publicClient.readContract({
-          address: options.token.address,
-          abi: ERC20_MIN_ABI,
-          functionName: "decimals",
-        }) as number;
-        decimalsRef.current = decimals;
-      }
-
-      const rawAmount = parseUnits(amount, decimals);
-      const data = encodeTransferCalldata(to, rawAmount);
-
+      // Transferring on the wrong chain sends the call to whatever contract
+      // occupies this address there. The decimals read below would come from
+      // that contract too, so the amount would be wrong as well.
       try {
+        assertCurrent();
+
+        const address = toBareAddress(evmAccount);
+
+        // Fetch decimals if not cached
+        let decimals = readDecimals(
+          decimalsRef.current,
+          options.token,
+          options.token.decimals,
+        );
+        if (decimals === undefined) {
+          decimals = (await publicClient.readContract({
+            address: options.token.address,
+            abi: ERC20_MIN_ABI,
+            functionName: "decimals",
+          })) as number;
+          assertCurrent();
+          writeDecimals(decimalsRef.current, options.token, decimals);
+        }
+
+        const rawAmount = parseUnits(amount, decimals);
+        const data = encodeTransferCalldata(to, rawAmount);
+
+        const activeClient = resolveClient(client);
         // Strategy 1: session-based connector
         if (session) {
-          const client = getClient();
-          if (client) {
+          if (activeClient) {
             const txHash = await sendTransaction({
               to: options.token.address,
               data,
@@ -106,6 +150,7 @@ export function useERC20Transfer(
             args: [to, rawAmount],
             account: address,
           });
+          assertCurrent();
           const txHash = await walletClient.writeContract(request);
           return txHash;
         }
@@ -119,11 +164,23 @@ export function useERC20Transfer(
         return txHash as `0x${string}`;
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Transfer failed");
-        setLocalError(error);
+        if (isCurrent()) setLocalError(error);
         throw error;
       }
     },
-    [options.token, publicClient, walletClient, evmAccount, isConnected, session, sendTransaction, reset],
+    [
+      options.token,
+      publicClient,
+      walletClient,
+      evmAccount,
+      isConnected,
+      session,
+      client,
+      sendTransaction,
+      reset,
+      assertCurrent,
+      isCurrent,
+    ],
   );
 
   return {

@@ -16,7 +16,10 @@ vi.mock("./useAccount", () => ({
 }));
 
 const mockGetNativeTokenPriceUsd = vi.fn().mockResolvedValue(null);
-vi.mock("@naculus/connect-core", () => ({
+// Partial: the CAIP readers are real, so a chain-id parsing regression shows
+// up here rather than being mocked away.
+vi.mock("@naculus/connect-core", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@naculus/connect-core")>()),
   getNativeTokenPriceUsd: (...args: unknown[]) => mockGetNativeTokenPriceUsd(...args),
   clearPriceCache: vi.fn(),
 }));
@@ -69,7 +72,9 @@ describe("useBalance", () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeNull();
     expect(result.current.chain).toBeNull();
-    expect(result.current.symbol).toBe("ETH");
+    // No fallback symbol: this label is rendered beside the number, and
+    // naming the wrong currency is a statement about what the user holds.
+    expect(result.current.symbol).toBeNull();
   });
 
   it("should create client and fetch balance when connected", async () => {
@@ -77,7 +82,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -100,6 +105,7 @@ describe("useBalance", () => {
     expect(result.current.formatted).toBe("1");
     expect(result.current.isLoading).toBe(false);
     expect(result.current.chain?.name).toBe("Ethereum");
+    // Reported because this chain actually declares it, not as a fallback.
     expect(result.current.symbol).toBe("ETH");
   });
 
@@ -108,7 +114,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -134,7 +140,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -158,7 +164,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -183,7 +189,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -216,7 +222,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:9999",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -227,7 +233,9 @@ describe("useBalance", () => {
     const { result } = renderHook(() => useBalance());
 
     expect(result.current.chain).toBeNull();
-    expect(result.current.symbol).toBe("ETH");
+    // No fallback symbol: this label is rendered beside the number, and
+    // naming the wrong currency is a statement about what the user holds.
+    expect(result.current.symbol).toBeNull();
   });
 
   it("should auto-refresh at specified interval", async () => {
@@ -236,7 +244,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -273,7 +281,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -303,7 +311,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -330,7 +338,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:137",
       chains: [
-        { id: 137, namespace: "eip155", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
+        { caip2: "eip155:137", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -349,7 +357,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -374,7 +382,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -417,7 +425,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({
@@ -440,7 +448,7 @@ describe("useBalance", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
       ],
     });
     mockUseAccount.mockReturnValue({

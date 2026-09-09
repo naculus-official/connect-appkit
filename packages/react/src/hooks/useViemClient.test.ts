@@ -16,7 +16,7 @@ vi.mock("./useChain", () => ({
 
 vi.mock("../utils/chains", () => ({
   getDefaultChains: () => [
-    { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+    { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
   ],
 }));
 
@@ -34,7 +34,7 @@ describe("useViemClient", () => {
     });
     mockUseChain.mockReturnValue({
       currentChain: null,
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
 
     const { result } = renderHook(() => useViemClient());
@@ -51,8 +51,7 @@ describe("useViemClient", () => {
     });
     mockUseChain.mockReturnValue({
       currentChain: {
-        id: 1,
-        namespace: "eip155",
+        caip2: "eip155:1",
         name: "Ethereum",
         rpcUrl: "https://eth.llamarpc.com",
         token: "ETH",
@@ -74,8 +73,7 @@ describe("useViemClient", () => {
     });
     mockUseChain.mockReturnValue({
       currentChain: {
-        id: 1,
-        namespace: "eip155",
+        caip2: "eip155:1",
         name: "Ethereum",
         rpcUrl: "https://eth.llamarpc.com",
         token: "ETH",
@@ -96,8 +94,7 @@ describe("useViemClient", () => {
     });
     mockUseChain.mockReturnValue({
       currentChain: {
-        id: 137,
-        namespace: "eip155",
+        caip2: "eip155:137",
         name: "Polygon",
         rpcUrl: "https://polygon-rpc.com",
         token: "MATIC",
@@ -118,8 +115,7 @@ describe("useViemClient", () => {
     });
     mockUseChain.mockReturnValue({
       currentChain: {
-        id: 1,
-        namespace: "eip155",
+        caip2: "eip155:1",
         name: "Ethereum",
         rpcUrl: "https://eth.llamarpc.com",
         token: "ETH",
@@ -139,8 +135,7 @@ describe("useViemClient", () => {
     });
     mockUseChain.mockReturnValue({
       currentChain: {
-        id: 1,
-        namespace: "eip155",
+        caip2: "eip155:1",
         name: "Ethereum",
         rpcUrl: undefined,
         token: "ETH",
@@ -149,6 +144,28 @@ describe("useViemClient", () => {
 
     const { result } = renderHook(() => useViemClient());
 
+    expect(result.current.publicClient).toBeNull();
+    expect(result.current.walletClient).toBeNull();
+  });
+});
+
+describe("useViemClient — non-EVM chains", () => {
+  // viem speaks to EVM nodes. Building a client with a stand-in number would
+  // address a real chain that is not the one connected.
+  it("builds no client for a Solana chain", () => {
+    mockUseChain.mockReturnValue({
+      currentChain: {
+        caip2: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        name: "Solana",
+        rpcUrl: "https://api.mainnet-beta.solana.com",
+      },
+    });
+    mockUseAccount.mockReturnValue({
+      evmAccount: "0x1234567890123456789012345678901234567890",
+      isConnected: true,
+    });
+
+    const { result } = renderHook(() => useViemClient());
     expect(result.current.publicClient).toBeNull();
     expect(result.current.walletClient).toBeNull();
   });

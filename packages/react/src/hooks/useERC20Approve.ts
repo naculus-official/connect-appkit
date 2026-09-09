@@ -1,13 +1,26 @@
+import { chainNumber } from "../core/chain-selection";
 import { useState, useCallback, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { useAccount } from "./useAccount";
+import { useChain } from "./useChain";
 import { useViemClient } from "./useViemClient";
 import { useSendTransaction } from "./useSendTransaction";
-import { getClient } from "../client";
-import { WalletError, ERC20_MIN_ABI, parseUnits } from "@naculus/connect-core";
+import {
+  WalletError,
+  ERC20_MIN_ABI,
+  parseUnits,
+  formatUnits,
+} from "@naculus/connect-core";
 import type { TokenConfig } from "@naculus/connect-core";
 import type { Address, Hex } from "viem";
 import { encodeFunctionData } from "viem";
+import { resolveClient } from "./client-resolver";
+import {
+  createDecimalsCache,
+  readDecimals,
+  writeDecimals,
+} from "../core/token-decimals";
+import { useERC20Context } from "./useERC20Context";
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -48,7 +61,14 @@ export interface UseERC20ApproveReturn {
   isApproving: boolean;
   isFetchingAllowance: boolean;
   error: Error | null;
-  refetchAllowance: () => Promise<void>;
+  /**
+   * Re-read the allowance and return it.
+   *
+   * The value is returned because reading `allowanceRaw` immediately after
+   * awaiting this does not work: that binding belongs to the render that
+   * created the callback, and setState does not rewrite it.
+   */
+  refetchAllowance: () => Promise<bigint | null>;
 }
 
 // ── Hook ──────────────────────────────────────────────────────────
@@ -58,13 +78,38 @@ export function useERC20Approve(
 ): UseERC20ApproveReturn {
   const { publicClient, walletClient } = useViemClient();
   const { evmAccount, isConnected } = useAccount();
-  const { session } = useWeb3();
-  const { sendTransaction, isSending, error: sendTxError, reset } = useSendTransaction();
+  const { currentChain } = useChain();
+  const { session, client } = useWeb3();
+  const {
+    sendTransaction,
+    isSending,
+    error: sendTxError,
+    reset,
+  } = useSendTransaction();
   const [localError, setLocalError] = useState<Error | null>(null);
-  const [allowanceRaw, setAllowanceRaw] = useState<bigint | null>(null);
-  const [isFetchingAllowance, setIsFetchingAllowance] = useState(false);
+  const { identity, isCurrent, assertCurrent } = useERC20Context({
+    token: options.token,
+    chainId: currentChain ? (chainNumber(currentChain) ?? undefined) : undefined,
+    owner: evmAccount,
+    spender: options.spender,
+    connected: isConnected,
+    publicClient,
+    walletClient,
+    session,
+    client,
+  });
+  const [read, setRead] = useState<{
+    identity: object;
+    raw: bigint | null;
+    fetching: boolean;
+  } | null>(null);
+  const allowanceRaw = read?.identity === identity ? read.raw : null;
+  const isFetchingAllowance = read?.identity === identity && read.fetching;
 
-  const decimalsRef = useRef<number | undefined>(options.token.decimals);
+  const decimalsRef = useRef(
+    createDecimalsCache(options.token, options.token.decimals),
+  );
+  const allowanceGenerationRef = useRef(0);
   const error = localError ?? sendTxError;
 
   const ownerAddress = (() => {
@@ -72,34 +117,64 @@ export function useERC20Approve(
     return toBareAddress(evmAccount);
   })();
 
-  const fetchAllowance = useCallback(async () => {
-    if (!publicClient || !ownerAddress) return;
-
-    setIsFetchingAllowance(true);
+  // Returns what it read. Callers that need the value cannot get it from
+  // `allowanceRaw` right after awaiting: that binding is the one captured at
+  // render, and a setState does not rewrite it.
+  const fetchAllowance = useCallback(async (): Promise<bigint | null> => {
+    if (!isCurrent()) return null;
+    const generation = ++allowanceGenerationRef.current;
+    const stillCurrent = () =>
+      isCurrent() && generation === allowanceGenerationRef.current;
+    setRead({
+      identity,
+      raw: null,
+      fetching: !!publicClient && !!ownerAddress && isConnected,
+    });
+    setLocalError(null);
+    if (!publicClient || !ownerAddress || !isConnected) return null;
     try {
-      const raw = await publicClient.readContract({
+      assertCurrent();
+      const raw = (await publicClient.readContract({
         address: options.token.address,
         abi: ERC20_MIN_ABI,
         functionName: "allowance",
         args: [ownerAddress, options.spender],
-      });
-      setAllowanceRaw(raw as bigint);
-    } catch {
-      setAllowanceRaw(null);
-    } finally {
-      setIsFetchingAllowance(false);
+      })) as bigint;
+      if (!stillCurrent()) return null;
+      setRead({ identity, raw, fetching: false });
+      return raw;
+    } catch (err) {
+      if (stillCurrent()) {
+        setRead({ identity, raw: null, fetching: false });
+        setLocalError(
+          err instanceof Error ? err : new Error("Failed to fetch allowance"),
+        );
+      }
+      return null;
     }
-  }, [publicClient, ownerAddress, options.token.address, options.spender]);
+  }, [
+    publicClient,
+    ownerAddress,
+    options.token.address,
+    options.token.chainId,
+    options.spender,
+    identity,
+    isCurrent,
+    assertCurrent,
+    isConnected,
+  ]);
 
   const allowance = (() => {
     if (allowanceRaw === null) return null;
-    const decimals = decimalsRef.current ?? options.token.decimals ?? 18;
-    const str = allowanceRaw.toString();
-    const padded = str.padStart(decimals + 1, "0");
-    const dotPos = padded.length - decimals;
-    let intPart = padded.slice(0, dotPos).replace(/^0+/, "") || "0";
-    let fracPart = padded.slice(dotPos).replace(/0+$/, "");
-    return fracPart ? `${intPart}.${fracPart}` : intPart;
+    // No `?? 18`: guessing a token's precision misstates every amount derived
+    // from it, and 18 is only right for the tokens that happen to use it.
+    const decimals = readDecimals(
+      decimalsRef.current,
+      options.token,
+      options.token.decimals,
+    );
+    if (decimals === undefined) return null;
+    return formatUnits(allowanceRaw, decimals);
   })();
 
   const doApprove = useCallback(
@@ -108,7 +183,10 @@ export function useERC20Approve(
       reset();
 
       if (!isConnected || !evmAccount) {
-        const err = new WalletError("wallet_unavailable", "No connected account");
+        const err = new WalletError(
+          "wallet_unavailable",
+          "No connected account",
+        );
         setLocalError(err);
         throw err;
       }
@@ -119,12 +197,15 @@ export function useERC20Approve(
         throw err;
       }
 
-      const data = encodeApproveCalldata(options.spender, rawAmount);
-
+      // Approving on the wrong chain grants a spender rights over whatever
+      // contract sits at this address there, which is not the token the user
+      // was shown.
       try {
+        assertCurrent();
+        const data = encodeApproveCalldata(options.spender, rawAmount);
+        const activeClient = resolveClient(client);
         if (session) {
-          const client = getClient();
-          if (client) {
+          if (activeClient) {
             const txHash = await sendTransaction({
               to: options.token.address,
               data,
@@ -143,6 +224,7 @@ export function useERC20Approve(
             args: [options.spender, rawAmount],
             account: ownerAddress!,
           });
+          assertCurrent();
           const txHash = await walletClient.writeContract(request);
           fetchAllowance();
           return txHash;
@@ -157,31 +239,60 @@ export function useERC20Approve(
         return txHash as `0x${string}`;
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Approve failed");
-        setLocalError(error);
+        if (isCurrent()) setLocalError(error);
         throw error;
       }
     },
-    [options, publicClient, walletClient, evmAccount, isConnected, session, ownerAddress, sendTransaction, reset, fetchAllowance],
+    [
+      options,
+      publicClient,
+      walletClient,
+      evmAccount,
+      isConnected,
+      session,
+      client,
+      ownerAddress,
+      sendTransaction,
+      reset,
+      fetchAllowance,
+      assertCurrent,
+      isCurrent,
+    ],
   );
 
   const approveAmount = useCallback(
     async (amount: string): Promise<`0x${string}`> => {
-      if (!publicClient) throw new WalletError("wallet_unavailable", "No public client");
+      try {
+        assertCurrent();
+        if (!publicClient)
+          throw new WalletError("wallet_unavailable", "No public client");
 
-      let decimals = decimalsRef.current;
-      if (decimals === undefined) {
-        decimals = await publicClient.readContract({
-          address: options.token.address,
-          abi: ERC20_MIN_ABI,
-          functionName: "decimals",
-        }) as number;
-        decimalsRef.current = decimals;
+        let decimals = readDecimals(
+          decimalsRef.current,
+          options.token,
+          options.token.decimals,
+        );
+        if (decimals === undefined) {
+          decimals = (await publicClient.readContract({
+            address: options.token.address,
+            abi: ERC20_MIN_ABI,
+            functionName: "decimals",
+          })) as number;
+          assertCurrent();
+          writeDecimals(decimalsRef.current, options.token, decimals);
+        }
+
+        const rawAmount = parseUnits(amount, decimals);
+        return await doApprove(rawAmount);
+      } catch (err) {
+        if (isCurrent())
+          setLocalError(
+            err instanceof Error ? err : new Error("Approve failed"),
+          );
+        throw err;
       }
-
-      const rawAmount = parseUnits(amount, decimals);
-      return doApprove(rawAmount);
     },
-    [options.token.address, publicClient, doApprove],
+    [options.token, publicClient, doApprove, assertCurrent, isCurrent],
   );
 
   const approveMaxAmount = useCallback(async (): Promise<`0x${string}`> => {
@@ -190,20 +301,63 @@ export function useERC20Approve(
 
   const checkAllowance = useCallback(
     async (required: string): Promise<boolean> => {
-      if (allowanceRaw === null) {
-        await fetchAllowance();
+      if (!isCurrent() || !isConnected || !ownerAddress || !publicClient)
+        return false;
+      try {
+        assertCurrent();
+      } catch (err) {
+        setLocalError(
+          err instanceof Error ? err : new Error("Cannot check allowance"),
+        );
+        return false;
       }
-      if (allowanceRaw === null) return false;
+      // `allowanceRaw` is the render-time binding, so awaiting a refetch never
+      // changed it — the second null check below used to always hit, and this
+      // gate answered false on every first call. Callers reading it as "no
+      // approval yet" prompted for an approval the user had already granted.
+      const current = allowanceRaw ?? (await fetchAllowance());
+      if (current === null) return false;
 
-      let decimals = decimalsRef.current ?? options.token.decimals;
+      // No `decimals = 18` fallback. This is a gate: a caller does
+      // `if (await hasAllowance(x)) skipApprove()`, so a wrong precision here
+      // is a wrong answer to "is it safe to skip the approval", not a
+      // misformatted string. Read the token instead, and refuse if that fails.
+      let decimals = readDecimals(
+        decimalsRef.current,
+        options.token,
+        options.token.decimals,
+      );
       if (decimals === undefined) {
-        decimals = 18; // safe fallback
+        if (!publicClient) {
+          throw new WalletError(
+            "wallet_unavailable",
+            "Cannot check allowance: no public client to read token decimals.",
+          );
+        }
+        decimals = (await publicClient.readContract({
+          address: options.token.address,
+          abi: ERC20_MIN_ABI,
+          functionName: "decimals",
+        })) as number;
+        if (!isCurrent()) return false;
+        writeDecimals(decimalsRef.current, options.token, decimals);
       }
 
       const requiredRaw = parseUnits(required, decimals);
-      return allowanceRaw >= requiredRaw;
+      return isCurrent() && current >= requiredRaw;
     },
-    [allowanceRaw, fetchAllowance, options.token.decimals],
+    [
+      allowanceRaw,
+      fetchAllowance,
+      options.token.address,
+      options.token.chainId,
+      options.token.decimals,
+      publicClient,
+      isCurrent,
+      assertCurrent,
+      isConnected,
+      ownerAddress,
+    ],
   );
 
   return {

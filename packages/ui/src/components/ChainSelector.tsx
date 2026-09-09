@@ -57,7 +57,7 @@ export function ChainSelector({
   if (variant === "minimal") {
     return (
       <div className={cn("inline-flex items-center gap-1.5 text-xs text-muted-foreground", className)}>
-        {currentChain && <ChainLogo chainId={`${currentChain.namespace}:${currentChain.id}`} className="h-3.5 w-3.5" />}
+        {currentChain && <ChainLogo chainId={currentChain.caip2} className="h-3.5 w-3.5" />}
         {chainName}
       </div>
     );
@@ -68,8 +68,8 @@ export function ChainSelector({
     return (
       <div className={cn("flex flex-wrap gap-2", className)}>
         {availableChains.map((chain) => {
-          const isActive = chain.id === currentChain?.id && chain.namespace === currentChain?.namespace;
-          const chainId = `${chain.namespace}:${chain.id}`;
+          const chainId = chain.caip2;
+          const isActive = chainId === currentChain?.caip2;
           return (
             <RegistryButton
               key={chainId}
@@ -94,7 +94,7 @@ export function ChainSelector({
   if (!hasMultipleChains) {
     return (
       <div className={cn("inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm opacity-60 cursor-default", className)}>
-        {currentChain && <ChainLogo chainId={`${currentChain.namespace}:${currentChain.id}`} className="h-4 w-4" />}
+        {currentChain && <ChainLogo chainId={currentChain.caip2} className="h-4 w-4" />}
         {chainName}
       </div>
     );
@@ -103,7 +103,7 @@ export function ChainSelector({
   return (
     <div ref={dropdownRef} className={cn("relative inline-block", className)}>
       <RegistryButton onClick={() => setIsOpen(!isOpen)}>
-        {currentChain && <ChainLogo chainId={`${currentChain.namespace}:${currentChain.id}`} className="h-4 w-4" />}
+        {currentChain && <ChainLogo chainId={currentChain.caip2} className="h-4 w-4" />}
         {chainName}
         <svg
           className={cn("h-3 w-3 transition-transform", isOpen && "rotate-180")}
@@ -121,8 +121,8 @@ export function ChainSelector({
             </div>
           )}
           {availableChains.map((chain) => {
-            const isActive = chain.id === currentChain?.id && chain.namespace === currentChain?.namespace;
-            const chainId = `${chain.namespace}:${chain.id}`;
+            const chainId = chain.caip2;
+            const isActive = chainId === currentChain?.caip2;
             return (
                <RegistryButton
                 key={chainId}

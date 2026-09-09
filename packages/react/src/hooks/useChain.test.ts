@@ -12,19 +12,15 @@ vi.mock("../provider/Web3ConnectProvider", () => ({
 
 vi.mock("../utils/chains", () => {
   const chains = [
-    { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
-    { id: 137, namespace: "eip155", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
+    { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+    { caip2: "eip155:137", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
   ];
   return {
     getDefaultChains: () => chains,
+    // A string comparison now. This mock used to carry its own copy of the
+    // startsWith + parseInt reading, which is exactly the code being removed.
     getChainById: (ch: typeof chains, chainId: string) =>
-      ch.find((c: typeof chains[0]) => {
-        const ns = chainId.startsWith("eip155:")
-          ? "eip155" : null;
-        if (!ns) return false;
-        const num = chainId.includes(":") ? parseInt(chainId.split(":")[1], 10) : parseInt(chainId, 10);
-        return c.namespace === ns && c.id === num;
-      }),
+      ch.find((c: (typeof chains)[0]) => c.caip2 === chainId),
   };
 });
 
@@ -41,8 +37,8 @@ describe("useChain", () => {
       session: null,
       switchChain: vi.fn(),
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
-        { id: 137, namespace: "eip155", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
       ],
     });
 
@@ -69,8 +65,8 @@ describe("useChain", () => {
       },
       switchChain: vi.fn(),
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
-        { id: 137, namespace: "eip155", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
       ],
     });
 
@@ -87,8 +83,8 @@ describe("useChain", () => {
       session: null,
       switchChain: vi.fn(),
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
-        { id: 137, namespace: "eip155", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
       ],
     });
 
@@ -104,8 +100,8 @@ describe("useChain", () => {
       session: null,
       switchChain: vi.fn(),
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
-        { id: 137, namespace: "eip155", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
       ],
     });
 
@@ -147,8 +143,8 @@ describe("useChain", () => {
       },
       switchChain: vi.fn(),
       chains: [
-        { id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
-        { id: 137, namespace: "eip155", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
+        { caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" },
+        { caip2: "eip155:137", name: "Polygon", rpcUrl: "https://polygon-rpc.com", token: "MATIC" },
       ],
     });
 

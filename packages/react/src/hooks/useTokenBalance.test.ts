@@ -61,7 +61,7 @@ describe("useTokenBalance", () => {
     mockReadContract.mockResolvedValue(BigInt("1000000"));
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -89,7 +89,7 @@ describe("useTokenBalance", () => {
       .mockResolvedValueOnce(BigInt("5000000000000000000"));
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -118,7 +118,7 @@ describe("useTokenBalance", () => {
     mockReadContract.mockRejectedValue(new Error("RPC error"));
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -142,7 +142,7 @@ describe("useTokenBalance", () => {
       .mockRejectedValueOnce(new Error("DAI error"));
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -165,7 +165,7 @@ describe("useTokenBalance", () => {
   it("should return empty array when no tokens specified", async () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -207,7 +207,7 @@ describe("useTokenBalance", () => {
     mockReadContract.mockResolvedValue(BigInt("1000000"));
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -238,7 +238,7 @@ describe("useTokenBalance", () => {
     mockReadContract.mockResolvedValue(BigInt("1000000"));
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -271,7 +271,7 @@ describe("useTokenBalance", () => {
     mockReadContract.mockResolvedValue(BigInt("1000000"));
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -300,7 +300,7 @@ describe("useTokenBalance", () => {
     mockReadContract.mockResolvedValue(BigInt("1000000"));
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: "eip155:1:0x1234567890123456789012345678901234567890",
@@ -323,7 +323,7 @@ describe("useTokenBalance", () => {
   it("should use chain token symbol as default when no tokens match", () => {
     mockUseWeb3.mockReturnValue({
       chainId: "eip155:1",
-      chains: [{ id: 1, namespace: "eip155", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
+      chains: [{ caip2: "eip155:1", name: "Ethereum", rpcUrl: "https://eth.llamarpc.com", token: "ETH" }],
     });
     mockUseAccount.mockReturnValue({
       evmAccount: null,

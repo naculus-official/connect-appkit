@@ -1,3 +1,4 @@
+import { chainNumber, resolveChain } from "../core/chain-selection";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { useAccount } from "./useAccount";
@@ -52,18 +53,17 @@ export function useTokenBalance(options: UseTokenBalanceOptions) {
     [tokens]
   );
 
-  const currentChain = useMemo(() => {
-    if (!chainId || !chains.length) return null;
-    const namespace = chainId.startsWith("eip155:") ? "eip155" : null;
-    if (!namespace) return null;
-    const chainNum = parseInt(chainId.split(":")[1], 10);
-    return chains.find((c) => c.namespace === namespace && c.id === chainNum) ?? null;
-  }, [chainId, chains]);
+  const currentChain = useMemo(
+    () => resolveChain(chains, chainId),
+    [chainId, chains],
+  );
+  // Null for a non-EVM chain, and a viem client must not be built for one.
+  const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
 
   const [client, setClient] = useState<PublicClient | null>(null);
 
   useEffect(() => {
-    if (!currentChain?.rpcUrl) {
+    if (!currentChain?.rpcUrl || evmChainNumber === null) {
       setClient(null);
       return;
     }
@@ -71,7 +71,7 @@ export function useTokenBalance(options: UseTokenBalanceOptions) {
     const publicClient = createPublicClient({
       transport: http(currentChain.rpcUrl),
       chain: {
-        id: currentChain.id,
+        id: evmChainNumber,
         name: currentChain.name,
         nativeCurrency: {
           name: currentChain.token ?? "ETH",
@@ -86,7 +86,7 @@ export function useTokenBalance(options: UseTokenBalanceOptions) {
     });
 
     setClient(publicClient);
-  }, [currentChain]);
+  }, [currentChain, evmChainNumber]);
 
   // ERC-20 ABI fragment for balanceOf
   const erc20Abi = [

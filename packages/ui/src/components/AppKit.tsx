@@ -1,12 +1,13 @@
 "use client"
 
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react"
-import { useAccount, useWallet, useChain, useEmbeddedWallet, useDisconnect, useBalance } from "@naculus/connect-appkit-react"
+import { useAccount, useWallet, useWeb3, useChain, useEmbeddedWallet, useDisconnect, useBalance } from "@naculus/connect-appkit-react"
 import type { Web3ConnectConfig } from "@naculus/connect-appkit-react"
 import { Web3ConnectUI, type Web3ConnectUIProps } from "./Web3ConnectUI"
 import { ConnectButton } from "./ConnectButton"
 import { ChainSelector } from "./ChainSelector"
 import { SeedPhraseBackup } from "./SeedPhraseBackup"
+import * as componentRegistry from "../contexts/ComponentRegistry"
 import { useEIP6963 } from "../hooks/useEIP6963"
 import type { DiscoveredWallet } from "../hooks/useEIP6963"
 import { cn } from "../lib/cn"
@@ -21,6 +22,14 @@ export interface AppKitProps {
   }
   enableEmbedded?: boolean
   enablePasskeys?: boolean
+  /** Chain/RPC configuration forwarded to connect-appkit-react. */
+  chains?: Web3ConnectConfig["chains"]
+  /** Embedded wallet storage, signer and isolation configuration. */
+  embeddedConfig?: Web3ConnectConfig["embeddedConfig"]
+  /** Encrypts persisted connection metadata at rest (not a frontend secret). */
+  encryptionKey?: Web3ConnectConfig["encryptionKey"]
+  /** Optional SIWx authentication policy. */
+  siwx?: Web3ConnectConfig["siwx"]
   children?: React.ReactNode
   className?: string
   autoConnect?: boolean
@@ -37,9 +46,10 @@ export interface AppKitContextValue {
   isConnecting: boolean
   address: string | null
   balance: string | null
-  balanceSymbol: string
+  /** Null when the chain's native symbol is not known. Do not substitute one. */
+  balanceSymbol: string | null
   chainName: string | null
-  availableChains: Array<{ id: number; namespace: string; name: string; token?: string }>
+  availableChains: Array<{ caip2: string; name: string; token?: string }>
   switchChain: (chainId: string) => Promise<void>
   wallets: DiscoveredWallet[]
   hasWallets: boolean
@@ -67,6 +77,10 @@ export function AppKit({
   metadata,
   enableEmbedded = false,
   enablePasskeys = false,
+  chains,
+  embeddedConfig,
+  encryptionKey,
+  siwx,
   children,
   className,
   autoConnect = false,
@@ -84,8 +98,12 @@ export function AppKit({
       metadata,
       enableEmbedded,
       enablePasskeys,
+      chains,
+      embeddedConfig,
+      encryptionKey,
+      siwx,
     }),
-    [projectId, metadata, enableEmbedded, enablePasskeys]
+    [projectId, metadata, enableEmbedded, enablePasskeys, chains, embeddedConfig, encryptionKey, siwx]
   )
 
   return (
@@ -146,8 +164,12 @@ function AppKitInner({
   }, [embedded])
 
   const handleSkipBackup = useCallback(() => {
+    // Dismissal must clear the one-shot seed phrase held by the hook. Keeping
+    // it in the React tree after the dialog closes needlessly expands its
+    // exposure to app code and browser extensions.
+    embedded.confirmBackup()
     setBackupOpen(false)
-  }, [])
+  }, [embedded])
 
   const handleExportPrivateKey = useCallback((): string | null => {
     return embedded.wallet?.privateKey ?? null
@@ -161,11 +183,12 @@ function AppKitInner({
       isConnecting,
       address: primaryAccount,
       balance,
-      balanceSymbol: currentChain?.token ?? "ETH",
+      // No `?? "ETH"`: this sits beside the number, and labelling MATIC or
+      // SOL as ether is a statement about what the user holds.
+      balanceSymbol: currentChain?.token ?? null,
       chainName: currentChain?.name ?? null,
       availableChains: availableChains.map((c) => ({
-        id: c.id,
-        namespace: c.namespace,
+        caip2: c.caip2,
         name: c.name,
         token: c.token,
       })),
@@ -232,8 +255,23 @@ export interface AppKitButtonProps {
 
 export function AppKitButton({ className }: AppKitButtonProps) {
   const ctx = useAppKit()
+  const { connectInjected } = useWeb3()
   const { primaryAccount } = useAccount()
   const { disconnect } = useDisconnect()
+
+  // The Web Component emits the selected wallet id, but the previous adapter
+  // left AppKitButton without an onConnect handler.  That made the injected
+  // wallet rows look clickable while never reaching the provider.  Keep the
+  // adapter generic and wire the public AppKit convenience button here.
+  const handleConnect = useCallback(async (
+    walletKind: "injected" | "walletconnect",
+    closeModal: () => void,
+    walletId?: string,
+  ) => {
+    if (walletKind !== "injected") return
+    await connectInjected(walletId)
+    closeModal()
+  }, [connectInjected])
 
   if (ctx.isConnected && primaryAccount) {
     return (
@@ -243,8 +281,9 @@ export function AppKitButton({ className }: AppKitButtonProps) {
           isConnected={ctx.isConnected}
           address={primaryAccount}
           balance={ctx.balance}
-          balanceSymbol={ctx.balanceSymbol}
+          balanceSymbol={ctx.balanceSymbol ?? undefined}
           onDisconnect={disconnect}
+          onConnect={handleConnect}
           className={className}
         />
       </div>
@@ -257,8 +296,9 @@ export function AppKitButton({ className }: AppKitButtonProps) {
       isConnecting={ctx.isConnecting}
       address={primaryAccount}
       balance={ctx.balance}
-      balanceSymbol={ctx.balanceSymbol}
+      balanceSymbol={ctx.balanceSymbol ?? undefined}
       onDisconnect={disconnect}
+      onConnect={handleConnect}
       className={className}
     />
   )
@@ -271,4 +311,14 @@ export interface AppKitChainSelectorProps {
 
 export function AppKitChainSelector({ className, variant = "dropdown" }: AppKitChainSelectorProps) {
   return <ChainSelector className={className} variant={variant} />
+}
+
+// Register AppKit business components after their module has initialized.
+// ComponentRegistry intentionally does not import this module, which keeps
+// ChainSelector's registry dependency acyclic in production bundles.
+try {
+  const defaults = componentRegistry.DEFAULT_COMPONENTS
+  if (defaults) Object.assign(defaults, { AppKit, AppKitButton, AppKitChainSelector })
+} catch {
+  // Test consumers may mock the registry module without its optional defaults.
 }

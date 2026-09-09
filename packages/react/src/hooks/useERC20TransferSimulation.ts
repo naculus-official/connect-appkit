@@ -1,3 +1,4 @@
+import { chainNumber } from "../core/chain-selection";
 /**
  * useERC20TransferSimulation — React hook for simulating ERC-20 token
  *                              transfers before signing/submitting.
@@ -8,16 +9,16 @@
  * @see /docs/features/transaction-simulation.md
  */
 
+import type { TokenConfig } from "@naculus/connect-core";
 import { useMemo } from "react";
-import {
-  useTransactionSimulation,
-  type UseTransactionSimulationReturn,
-  type SimulationResult,
-} from "./useTransactionSimulation";
+import type { EvmTransaction } from "../types";
 import { useAccount } from "./useAccount";
 import { useChain } from "./useChain";
-import type { TokenConfig } from "@naculus/connect-core";
-import type { EvmTransaction } from "../types";
+import {
+  type SimulationResult,
+  type UseTransactionSimulationReturn,
+  useTransactionSimulation,
+} from "./useTransactionSimulation";
 
 // ── Constants ─────────────────────────────────────────────────────
 
@@ -104,14 +105,22 @@ export function useERC20TransferSimulation(
 ): UseERC20TransferSimulationReturn {
   const { evmAccount, isConnected } = useAccount();
   const { currentChain } = useChain();
-  const chainId = options.token.chainId ?? currentChain?.id ?? 1;
+  // No `?? 1`. TokenConfig.chainId says where the token lives; falling back to
+  // mainnet simulates against whatever contract occupies that address there.
+  const chainId =
+    options.token.chainId ??
+    (currentChain ? (chainNumber(currentChain) ?? undefined) : undefined);
 
   // Build the transaction descriptor from ERC-20 transfer params
   const tx: EvmTransaction | undefined = useMemo(() => {
     if (!isConnected || !evmAccount) return undefined;
 
     try {
-      const decimals = options.token.decimals ?? 18;
+      // No `?? 18`. A simulation built with the wrong precision previews a
+      // different transfer than the one that will be sent, which is worse
+      // than showing no preview at all.
+      const decimals = options.token.decimals;
+      if (decimals === undefined) return undefined;
       const rawAmount = parseUnits(options.amount, decimals);
       const data = buildTransferCalldata(options.to, rawAmount);
 

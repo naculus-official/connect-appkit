@@ -9,24 +9,34 @@ import { eip155Reference, namespaceOf } from "@naculus/connect-core";
 import type { ChainInfo, WalletChain } from "../types";
 
 /**
- * The configured chain matching a CAIP-2 id, or null.
+ * The EIP-155 chain number, or null when this is not an EVM chain.
  *
- * `WalletChain.id` is a number, which can only ever describe an EIP-155
- * chain — a Solana reference is base58 and an XRPL one is an unsigned
- * network id. So this matches EIP-155 chains and answers null for the rest,
- * which is the truth about what the registry can represent rather than a
- * guess dressed up as a match.
+ * Callers that need a number — a viem client, an ERC-20 read — must handle
+ * the null rather than defaulting, because there is no number that means
+ * "Solana" and any stand-in would address a real EVM chain.
+ */
+export function chainNumber(chain: WalletChain): number | null {
+  return eip155Reference(chain.caip2);
+}
+
+/** The namespace a chain belongs to, read from its CAIP-2 id. */
+export function chainNamespace(chain: WalletChain): string | null {
+  return namespaceOf(chain.caip2);
+}
+
+/**
+ * The configured chain for a CAIP-2 id, or null.
+ *
+ * A string comparison now that `WalletChain` is keyed by CAIP-2. It used to
+ * pull an integer out of the id and compare that, which no non-EVM chain
+ * could ever match.
  */
 export function resolveChain(
   chains: WalletChain[],
   chainId: string | null | undefined,
 ): WalletChain | null {
   if (!chainId) return null;
-  const reference = eip155Reference(chainId);
-  if (reference === null) return null;
-  return (
-    chains.find((c) => c.namespace === "eip155" && c.id === reference) ?? null
-  );
+  return chains.find((c) => c.caip2 === chainId) ?? null;
 }
 
 /**
@@ -48,7 +58,7 @@ export function chainsForNamespace(
   if (!chainId) return chains;
   const namespace = namespaceOf(chainId);
   if (!namespace) return chains;
-  return chains.filter((c) => c.namespace === namespace);
+  return chains.filter((c) => chainNamespace(c) === namespace);
 }
 
 /**

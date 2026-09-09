@@ -1,3 +1,5 @@
+import type { WalletChain } from "../types";
+import { chainNumber, resolveChain } from "../core/chain-selection";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { useAccount } from "./useAccount";
@@ -15,7 +17,14 @@ export interface UseBalanceResult {
   /** Human-readable formatted balance in ETH (or native token), or null */
   formatted: string | null;
   /** Native token symbol (e.g. "ETH", "MATIC") */
-  symbol: string;
+  /**
+   * The native currency symbol, or null when it is not known.
+   *
+   * Null rather than "ETH". This is rendered beside the number, so a fallback
+   * labels 1.5 MATIC or 1.5 SOL as ether. Show the amount without a unit, or
+   * hide it, but do not name the wrong one.
+   */
+  symbol: string | null;
   /** USD price of one native token, or null if unavailable */
   usdPrice: number | null;
   /** Formatted USD value of the balance (e.g. "$1,234.56"), or null */
@@ -23,7 +32,7 @@ export interface UseBalanceResult {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
-  chain: { id: number; namespace: string; name: string; rpcUrl?: string; token?: string } | null;
+  chain: WalletChain | null;
 }
 
 export function useBalance(options?: UseBalanceOptions): UseBalanceResult {
@@ -36,26 +45,25 @@ export function useBalance(options?: UseBalanceOptions): UseBalanceResult {
   const refreshInterval = options?.refreshInterval;
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const currentChain = useMemo(() => {
-    if (!chainId || !chains.length) return null;
+  const currentChain = useMemo(
+    () => resolveChain(chains, chainId),
+    [chainId, chains],
+  );
+  const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
 
-    const namespace = chainId.startsWith("eip155:") ? "eip155" : null;
-    if (!namespace) return null;
-
-    const chainPart = chainId.split(":")[1];
-    const chainNum = Number(chainPart);
-    if (!Number.isFinite(chainNum) || chainNum <= 0) return null; // H11: reject malformed chain IDs
-    return chains.find((c) => c.namespace === namespace && c.id === chainNum) ?? null;
-  }, [chainId, chains]);
-
-  const tokenSymbol = useMemo(() => {
-    return currentChain?.token ?? "ETH";
-  }, [currentChain]);
+  // No `?? "ETH"`. This label is rendered directly beside the number, so a
+  // fallback shows "1.5 ETH" to someone holding 1.5 MATIC or 1.5 SOL. When
+  // the chain is unknown or its native symbol was never configured, the
+  // honest answer is that we do not know it.
+  const tokenSymbol = useMemo(
+    () => currentChain?.token ?? null,
+    [currentChain],
+  );
 
   const [client, setClient] = useState<PublicClient | null>(null);
 
   useEffect(() => {
-    if (!currentChain?.rpcUrl) {
+    if (!currentChain?.rpcUrl || evmChainNumber === null) {
       setClient(null);
       return;
     }
@@ -63,7 +71,7 @@ export function useBalance(options?: UseBalanceOptions): UseBalanceResult {
     const publicClient = createPublicClient({
       transport: http(currentChain.rpcUrl),
       chain: {
-        id: currentChain.id,
+        id: evmChainNumber,
         name: currentChain.name,
         nativeCurrency: {
           name: currentChain.token ?? "ETH",

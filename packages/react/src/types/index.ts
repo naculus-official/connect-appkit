@@ -1,9 +1,21 @@
 import type { UniversalWalletSession, Namespace, SessionNamespace } from "@naculus/connect-core";
+import type { PocketConfig } from "@naculus/connector-embedded";
 import type { Chain } from "viem";
 
 export type WalletChain = {
-  id: number;
-  namespace: Namespace;
+  /**
+   * CAIP-2, and the chain's identity.
+   *
+   * This was `id: number` alongside a separate `namespace`, which could only
+   * ever describe an EIP-155 chain: a Solana reference is base58
+   * (`solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`) and an XRPL one is an
+   * unsigned network id. The registry structurally could not hold a non-EVM
+   * chain, so every non-EVM path fell back to "unknown".
+   *
+   * `namespace` is gone rather than kept alongside: two fields that must
+   * agree are two fields that eventually do not.
+   */
+  caip2: string;
   name: string;
   rpcUrl?: string;
   explorerUrl?: string;
@@ -36,6 +48,8 @@ export interface Web3ConnectConfig {
   storageKey?: string;
   /** Enable embedded self-custodial wallet */
   enableEmbedded?: boolean;
+  /** Configuration forwarded to the embedded wallet engine. */
+  embeddedConfig?: PocketConfig;
   /** Enable passkeys (WebAuthn) connector */
   enablePasskeys?: boolean;
   /** Enable Solana injected wallet connector (Phantom, Solflare) */
@@ -46,9 +60,13 @@ export interface Web3ConnectConfig {
   connectionTimeout?: number;
   /** Max retry attempts for reconnection (default: 2) */
   maxRetries?: number;
+  /** Refresh fee data after a chain switch (default: true). */
+  autoRefreshFeeOnSwitch?: boolean;
   /**
    * Optional AES-256-GCM encryption key for session persistence.
-   * When provided, session data is encrypted at rest in localStorage.
+   * When provided, session data is encrypted at rest in localStorage. This
+   * key is frontend runtime data, not a secret boundary; never use a PaaS
+   * root credential, signing key, or private API token here.
    * When omitted, existing backward-compatible plaintext storage is used.
    */
   encryptionKey?: string;
@@ -64,6 +82,14 @@ export interface Web3State {
 
 export interface Web3Actions {
   startPairing: () => Promise<string>;
+  /**
+   * Abandon an in-flight pairing.
+   *
+   * WalletConnect cannot withdraw a proposal once the URI is displayed, so
+   * this refuses the resulting session and disconnects it if the wallet
+   * approves anyway. A user who cancels must not end up connected.
+   */
+  cancelPairing: () => void;
   completePairing: () => Promise<UniversalWalletSession>;
   connect: () => Promise<void>;
   connectInjected: (walletId?: string) => Promise<void>;

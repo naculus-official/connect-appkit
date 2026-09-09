@@ -8,32 +8,28 @@ import { CHAINS, getRpcUrl, DEFAULT_RPC_URLS } from "@naculus/connect-core";
 
 const STATIC_TESTNETS: WalletChain[] = [
   {
-    id: 5,
-    namespace: "eip155",
+    caip2: "eip155:5",
     name: "Goerli",
     rpcUrl: "https://goerli.blockpi.network/v1/rpc/public",
     explorerUrl: "https://goerli.etherscan.io",
     token: "ETH",
   },
   {
-    id: 80001,
-    namespace: "eip155",
+    caip2: "eip155:80001",
     name: "Mumbai",
     rpcUrl: "https://rpc-mumbai.maticvigil.com",
     explorerUrl: "https://mumbai.polygonscan.com",
     token: "MATIC",
   },
   {
-    id: 421613,
-    namespace: "eip155",
+    caip2: "eip155:421613",
     name: "Arbitrum Goerli",
     rpcUrl: "https://goerli-rollup.arbitrum.io/rpc",
     explorerUrl: "https://goerli.arbiscan.io",
     token: "ETH",
   },
   {
-    id: 420,
-    namespace: "eip155",
+    caip2: "eip155:420",
     name: "Optimism Goerli",
     rpcUrl: "https://goerli.optimism.io",
     explorerUrl: "https://goerli-optimism.etherscan.io",
@@ -55,8 +51,7 @@ function toWalletChain(chainId: number): WalletChain | null {
   const caip2Id = info.caip2Id;
 
   return {
-    id: chainId,
-    namespace: "eip155",
+    caip2: caip2Id,
     name: info.name,
     rpcUrl: getRpcUrl(caip2Id, DEFAULT_RPC_URLS[caip2Id] ?? ""),
     explorerUrl: info.explorerUrl,
@@ -83,7 +78,8 @@ function buildDefaultChains(): WalletChain[] {
 
   // Append static testnets that aren't in the registry
   for (const testnet of STATIC_TESTNETS) {
-    if (!CHAINS[testnet.id]) {
+    const reference = Number(testnet.caip2.split(":")[1]);
+    if (!CHAINS[reference]) {
       registryChains.push(testnet);
     }
   }

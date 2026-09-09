@@ -1,3 +1,4 @@
+import { chainNumber } from "../core/chain-selection";
 import { useMemo } from "react";
 import { createPublicClient, http, createWalletClient, type PublicClient, type WalletClient } from "viem";
 import type { WalletChain } from "../types";
@@ -12,13 +13,18 @@ export function useViemClient(): {
   const { evmAccount, isConnected } = useAccount();
   const { currentChain, chains } = useChain();
 
+  // Null for anything that is not EIP-155. viem speaks to EVM nodes, and a
+  // client built with a stand-in number would address a real chain that is
+  // not the one connected.
+  const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
+
   const publicClient = useMemo<PublicClient | null>(() => {
-    if (!currentChain?.rpcUrl) return null;
+    if (!currentChain?.rpcUrl || evmChainNumber === null) return null;
 
     return createPublicClient({
       transport: http(currentChain.rpcUrl),
       chain: {
-        id: currentChain.id,
+        id: evmChainNumber,
         name: currentChain.name,
         nativeCurrency: {
           name: currentChain.token ?? "ETH",
@@ -31,17 +37,23 @@ export function useViemClient(): {
         }
       }
     });
-  }, [currentChain]);
+  }, [currentChain, evmChainNumber]);
 
   const walletClient = useMemo<WalletClient | null>(() => {
-    if (!isConnected || !evmAccount || !currentChain?.rpcUrl) return null;
+    if (
+      !isConnected ||
+      !evmAccount ||
+      !currentChain?.rpcUrl ||
+      evmChainNumber === null
+    )
+      return null;
 
     const address = evmAccount.includes(":") ? evmAccount.split(":").pop()! : evmAccount;
 
     return createWalletClient({
       transport: http(currentChain.rpcUrl),
       chain: {
-        id: currentChain.id,
+        id: evmChainNumber,
         name: currentChain.name,
         nativeCurrency: {
           name: currentChain.token ?? "ETH",
@@ -55,7 +67,7 @@ export function useViemClient(): {
       },
       account: address as `0x${string}`
     });
-  }, [isConnected, evmAccount, currentChain]);
+  }, [isConnected, evmAccount, currentChain, evmChainNumber]);
 
   return {
     publicClient,
