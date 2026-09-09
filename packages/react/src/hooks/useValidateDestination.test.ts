@@ -34,7 +34,7 @@ describe("validateDestination", () => {
   });
 
   // Property-based: fuzz variant with many generated addresses
-  it("correctly validates 50 random-like hex strings", () => {
+  it("reports ok, not safe, for 50 random-like hex strings", () => {
     for (let i = 0; i < 50; i++) {
       // Generate random 40-char hex
       const hex = "0x" + Array.from({ length: 40 }, () =>
@@ -49,7 +49,7 @@ describe("validateDestination", () => {
         expect(result.isValid).toBe(false);
       } else {
         expect(result.isValid).toBe(true);
-        expect(result.level).toBe("safe");
+        expect(result.level).toBe("ok");
       }
     }
   });
@@ -65,12 +65,12 @@ describe("validateDestination", () => {
 });
 
 describe("useValidateDestination", () => {
-  it("returns safe validation for valid address", () => {
+  it("returns ok — nothing wrong found — for a well-formed address", () => {
     const { result } = renderHook(() =>
       useValidateDestination({ address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" })
     );
     expect(result.current.validation.isValid).toBe(true);
-    expect(result.current.validation.level).toBe("safe");
+    expect(result.current.validation.level).toBe("ok");
     expect(result.current.validation.warning).toBe(null);
   });
 

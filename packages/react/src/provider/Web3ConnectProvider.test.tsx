@@ -46,10 +46,19 @@ vi.mock("@naculus/connector-evm-injected", () => ({
 
 const { MockStorage } = vi.hoisted(() => {
   return {
+    // An actual store, not three bare spies. `load` returning undefined meant
+    // every reconnect took the "nothing saved" early return, so the reconnect
+    // path was unreachable from this file — which is why SIWx being skipped
+    // there went unnoticed.
     MockStorage: class {
-      save = vi.fn();
-      load = vi.fn();
-      clear = vi.fn();
+      static saved: unknown = null;
+      save = vi.fn(async (session: unknown) => {
+        MockStorage.saved = session;
+      });
+      load = vi.fn(async () => MockStorage.saved);
+      clear = vi.fn(async () => {
+        MockStorage.saved = null;
+      });
     },
   };
 });
@@ -210,5 +219,87 @@ describe("Web3ConnectProvider — session manager options", () => {
       expect.anything(),
       expect.objectContaining({ autoRefreshFeeOnSwitch: true }),
     );
+  });
+});
+
+/**
+ * SIWx on reconnect.
+ *
+ * `autoConnect` defaults to true, so reconnect is the path taken on every page
+ * load. It used to report `connected` without SIWx ever running, which meant
+ * `required: true` was enforced once at first connect and skipped on every
+ * refresh afterwards.
+ */
+describe("Web3ConnectProvider — SIWx on reconnect", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockClient.connect.mockReset().mockResolvedValue(mockSession);
+    mockClient.reconnect.mockReset().mockResolvedValue(mockSession);
+    mockClient.signMessage.mockReset().mockResolvedValue("0xsignature");
+  });
+
+  async function connectThenReconnect(config: Record<string, unknown>) {
+    const { result } = renderWithProvider(config);
+    await act(async () => {
+      await result.current.connect();
+    });
+    siwxConfig.createMessage.mockClear();
+    await act(async () => {
+      await result.current.reconnect();
+    });
+    return result;
+  }
+
+  it("re-authenticates on reconnect when SIWx is required", async () => {
+    const result = await connectThenReconnect({ siwx: siwxConfig });
+    expect(siwxConfig.createMessage).toHaveBeenCalled();
+    expect(result.current.status).toBe("connected");
+  });
+
+  it("does not reach connected when the required signature fails", async () => {
+    mockClient.signMessage.mockReset();
+    const { result } = renderWithProvider({ siwx: siwxConfig });
+    await act(async () => {
+      await result.current.connect();
+    });
+    mockClient.signMessage.mockRejectedValue(new Error("user rejected"));
+    await act(async () => {
+      await result.current.reconnect();
+    });
+    expect(result.current.status).not.toBe("connected");
+  });
+
+  it("skips the prompt when the app says a session already exists", async () => {
+    const hasValidSession = vi.fn().mockResolvedValue(true);
+    const result = await connectThenReconnect({
+      siwx: { ...siwxConfig, hasValidSession },
+    });
+    expect(hasValidSession).toHaveBeenCalled();
+    expect(siwxConfig.createMessage).not.toHaveBeenCalled();
+    expect(result.current.status).toBe("connected");
+  });
+
+  // A check that throws has not established a session. Assuming one would be
+  // the exact failure this change exists to remove.
+  it("asks for a signature when the session check throws", async () => {
+    const hasValidSession = vi.fn().mockRejectedValue(new Error("storage gone"));
+    await connectThenReconnect({ siwx: { ...siwxConfig, hasValidSession } });
+    expect(siwxConfig.createMessage).toHaveBeenCalled();
+  });
+
+  // Prompting on every reload for something the app said it can live without
+  // is the wrong trade.
+  it("leaves optional SIWx alone on reconnect", async () => {
+    const result = await connectThenReconnect({
+      siwx: { ...siwxConfig, required: false },
+    });
+    expect(siwxConfig.createMessage).not.toHaveBeenCalled();
+    expect(result.current.status).toBe("connected");
+  });
+
+  it("does not prompt when SIWx is not configured at all", async () => {
+    const result = await connectThenReconnect({});
+    expect(siwxConfig.createMessage).not.toHaveBeenCalled();
+    expect(result.current.status).toBe("connected");
   });
 });

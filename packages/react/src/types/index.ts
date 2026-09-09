@@ -23,6 +23,22 @@ export interface SIWxConfig {
   handleSignComplete?: (params: { message: string; signature: string }) => Promise<void>;
   /** Whether SIWx is required. If true, wallet disconnects on sign failure (default: true) */
   required?: boolean;
+  /**
+   * Whether an authenticated session already exists, asked on reconnect.
+   *
+   * `autoConnect` restores a stored wallet session on every page load, and
+   * that path used to report `connected` without SIWx ever running — so
+   * `required: true`, the strongest setting, was enforced on first connect
+   * and skipped on every refresh afterwards.
+   *
+   * Reconnect now re-authenticates when SIWx is required. Supply this to say
+   * "the user is already signed in, do not prompt again": return true from
+   * your own session check — `useSIWxSession` tracks expiry for exactly this.
+   *
+   * Absent means unknown, and unknown re-authenticates. A signature prompt is
+   * a nuisance; treating an unverified session as signed in is not.
+   */
+  hasValidSession?: () => boolean | Promise<boolean>;
 }
 
 export interface Web3ConnectConfig {

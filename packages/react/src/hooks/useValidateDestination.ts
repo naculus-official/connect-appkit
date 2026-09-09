@@ -4,7 +4,7 @@
  * Validates that a destination address is not a known burn/zero address
  * before sending a transaction. Returns { isValid, warning, level }.
  *
- * Level: "safe" | "warning" | "blocked"
+ * Level: "ok" | "warning" | "blocked"
  */
 
 import { useMemo } from "react";
@@ -34,7 +34,17 @@ function isValidFormat(addr: string): boolean {
   return /^0x[0-9a-fA-F]{40}$/.test(addr);
 }
 
-export type AddressValidationLevel = "safe" | "warning" | "blocked";
+/**
+ * What the four syntactic checks below found.
+ *
+ * `"ok"` was `"safe"`, which this function is in no position to say. It checks
+ * that an address is non-empty, well-formed, and not the zero or a burn
+ * address — nothing about whether the recipient is who the user thinks. It
+ * cannot see an address-poisoning lookalike, a contract that will not release
+ * the funds, or a known-malicious destination. Labelling that "safe" put a
+ * green tick beside a scammer's address.
+ */
+export type AddressValidationLevel = "ok" | "warning" | "blocked";
 
 export interface AddressValidationResult {
   isValid: boolean;
@@ -55,7 +65,8 @@ export function validateDestination(address: string): AddressValidationResult {
   if (isBurnAddress(address)) {
     return { isValid: false, level: "blocked", warning: t("address.burn_address") };
   }
-  return { isValid: true, level: "safe", warning: null };
+  // Nothing wrong was found. That is not the same as safe.
+  return { isValid: true, level: "ok", warning: null };
 }
 
 export interface UseValidateDestinationOptions {

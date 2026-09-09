@@ -18,11 +18,15 @@ const LEVEL_CONFIG: Record<
   AddressValidationLevel,
   { icon: React.ReactNode; label: string; colorClass: string; bgClass: string; buttonVariant: string }
 > = {
-  safe: {
+  ok: {
     icon: <CheckCircle size={20} />,
-    label: "Safe",
-    colorClass: "text-[hsl(var(--safe,142_76%_36%))]",
-    bgClass: "bg-[hsl(var(--safe)/0.1)]",
+    // Not "Safe". The checks behind this are syntactic: non-empty, correctly
+    // formed, not the zero or a burn address. They say nothing about whether
+    // the recipient is who the user believes, and a green "Safe" beside an
+    // address-poisoning lookalike is worse than no badge at all.
+    label: "No problem found",
+    colorClass: "text-muted-foreground",
+    bgClass: "bg-muted",
     buttonVariant: "default",
   },
   warning: {

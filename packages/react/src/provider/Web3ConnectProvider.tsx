@@ -510,6 +510,33 @@ export function Web3ConnectProvider({
     return session;
   }, [client, storage, updateStateFromSession, runSiwx, attachSession]);
 
+  /**
+   * SIWx on the reconnect path.
+   *
+   * Every other entry point runs `runSiwx` before reporting `connected`;
+   * this one did not, and `autoConnect` makes it the path taken on every page
+   * load. An application configured with `required: true` therefore had the
+   * setting enforced once and bypassed on every refresh.
+   *
+   * Optional SIWx is left alone: prompting for a signature the application
+   * said it can live without, on every reload, is the wrong trade.
+   */
+  const runSiwxOnReconnect = useCallback(
+    async (session: UniversalWalletSession): Promise<boolean> => {
+      const siwx = config.siwx;
+      if (!siwx || siwx.required === false) return true;
+      try {
+        if (await siwx.hasValidSession?.()) return true;
+      } catch (err) {
+        // A session check that throws has not established a session. Fall
+        // through and ask for a signature rather than assuming one.
+        logger.warn("react/provider", "siwx.hasValidSession failed", err);
+      }
+      return runSiwx(session);
+    },
+    [config.siwx, runSiwx],
+  );
+
   const reconnect = useCallback(async () => {
     const savedSession = await storage.load();
     if (!savedSession) {
@@ -538,6 +565,7 @@ export function Web3ConnectProvider({
         logger.warn("react/provider", "SessionManager restore error:", smError);
       }
 
+      if (!(await runSiwxOnReconnect(session))) return;
       dispatch({ type: "SET_STATUS", payload: "connected" });
     } catch (error) {
       logger.error("react/provider", "Reconnect error:", error);
@@ -551,6 +579,7 @@ export function Web3ConnectProvider({
     updateStateFromSession,
     maxRetries,
     syncSessionManagerConnectors,
+    runSiwxOnReconnect,
   ]);
 
   const switchChain = useCallback(
