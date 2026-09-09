@@ -1,45 +1,41 @@
 import { useMemo } from "react";
+import {
+  chainsForNamespace,
+  describeChain,
+  resolveChain,
+} from "../core/chain-selection";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { getChainById } from "../utils/chains";
-import type { WalletChain, ChainInfo } from "../types";
+import type { ChainInfo, WalletChain } from "../types";
 
+/**
+ * The connected chain, and the chains it is possible to switch to.
+ *
+ * All the judgement lives in `core/chain-selection.ts`, which imports no
+ * framework — the Vue binding for this is the same three calls.
+ */
 export function useChain() {
   const { chainId, session, switchChain, chains } = useWeb3();
 
-  const currentChain = useMemo(() => {
-    if (!chainId) return null;
-    return getChainById(chains, chainId) ?? null;
-  }, [chainId, chains]);
+  const currentChain = useMemo<WalletChain | null>(
+    () => resolveChain(chains, chainId),
+    [chains, chainId],
+  );
 
-  const chainInfo = useMemo<ChainInfo | null>(() => {
-    if (!chainId || !session) return null;
+  // Gated on the session, unlike `currentChain`. The two answer different
+  // questions: `currentChain` is the chain this client is pointed at,
+  // `chainInfo` is the chain of the connection that exists. A consumer
+  // rendering chain details only while connected depends on the difference.
+  const chainInfo = useMemo<ChainInfo | null>(
+    () => (session ? describeChain(chains, chainId) : null),
+    [chains, chainId, session],
+  );
 
-    const namespace = chainId.startsWith("eip155:")
-      ? "eip155"
-      : null;
-
-    if (!namespace) return null;
-
-    const chainNum = chainId.includes(":")
-      ? parseInt(chainId.split(":")[1], 10)
-      : parseInt(chainId, 10);
-
-    const chain = chains.find((c) => c.namespace === namespace && c.id === chainNum);
-
-    return {
-      namespace,
-      chainId,
-      name: chain?.name ?? `Chain ${chainNum}`,
-      selected: true
-    };
-  }, [chainId, session, chains]);
-
-  const availableChains = useMemo<WalletChain[]>(() => {
-    // Return all default EVM chains so users can see and switch to any supported chain
-    // The session namespace only contains the current/approved chain, but we want to
-    // make all configured chains available for switching.
-    return chains;
-  }, [chains]);
+  // Only the chains the connected wallet could actually switch to. Offering
+  // an EVM chain to a Solana wallet presents an action that cannot work.
+  const availableChains = useMemo<WalletChain[]>(
+    () => chainsForNamespace(chains, chainId),
+    [chains, chainId],
+  );
 
   return {
     chainId,
@@ -47,7 +43,7 @@ export function useChain() {
     chainInfo,
     availableChains,
     chains: availableChains,
-    isEvm: chainId?.startsWith("eip155:"),
-    switchChain
+    isEvm: chainId?.startsWith("eip155:") ?? false,
+    switchChain,
   };
 }

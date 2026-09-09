@@ -1,26 +1,45 @@
+import { isEvmAddress, parseCaip10 } from "@naculus/connect-core";
 import { useMemo } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 
-export function useAccount() {
-  const { accounts, session, isConnected } = useWeb3();
+export interface AccountEntry {
+  /** As the session reports it: CAIP-10 for most wallets, bare hex for some. */
+  address: string;
+  /** The namespace, when the entry was CAIP-10. Null for a bare address. */
+  namespace: string | null;
+  isEVM: boolean;
+}
 
-  const accountData = useMemo(() => {
-    if (!isConnected || accounts.length === 0) {
-      return null;
-    }
+/**
+ * The connected accounts, split by what they actually are.
+ *
+ * Reads the namespace from the CAIP-10 form rather than inferring it from
+ * address shape wherever it can, and falls back to shape only for a bare
+ * address. A bare 0x-40-hex value is unambiguously EVM; a bare base58 string
+ * is not unambiguously anything.
+ */
+export function useAccount() {
+  const { accounts, isConnected } = useWeb3();
+
+  const accountData = useMemo<AccountEntry[] | null>(() => {
+    if (!isConnected || accounts.length === 0) return null;
 
     return accounts.map((address) => {
-      // H12: Strengthened CAIP-10 / address detection
-      // Valid formats:
-      //   CAIP-10: "eip155:1:0x1234...5678" (namespace:chainId:address)
-      //   Plain:   "0x1234...5678" (42-char hex, 0x + 40 hex chars)
-      const isCaip10 = /^eip155:\d+:0x[0-9a-fA-F]{40}$/.test(address);
-      const isPlainHex = /^0x[0-9a-fA-F]{40}$/.test(address);
-      const isEvm = isCaip10 || isPlainHex;
-
+      const parsed = parseCaip10(address);
+      if (parsed) {
+        return {
+          address,
+          namespace: parsed.namespace,
+          // The namespace decides, not the shape. A wallet that reports
+          // `solana:...:0x...` is telling us something about the account that
+          // its characters do not.
+          isEVM: parsed.namespace === "eip155" && isEvmAddress(parsed.address),
+        };
+      }
       return {
         address,
-        isEVM: isEvm,
+        namespace: null,
+        isEVM: isEvmAddress(address),
       };
     });
   }, [accounts, isConnected]);
@@ -32,6 +51,6 @@ export function useAccount() {
     evmAccount,
     primaryAccount: accounts[0] ?? null,
     isConnected,
-    count: accounts.length
+    count: accounts.length,
   };
 }

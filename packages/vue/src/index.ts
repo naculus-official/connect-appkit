@@ -30,6 +30,8 @@ export {
 } from "./wc-generated/proxies"
 
 // ── Composables ───────────────────────────────────────────────────
+export { useAccounts } from "./useAccounts";
+export type { AccountEntry, UseAccountsReturn } from "./useAccounts";
 export { usePassphraseGate } from "./usePassphraseGate";
 export { useSolanaBalance } from "./useSolanaBalance";
 export type { UseSolanaBalanceReturn as UseSolanaBalanceVueReturn } from "./useSolanaBalance";

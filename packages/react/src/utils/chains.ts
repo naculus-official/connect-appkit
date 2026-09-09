@@ -1,3 +1,4 @@
+import { resolveChain } from "../core/chain-selection";
 import type { WalletChain } from "../types";
 import { CHAINS, getRpcUrl, DEFAULT_RPC_URLS } from "@naculus/connect-core";
 
@@ -94,20 +95,15 @@ export const DEFAULT_EVM_CHAINS: WalletChain[] = buildDefaultChains();
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
+/**
+ * The configured chain for a CAIP-2 id.
+ *
+ * Delegates rather than parsing again. The version this replaces did
+ * `parseInt(chainId.split(":")[1])`, which answers 5 for
+ * `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`.
+ */
 export function getChainById(chains: WalletChain[], chainId: string): WalletChain | undefined {
-  return chains.find((chain) => {
-    const chainNamespace = chainId.startsWith("eip155:")
-      ? "eip155"
-      : null;
-
-    if (!chainNamespace) return false;
-
-    const chainNum = chainId.includes(":")
-      ? parseInt(chainId.split(":")[1], 10)
-      : parseInt(chainId, 10);
-
-    return chain.namespace === chainNamespace && chain.id === chainNum;
-  });
+  return resolveChain(chains, chainId) ?? undefined;
 }
 
 export function getDefaultChains(): WalletChain[] {
