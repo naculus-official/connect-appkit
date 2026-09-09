@@ -4,7 +4,23 @@ import { WalletError } from "@naculus/connect-core";
 import type { EvmTransaction } from "../types";
 import { resolveClient } from "./client-resolver";
 
-export type SendTransactionStatus = "idle" | "awaiting_approval" | "confirmed" | "failed";
+/**
+ * Where a send has got to.
+ *
+ * `"submitted"` was `"confirmed"`, which was a claim the hook could not
+ * support: `sendTransaction` resolves with a transaction hash, and a hash
+ * means the wallet broadcast it — not that it was mined, and not that it
+ * succeeded. An interface showing "confirmed" at that moment tells someone
+ * their payment went through while it can still revert or never be included.
+ *
+ * To reach an actual confirmation, watch the returned hash with
+ * `useTxMonitor`, where `"confirmed"` is established by a receipt.
+ */
+export type SendTransactionStatus =
+  | "idle"
+  | "awaiting_approval"
+  | "submitted"
+  | "failed";
 
 export function useSendTransaction() {
   const { session, chainId, client } = useWeb3();
@@ -49,7 +65,7 @@ export function useSendTransaction() {
           chainId: chainId ?? undefined
         })) as string;
 
-        setStatus("confirmed");
+        setStatus("submitted");
         return result;
       } catch (err) {
         setStatus("failed");

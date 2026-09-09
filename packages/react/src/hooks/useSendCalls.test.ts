@@ -104,7 +104,7 @@ describe("useSendCalls", () => {
     expect(result.current.status).toBe("failed");
   });
 
-  it("confirms and exposes the batch handle on success", async () => {
+  it("reports submitted and exposes the batch handle on success", async () => {
     const { client, sendCalls } = batchingClient();
     mockUseWeb3.mockReturnValue({ session, chainId: "eip155:1", client: {} });
     mockResolveClient.mockReturnValue(client);
@@ -113,7 +113,7 @@ describe("useSendCalls", () => {
       await result.current.sendCalls([call, call]);
     });
     expect(sendCalls).toHaveBeenCalled();
-    expect(result.current.status).toBe("confirmed");
+    expect(result.current.status).toBe("submitted");
     expect(result.current.batchHash).toBe("0xbatch");
     expect(result.current.error).toBeNull();
   });
@@ -175,7 +175,7 @@ describe("useSendCalls — execution strategy", () => {
     expect(sendCalls).not.toHaveBeenCalled();
     expect(sendTransaction).toHaveBeenCalledTimes(3);
     expect(result.current.execution).toBe("sequential");
-    expect(result.current.status).toBe("confirmed");
+    expect(result.current.status).toBe("submitted");
   });
 
   it("falls back when the wallet cannot be asked at all", async () => {
@@ -205,7 +205,7 @@ describe("useSendCalls — execution strategy", () => {
       await result.current.sendCalls([call, call]);
     });
     expect(sendTransaction).toHaveBeenCalledTimes(2);
-    expect(result.current.status).toBe("confirmed");
+    expect(result.current.status).toBe("submitted");
   });
 
   it("sends a lone call directly rather than as a batch of one", async () => {
@@ -400,7 +400,7 @@ describe("useSendCalls — showCallsStatus", () => {
     });
     expect(shown).toBe(false);
     // The bundle is untouched by a refusal to display it.
-    expect(result.current.status).toBe("confirmed");
+    expect(result.current.status).toBe("submitted");
     expect(result.current.error).toBeNull();
   });
 

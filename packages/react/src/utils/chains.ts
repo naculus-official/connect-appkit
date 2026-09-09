@@ -1,6 +1,11 @@
 import { resolveChain } from "@naculus/connect-appkit-core";
 import type { WalletChain } from "../types";
-import { CHAINS, getRpcUrl, DEFAULT_RPC_URLS } from "@naculus/connect-core";
+import {
+  CHAINS,
+  DEFAULT_RPC_URLS,
+  eip155Reference,
+  getRpcUrl,
+} from "@naculus/connect-core";
 
 // ─── Static Overrides ──────────────────────────────────────────────
 // Chains that exist in the old default list but are NOT in chain-registry.
@@ -78,8 +83,10 @@ function buildDefaultChains(): WalletChain[] {
 
   // Append static testnets that aren't in the registry
   for (const testnet of STATIC_TESTNETS) {
-    const reference = Number(testnet.caip2.split(":")[1]);
-    if (!CHAINS[reference]) {
+    // eip155Reference rather than a split: the registry is keyed by an
+    // EIP-155 number, and only a chain that has one can collide with it.
+    const reference = eip155Reference(testnet.caip2);
+    if (reference === null || !CHAINS[reference]) {
       registryChains.push(testnet);
     }
   }

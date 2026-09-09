@@ -12,10 +12,21 @@ import { useCallback, useState } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { resolveClient } from "./client-resolver";
 
+/**
+ * Where a batch has got to.
+ *
+ * `"submitted"` was `"confirmed"`, which this hook is two steps away from
+ * knowing. `wallet_sendCalls` answers with a bundle identifier, and a bundle
+ * identifier does not even promise the calls were broadcast — EIP-5792 lets a
+ * wallet accept them and send later. The sequential fallback returns the last
+ * transaction hash, which promises broadcast and nothing more.
+ *
+ * `getCallsStatus` is what turns a bundle identifier into an outcome.
+ */
 export type SendCallsStatus =
   | "idle"
   | "awaiting_approval"
-  | "confirmed"
+  | "submitted"
   | "failed";
 
 export function useSendCalls() {
@@ -84,7 +95,7 @@ export function useSendCalls() {
               atomicRequired: true,
             },
           );
-          setStatus("confirmed");
+          setStatus("submitted");
           setBatchHash(result);
           return result;
         }
@@ -118,7 +129,7 @@ export function useSendCalls() {
             );
           }
         }
-        setStatus("confirmed");
+        setStatus("submitted");
         setBatchHash(lastHash);
         return lastHash;
       } catch (err) {
