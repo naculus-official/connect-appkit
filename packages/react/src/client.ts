@@ -53,6 +53,28 @@ export type ClientConfig = {
   enableSolana?: boolean;
   /** Default Solana chain (e.g. "solana:0"). Only used when enableSolana is true. */
   solanaDefaultChain?: string;
+  /**
+   * Solana JSON-RPC endpoint, for reading balances and submitting
+   * transactions.
+   *
+   * Kept separate from any EVM endpoint: pointing Solana traffic at an
+   * EIP-155 node fails with an error that blames the request.
+   */
+  solanaRpcUrl?: string;
+};
+
+/**
+ * What a transaction looks like on the way in.
+ *
+ * An EVM transaction is a set of named fields the wallet assembles; a Solana
+ * one is bytes the application has already built and serialized. Typing this
+ * as `Record<string, unknown>` made the second impossible to express, so a
+ * Solana transaction could not be sent through the client even once the
+ * connector below it knew how.
+ */
+export type TransactionInput = {
+  transaction: Record<string, unknown> | Uint8Array | string;
+  chainId?: string;
 };
 
 export interface Web3Client {
@@ -65,6 +87,8 @@ export interface Web3Client {
    * on. Null otherwise, including when the app supplies its own callback.
    */
   passphraseGate: PassphraseGate | null;
+  /** Solana JSON-RPC endpoint from config, or null when none was given. */
+  solanaRpcUrl: string | null;
   /** The Solana injected wallet connector if enabled */
   solanaConnector: UniversalConnector | null;
   connect: () => Promise<UniversalWalletSession>;
@@ -85,7 +109,18 @@ export interface Web3Client {
   /** Send a transaction via the appropriate connector for the session */
   sendTransaction: (
     session: UniversalWalletSession,
-    input: { transaction: Record<string, unknown>; chainId?: string },
+    input: TransactionInput,
+  ) => Promise<unknown>;
+  /**
+   * Sign without broadcasting.
+   *
+   * Present because a Solana application routinely signs a transaction it
+   * submits itself, or hands to a relayer. There was no way to ask for that
+   * through the client at all.
+   */
+  signTransaction: (
+    session: UniversalWalletSession,
+    input: TransactionInput,
   ) => Promise<unknown>;
   /** Send batched calls (EIP-5792 wallet_sendCalls) via the appropriate connector */
   sendCalls: (
@@ -271,6 +306,7 @@ export function createClient(config: ClientConfig): Web3Client {
       return _passkeysConnector;
     },
     passphraseGate: _passphraseGate,
+    solanaRpcUrl: config.solanaRpcUrl ?? null,
     get solanaConnector() {
       return _solanaConnector;
     },
@@ -326,6 +362,35 @@ export function createClient(config: ClientConfig): Web3Client {
         );
       }
       return connector.signMessage(session, input);
+    },
+    signTransaction: async (session, input) => {
+      // Same dispatch as sendTransaction; only the connector method differs.
+      if (session.id?.startsWith("eip6963-")) {
+        return eip6963Connector.signTransaction(session as any, input);
+      }
+      if (session.walletType === "embedded") {
+        if (!_embeddedConnector) {
+          throw new WalletError(
+            "wallet_unavailable",
+            "Embedded wallet connector not available.",
+          );
+        }
+        return _embeddedConnector.signTransaction(session as any, input);
+      }
+      if (session.walletType === "solana") {
+        if (solanaInit) await solanaInit;
+        if (_solanaConnector) {
+          return (_solanaConnector as any).signTransaction(
+            session as any,
+            input,
+          );
+        }
+        throw new WalletError(
+          "wallet_unavailable",
+          "Solana connector not available. Ensure enableSolana is true and @naculus/connector-solana is installed.",
+        );
+      }
+      return connector.signTransaction(session as any, input);
     },
     sendTransaction: async (session, input) => {
       if (session.id?.startsWith("eip6963-")) {

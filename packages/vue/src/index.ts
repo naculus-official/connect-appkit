@@ -31,4 +31,6 @@ export {
 
 // ── Composables ───────────────────────────────────────────────────
 export { usePassphraseGate } from "./usePassphraseGate";
+export { useSolanaBalance } from "./useSolanaBalance";
+export type { UseSolanaBalanceReturn as UseSolanaBalanceVueReturn } from "./useSolanaBalance";
 export type { UsePassphraseGateReturn } from "./usePassphraseGate";

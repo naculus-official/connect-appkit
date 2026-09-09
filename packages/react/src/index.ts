@@ -32,6 +32,32 @@ export type {
   PassphraseIntent,
   PassphraseRequest,
 } from "@naculus/connect-core";
+// ── Solana ────────────────────────────────────────────────────────
+export { useSolanaAccount } from "./hooks/useSolanaAccount";
+export type { UseSolanaAccountReturn } from "./hooks/useSolanaAccount";
+export { useSolanaBalance } from "./hooks/useSolanaBalance";
+export type {
+  UseSolanaBalanceOptions,
+  UseSolanaBalanceReturn,
+} from "./hooks/useSolanaBalance";
+export { useSolanaTransaction } from "./hooks/useSolanaTransaction";
+export type { UseSolanaTransactionReturn } from "./hooks/useSolanaTransaction";
+// Re-exported from connect-core, where the framework-neutral half lives so a
+// Vue composable can use it unchanged. A React consumer never has to know.
+export {
+  formatSol,
+  getLatestBlockhash,
+  getSignatureStatus,
+  getSolanaBalance,
+  LAMPORTS_PER_SOL,
+  parseSol,
+  SolanaRpcError,
+} from "@naculus/connect-core";
+export type {
+  SolanaBalance,
+  SolanaConfirmationStatus,
+} from "@naculus/connect-core";
+
 export { useEmbeddedWallet } from "./hooks/useEmbeddedWallet";
 export type { UseEmbeddedWalletReturn } from "./hooks/useEmbeddedWallet";
 // Re-exported so a UI package can name what the hook returns without taking a
