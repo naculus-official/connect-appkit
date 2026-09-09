@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { TokenListManager } from "@naculus/connect-core";
 import type { TokenSearchResult, TokenListSource, TokenListManagerConfig } from "@naculus/connect-core";
 import { getDefaultSources } from "./defaults";
+import { eip155ChainIdToNumber } from "@naculus/connect-appkit-core";
 
 const DEBOUNCE_MS = 300;
 
@@ -73,7 +74,7 @@ export function useTokenSearch(
 
     debounceRef.current = setTimeout(() => {
       const manager = getManager();
-      const numericChainId = chainId ? parseChainId(chainId) : undefined;
+      const numericChainId = chainId ? eip155ChainIdToNumber(chainId) : undefined;
       const searchResults = manager.search(trimmedQuery, {
         chainId: numericChainId,
         limit: 20,
@@ -92,8 +93,4 @@ export function useTokenSearch(
   return { results, isSearching };
 }
 
-function parseChainId(chainId: string): number | undefined {
-  const parts = chainId.split(":");
-  const numeric = parseInt(parts[parts.length - 1], 10);
-  return isNaN(numeric) ? undefined : numeric;
-}
+

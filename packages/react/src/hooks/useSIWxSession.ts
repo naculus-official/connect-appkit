@@ -11,18 +11,17 @@
  *  - Loading/error state
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useSIWxLogin } from "./useSIWxLogin";
-import type { UseSIWxLoginOptions } from "./useSIWxLogin";
 import { LocalStorageAdapter, logger } from "@naculus/connect-core";
-import type {
-  SiwxResult,
-  SiwxMessage,
+import type { SiwxMessage, SiwxResult, SiwxSession } from "@naculus/siwx";
+import {
+  checkSessionExpired,
+  createLocalStorageSiwxSessionStorage,
+  SiwxSessionManager,
 } from "@naculus/siwx";
-import { checkSessionExpired, createLocalStorageSiwxSessionStorage, SiwxSessionManager } from "@naculus/siwx";
-import type { SiwxSession } from "@naculus/siwx";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { getClient } from "../client";
+import type { UseSIWxLoginOptions } from "./useSIWxLogin";
+import { useSIWxLogin } from "./useSIWxLogin";
 
 // ── Constants ────────────────────────────────────────────────────
 
@@ -70,9 +69,23 @@ export interface UseSIWxSessionReturn {
 
 // ── Helpers ──────────────────────────────────────────────────────
 
+/**
+ * Random suffix for a session record ID.
+ *
+ * `Math.random` gave roughly 31 predictable bits. The signature, not this ID,
+ * is what authenticates a SIWx session, so this was not an authentication
+ * bypass — but an ID a consumer may key storage or a request on should not be
+ * guessable, and the CSPRNG is already the convention everywhere else here.
+ */
+function randomSuffix(): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 function siwxResultToSession(result: SiwxResult): SiwxSession {
   return {
-    id: `siwx_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+    id: `siwx_${Date.now().toString(36)}_${randomSuffix()}`,
     chainId: result.message.chainId,
     address: result.message.address,
     domain: result.message.domain,
@@ -87,7 +100,7 @@ function siwxResultToSession(result: SiwxResult): SiwxSession {
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useSIWxSession(
-  options?: UseSIWxSessionOptions
+  options?: UseSIWxSessionOptions,
 ): UseSIWxSessionReturn {
   const {
     storagePrefix = "naculus_",
@@ -103,7 +116,7 @@ export function useSIWxSession(
   const { session: web3Session, chainId: currentChainId } = useWeb3();
   const login = useSIWxLogin();
   const storageRef = useRef(
-    createLocalStorageSiwxSessionStorage(`${storagePrefix}siwx_session`)
+    createLocalStorageSiwxSessionStorage(`${storagePrefix}siwx_session`),
   );
 
   const clearError = useCallback(() => setError(null), []);
@@ -126,7 +139,10 @@ export function useSIWxSession(
         if (cancelled) return;
 
         if (saved) {
-          logger.info("react/useSIWxSession", "Restored persisted SIWx session");
+          logger.info(
+            "react/useSIWxSession",
+            "Restored persisted SIWx session",
+          );
           setSession(saved);
           setError(null);
         } else {
@@ -134,7 +150,11 @@ export function useSIWxSession(
           setSession(null);
         }
       } catch (err) {
-        logger.warn("react/useSIWxSession", "Failed to restore SIWx session:", err);
+        logger.warn(
+          "react/useSIWxSession",
+          "Failed to restore SIWx session:",
+          err,
+        );
         setSession(null);
       } finally {
         if (!cancelled) setIsRestoring(false);
@@ -199,13 +219,14 @@ export function useSIWxSession(
         setIsSigningIn(false);
         return siwxSession;
       } catch (err) {
-        const wrapped = err instanceof Error ? err : new Error("SIWx sign-in failed");
+        const wrapped =
+          err instanceof Error ? err : new Error("SIWx sign-in failed");
         setError(wrapped);
         setIsSigningIn(false);
         throw wrapped;
       }
     },
-    [login, currentChainId, defaultExpirySeconds]
+    [login, currentChainId, defaultExpirySeconds],
   );
 
   // ── Sign Out ───────────────────────────────────────────────────
@@ -239,7 +260,10 @@ export function useSIWxSession(
         uri: session.message.uri,
         chainId: session.chainId,
         expirySeconds: defaultExpirySeconds,
-        resources: session.message.resources.length > 0 ? session.message.resources : undefined,
+        resources:
+          session.message.resources.length > 0
+            ? session.message.resources
+            : undefined,
         requestId: session.message.requestId ?? undefined,
       });
 
@@ -257,7 +281,8 @@ export function useSIWxSession(
       setIsSigningIn(false);
       return refreshedSession;
     } catch (err) {
-      const wrapped = err instanceof Error ? err : new Error("Session refresh failed");
+      const wrapped =
+        err instanceof Error ? err : new Error("Session refresh failed");
       setError(wrapped);
       setIsSigningIn(false);
       throw wrapped;

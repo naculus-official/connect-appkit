@@ -33,7 +33,7 @@ import {
   web3Reducer,
   withRetry,
   withTimeout,
-} from "../core/web3-store";
+} from "@naculus/connect-appkit-core";
 import { selectSiwxAccount } from "../hooks/siwx-accounts";
 import type {
   ConnectionStatus,

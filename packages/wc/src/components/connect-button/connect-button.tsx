@@ -22,6 +22,9 @@ export class AppkitConnectButton {
   @Prop() isBalanceLoading = false
   @Prop() tokenBalancesJson = "[]"
   @Prop() explorerUrl = ""
+  @Prop() explorerLabel = "Explorer"
+  @Prop() isMobile = false
+  @Prop() mobileWalletName = ""
   @Prop() walletsJson = "[]"
   @Prop() qrUri: string | null = null
   @Prop() qrLoading = false
@@ -32,6 +35,7 @@ export class AppkitConnectButton {
   @Event() appkitDisconnect!: EventEmitter<void>
   @Event() appkitStartPairing!: EventEmitter<void>
   @Event() appkitRetry!: EventEmitter<void>
+  @Event() appkitCancelPairing!: EventEmitter<void>
   @Event() appkitMobileDeepLink!: EventEmitter<void>
   @Event() appkitCopyAddress!: EventEmitter<string>
 
@@ -78,7 +82,11 @@ export class AppkitConnectButton {
     this.modalOpen = true
     setTimeout(() => this.dialogEl?.showModal(), 0)
   }
-  private closeModal() { this.modalOpen = false; this.dialogEl?.close() }
+  private closeModal() {
+    if (this.view !== "menu") this.appkitCancelPairing.emit()
+    this.modalOpen = false
+    this.dialogEl?.close()
+  }
 
   private goToWC() {
     this.view = "loading-qr"; this.qrError = null
@@ -171,7 +179,14 @@ export class AppkitConnectButton {
                   {this.addressCopied ? "✓" : "📋"}
                 </appkit-button>
                 {this.explorerUrl && (
-                  <a href={`${this.explorerUrl}/address/${this.fullAddr}`} target="_blank" class="expl-link">↗</a>
+                  <a
+                    href={`${this.explorerUrl}/address/${this.fullAddr}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    class="expl-link"
+                    aria-label={this.explorerLabel}
+                    title={this.explorerLabel}
+                  >↗</a>
                 )}
               </div>
               <div class="dd-balance">
@@ -249,6 +264,16 @@ export class AppkitConnectButton {
                     <span class="wc-name">WalletConnect</span>
                     <span class="wc-desc">Scan QR with any wallet</span>
                   </appkit-button>
+                  {this.isMobile && this.mobileWalletName && (
+                    <appkit-button
+                      variant="outline"
+                      class="wc-opt"
+                      onClick={() => this.appkitMobileDeepLink.emit()}
+                    >
+                      <span class="wc-name">Open {this.mobileWalletName}</span>
+                      <span class="wc-desc">Continue in your mobile wallet</span>
+                    </appkit-button>
+                  )}
                   <appkit-button variant="outline" class="wc-opt" onClick={() => this.closeModal()}>
                     Close
                   </appkit-button>
@@ -271,13 +296,24 @@ export class AppkitConnectButton {
                   <appkit-button variant="outline" size="sm" onClick={() => this.copyUri()}>
                     {this.uriCopied ? "✓ Copied" : "Copy link"}
                   </appkit-button>
+                  <appkit-button variant="ghost" size="sm" onClick={() => this.closeModal()}>
+                    Cancel
+                  </appkit-button>
                 </div>
               )}
               {this.view === "qr-error" && (
                 <div class="qr-center">
                   <div class="qr-error-text">{this.qrError || "Connection failed"}</div>
                   <appkit-button variant="default" size="sm" onClick={() => this.appkitRetry.emit()}>Retry</appkit-button>
+                  <appkit-button variant="ghost" size="sm" onClick={() => this.closeModal()}>
+                    Cancel
+                  </appkit-button>
                 </div>
+              )}
+              {this.view === "loading-qr" && (
+                <appkit-button variant="ghost" size="sm" onClick={() => this.closeModal()}>
+                  Cancel
+                </appkit-button>
               )}
             </div>
             <div class="modal-footer">Powered by Naculus</div>

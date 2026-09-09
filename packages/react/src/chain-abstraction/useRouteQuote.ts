@@ -32,7 +32,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 // ── Local type definitions (hook domain types, not core exports) ──────
 
 export interface Quote {
@@ -80,7 +80,19 @@ export interface UseRouteQuoteReturn {
  */
 export function useRouteQuote(
   input: UseRouteQuoteInput,
-  getQuoteFn?: (from: string, to: string, token: string, amount: string, options?: QuoteOptions) => Promise<Quote[]>,
+  getQuoteFn?: (
+    from: string,
+    to: string,
+    token: string,
+    amount: string,
+    options?: QuoteOptions,
+    /**
+     * Destination token for a cross-token route. Appended so existing
+     * implementations stay assignable; `toToken` was declared on the input and
+     * then dropped, so a USDC→USDT quote silently asked for USDC→USDC.
+     */
+    toToken?: string,
+  ) => Promise<Quote[]>,
 ): UseRouteQuoteReturn {
   const { fromChain, toChain, fromToken, toToken, amount, options } = input;
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -90,7 +102,13 @@ export function useRouteQuote(
   const mountedRef = useRef(true);
 
   const fetchQuotes = useCallback(async () => {
-    if (!fromChain || !toChain || !fromToken || !amount || BigInt(amount) <= 0n) {
+    // BigInt() throws on anything that is not a decimal integer — "1.5",
+    // "abc", "1e18" — and this guard runs outside the try below, so a user
+    // typing into an amount field produced an uncaught error from the
+    // debounce timer rather than an empty quote list.
+    const amountIsPositiveInteger =
+      /^(?:0|[1-9][0-9]*)$/.test(amount) && BigInt(amount) > 0n;
+    if (!fromChain || !toChain || !fromToken || !amountIsPositiveInteger) {
       setQuotes([]);
       return;
     }
@@ -107,6 +125,7 @@ export function useRouteQuote(
         fromToken,
         amount,
         options,
+        toToken,
       );
 
       if (mountedRef.current) {
@@ -122,7 +141,7 @@ export function useRouteQuote(
         setLoading(false);
       }
     }
-  }, [fromChain, toChain, fromToken, amount, options, getQuoteFn]);
+  }, [fromChain, toChain, fromToken, toToken, amount, options, getQuoteFn]);
 
   // Debounced auto-fetch on input change
   useEffect(() => {

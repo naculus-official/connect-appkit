@@ -1,4 +1,4 @@
-import { resolveChain } from "../core/chain-selection";
+import { resolveChain } from "@naculus/connect-appkit-core";
 import type { WalletChain } from "../types";
 import { CHAINS, getRpcUrl, DEFAULT_RPC_URLS } from "@naculus/connect-core";
 

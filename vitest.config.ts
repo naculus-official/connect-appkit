@@ -21,6 +21,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      thresholds: {
+        // The current full-suite baseline is 46.94/45.21/48.84/47.64.
+        // Keep a modest floor so new hooks and UI branches do not silently
+        // reduce the consumer-facing test surface.
+        statements: 45,
+        branches: 40,
+        functions: 45,
+        lines: 45,
+      },
       exclude: ['**/*.test.ts', '**/*.test.tsx', '**/node_modules/**', '**/dist/**'],
     },
   },

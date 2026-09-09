@@ -1,4 +1,4 @@
-import { chainNumber, resolveChain } from "../core/chain-selection";
+import { chainNumber, resolveChain } from "@naculus/connect-appkit-core";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { useAccount } from "./useAccount";

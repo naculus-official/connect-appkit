@@ -68,7 +68,7 @@ export function WalletConnectProvider({ children }: WalletConnectProviderProps) 
   }
 
   const connectWalletConnect = useCallback(async () => {
-    connectRef.current?.()
+    await connectRef.current?.()
   }, [])
 
   const retryQR = useCallback(() => {

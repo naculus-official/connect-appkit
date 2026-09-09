@@ -2,28 +2,72 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { getClient } from "../client";
 import { WalletError, SessionKeyManager, MemoryStorageAdapter } from "@naculus/connect-core";
 import type {
   SessionKeyScope,
   SessionKeyInfo,
   SessionKeyManagerConfig,
+  SessionKeyTransaction,
 } from "@naculus/connect-core";
 
 // ─── Internal singleton for session key management ─────────────────────
 // In a full production setup, this would be injected via context or client config.
 
 let globalSessionKeyManager: SessionKeyManager | null = null;
+let globalSessionKeyConfigFingerprint: string | null = null;
+
+/**
+ * Fields that decide how much authority a session key carries.
+ *
+ * The manager is a module singleton, so only the first caller's config was
+ * ever applied and every later one was silently discarded. That is tolerable
+ * for a storage prefix and not for a spending cap: a component asking for a
+ * 0.1 ETH limit would quietly inherit whatever limit the first caller set.
+ */
+function spendingFingerprint(config?: SessionKeyManagerConfig): string {
+  if (!config) return "";
+  return JSON.stringify({
+    defaultMaxTotalValue: config.defaultMaxTotalValue?.toString(),
+    defaultMaxTxCount: config.defaultMaxTxCount,
+    defaultExpiryMs: config.defaultExpiryMs,
+    requireAllowedContracts: config.requireAllowedContracts,
+    forbiddenMethods: config.forbiddenMethods,
+    pbkdf2Iterations: config.pbkdf2Iterations,
+    unsafeAllowWeakKdf: config.unsafeAllowWeakKdf,
+    storagePrefix: config.storagePrefix,
+  });
+}
 
 function getSessionKeyManager(config?: SessionKeyManagerConfig): SessionKeyManager {
+  const fingerprint = spendingFingerprint(config);
   if (!globalSessionKeyManager) {
     globalSessionKeyManager = new SessionKeyManager(
       config,
       // Use MemoryStorageAdapter for SSR safety; browser integration will use LocalStorageAdapter
       typeof window !== "undefined" ? undefined : new MemoryStorageAdapter(),
     );
+    globalSessionKeyConfigFingerprint = fingerprint;
+    return globalSessionKeyManager;
+  }
+
+  // Refuse rather than hand back a manager governed by someone else's limits.
+  if (fingerprint !== "" && fingerprint !== globalSessionKeyConfigFingerprint) {
+    throw new WalletError(
+      "invalid_input",
+      "useSessionKeys is backed by a process-wide SessionKeyManager, and a " +
+        "different spending configuration was supplied after it was created. " +
+        "The second configuration would be ignored, so the caller would be " +
+        "operating under limits it did not set. Use one configuration per " +
+        "application, or construct a SessionKeyManager directly.",
+    );
   }
   return globalSessionKeyManager;
+}
+
+/** Test seam: drop the process-wide manager. */
+export function __resetSessionKeyManagerForTests(): void {
+  globalSessionKeyManager = null;
+  globalSessionKeyConfigFingerprint = null;
 }
 
 // ─── useSessionKeys ────────────────────────────────────────────────────
@@ -53,7 +97,9 @@ export interface UseSessionKeysReturn {
  * const { sessions, activeSessions, refresh } = useSessionKeys();
  * ```
  */
-export function useSessionKeys(): UseSessionKeysReturn {
+export function useSessionKeys(
+  config?: SessionKeyManagerConfig,
+): UseSessionKeysReturn {
   const { session } = useWeb3();
   const [sessions, setSessions] = useState<SessionKeyInfo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,7 +108,7 @@ export function useSessionKeys(): UseSessionKeysReturn {
 
   const clearError = useCallback(() => setError(null), []);
 
-  const manager = getSessionKeyManager();
+  const manager = getSessionKeyManager(config);
   const storageAvailable = manager.isStorageAvailable();
 
   const refresh = useCallback(async () => {
@@ -144,7 +190,9 @@ export interface UseCreateSessionKeyReturn {
  * };
  * ```
  */
-export function useCreateSessionKey(): UseCreateSessionKeyReturn {
+export function useCreateSessionKey(
+  config?: SessionKeyManagerConfig,
+): UseCreateSessionKeyReturn {
   const { session } = useWeb3();
   const [lastCreated, setLastCreated] = useState<SessionKeyInfo | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -152,7 +200,7 @@ export function useCreateSessionKey(): UseCreateSessionKeyReturn {
 
   const clearError = useCallback(() => setError(null), []);
 
-  const manager = getSessionKeyManager();
+  const manager = getSessionKeyManager(config);
 
   const createSessionKey = useCallback(
     async (
@@ -212,13 +260,15 @@ export interface UseRevokeSessionReturn {
  * await revokeSession(sessionId);
  * ```
  */
-export function useRevokeSession(): UseRevokeSessionReturn {
+export function useRevokeSession(
+  config?: SessionKeyManagerConfig,
+): UseRevokeSessionReturn {
   const [isRevoking, setIsRevoking] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const clearError = useCallback(() => setError(null), []);
 
-  const manager = getSessionKeyManager();
+  const manager = getSessionKeyManager(config);
 
   const revokeSession = useCallback(
     async (sessionId: string): Promise<void> => {
@@ -248,8 +298,12 @@ export function useRevokeSession(): UseRevokeSessionReturn {
 // ─── useSendWithSession ────────────────────────────────────────────────
 
 export interface UseSendWithSessionReturn {
-  /** Sign a message hash using a session key */
-  signWithSession: (sessionId: string, messageHash: `0x${string}`) => Promise<`0x${string}`>;
+  /** Sign a transaction hash after enforcing the transaction scope */
+  signWithSession: (
+    sessionId: string,
+    messageHash: `0x${string}`,
+    tx: SessionKeyTransaction,
+  ) => Promise<`0x${string}`>;
   /** Check if a transaction is within a session's scope */
   checkScope: (
     sessionId: string,
@@ -284,24 +338,30 @@ export interface UseSendWithSessionReturn {
  *
  * const check = await checkScope(sessionId, tx);
  * if (check.valid) {
- *   const sig = await signWithSession(sessionId, messageHash);
+ *   const sig = await signWithSession(sessionId, messageHash, tx);
  * }
  * ```
  */
-export function useSendWithSession(): UseSendWithSessionReturn {
+export function useSendWithSession(
+  config?: SessionKeyManagerConfig,
+): UseSendWithSessionReturn {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const clearError = useCallback(() => setError(null), []);
 
-  const manager = getSessionKeyManager();
+  const manager = getSessionKeyManager(config);
 
   const signWithSession = useCallback(
-    async (sessionId: string, messageHash: `0x${string}`): Promise<`0x${string}`> => {
+    async (
+      sessionId: string,
+      messageHash: `0x${string}`,
+      tx: SessionKeyTransaction,
+    ): Promise<`0x${string}`> => {
       setIsBusy(true);
       setError(null);
       try {
-        return await manager.signWithSessionKey(sessionId, messageHash);
+        return await manager.signWithSessionKey(sessionId, messageHash, tx);
       } catch (err) {
         const errorObj = err instanceof Error ? err : new Error("Failed to sign with session key");
         setError(errorObj);

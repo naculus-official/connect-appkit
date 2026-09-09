@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Need vi.hoisted because vi.mock is hoisted above variable declarations
-const { mockWalletConnectConnector, mockEmbeddedConnector, mockSolanaConnector } = vi.hoisted(() => {
+const {
+  mockWalletConnectConnector,
+  mockEmbeddedConnector,
+  mockSolanaConnector,
+} = vi.hoisted(() => {
   const wc = {
     id: "walletconnect",
     name: "WalletConnect",
@@ -15,18 +19,32 @@ const { mockWalletConnectConnector, mockEmbeddedConnector, mockSolanaConnector }
     switchChain: vi.fn().mockResolvedValue(undefined),
     getAccounts: vi.fn().mockResolvedValue([]),
     signMessage: vi.fn(),
+    getCapabilities: vi.fn().mockResolvedValue({
+      "eip155:1": { atomicBatch: { supported: true } },
+    }),
+    onAccountsChanged: vi.fn().mockReturnValue(() => {}),
+    onChainChanged: vi.fn().mockReturnValue(() => {}),
   };
 
   const embedded = {
     id: "embedded",
     name: "Embedded Wallet",
     kind: "embedded",
-    connect: vi.fn().mockResolvedValue({ id: "embedded-session", walletType: "embedded" }),
+    connect: vi
+      .fn()
+      .mockResolvedValue({ id: "embedded-session", walletType: "embedded" }),
     disconnect: vi.fn().mockResolvedValue(undefined),
     getAccounts: vi.fn().mockResolvedValue([]),
+    signMessage: vi.fn().mockResolvedValue("embedded-signature"),
+    sendTransaction: vi.fn().mockResolvedValue("embedded-tx-hash"),
+    sendCalls: vi.fn().mockResolvedValue("embedded-bundle-id"),
+    getCapabilities: vi.fn().mockResolvedValue({}),
+    onAccountsChanged: vi.fn().mockReturnValue(() => {}),
   };
 
   const solana = {
+    onAccountsChanged: vi.fn().mockReturnValue(() => {}),
+    onChainChanged: vi.fn().mockReturnValue(() => {}),
     id: "solana",
     name: "Solana",
     kind: "solana" as const,
@@ -41,7 +59,11 @@ const { mockWalletConnectConnector, mockEmbeddedConnector, mockSolanaConnector }
     sendTransaction: vi.fn().mockResolvedValue("tx-hash"),
   };
 
-  return { mockWalletConnectConnector: wc, mockEmbeddedConnector: embedded, mockSolanaConnector: solana };
+  return {
+    mockWalletConnectConnector: wc,
+    mockEmbeddedConnector: embedded,
+    mockSolanaConnector: solana,
+  };
 });
 
 vi.mock("@naculus/connector-walletconnect", () => ({
@@ -57,11 +79,7 @@ vi.mock("@naculus/connector-solana", () => ({
   solanaConnector: mockSolanaConnector,
 }));
 
-import {
-  createClient,
-  clearClient,
-  getClient,
-} from "./client";
+import { clearClient, createClient, getClient } from "./client";
 
 const defaultConfig = {
   projectId: "test-project-id",
@@ -90,10 +108,10 @@ describe("createClient", () => {
       expect(client.connector).toBeDefined();
     });
 
-    it("should return singleton", () => {
+    it("should create an isolated client for each provider", () => {
       const client1 = createClient(defaultConfig);
       const client2 = createClient(defaultConfig);
-      expect(client1).toBe(client2);
+      expect(client1).not.toBe(client2);
     });
 
     it("getClient should return null before creation", () => {
@@ -124,14 +142,18 @@ describe("createClient", () => {
       const client = createClient(defaultConfig);
       const session = { id: "test" } as any;
       await client.disconnect(session);
-      expect(mockWalletConnectConnector.disconnect).toHaveBeenCalledWith(session);
+      expect(mockWalletConnectConnector.disconnect).toHaveBeenCalledWith(
+        session,
+      );
     });
 
     it("should delegate reconnect()", async () => {
       const client = createClient(defaultConfig);
       const session = { id: "test" } as any;
       const result = await client.reconnect(session);
-      expect(mockWalletConnectConnector.reconnect).toHaveBeenCalledWith(session);
+      expect(mockWalletConnectConnector.reconnect).toHaveBeenCalledWith(
+        session,
+      );
       expect(result).toEqual({ id: "wc-session" });
     });
 
@@ -157,7 +179,10 @@ describe("createClient", () => {
     it("should connect embedded wallet", async () => {
       const client = createClient({ ...defaultConfig, enableEmbedded: true });
       const session = await client.connectEmbedded();
-      expect(session).toEqual({ id: "embedded-session", walletType: "embedded" });
+      expect(session).toEqual({
+        id: "embedded-session",
+        walletType: "embedded",
+      });
     });
 
     it("should set embeddedConnector after connect", async () => {
@@ -173,6 +198,28 @@ describe("createClient", () => {
       const connectors = client.getAllConnectors();
       expect(connectors.find((c) => c.kind === "embedded")).toBeDefined();
     });
+
+    it("routes signing and transactions to the embedded connector", async () => {
+      const client = createClient({ ...defaultConfig, enableEmbedded: true });
+      const session = await client.connectEmbedded();
+      const input = { message: "hello" };
+      const tx = { transaction: { to: "0x1234" }, chainId: "eip155:1" };
+
+      await expect(client.signMessage(session, input)).resolves.toBe(
+        "embedded-signature",
+      );
+      await expect(client.sendTransaction(session, tx)).resolves.toBe(
+        "embedded-tx-hash",
+      );
+      expect(mockEmbeddedConnector.signMessage).toHaveBeenCalledWith(
+        session,
+        input,
+      );
+      expect(mockEmbeddedConnector.sendTransaction).toHaveBeenCalledWith(
+        session,
+        tx,
+      );
+    });
   });
 
   describe("with Solana enabled", () => {
@@ -180,17 +227,27 @@ describe("createClient", () => {
       const client = createClient({ ...defaultConfig, enableSolana: false });
       client._setSolanaConnector(mockSolanaConnector as any);
 
-      const session = { walletType: "solana", id: "sol-session", namespaces: {} } as any;
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
       const result = await client.signMessage(session, { message: "hello" });
 
-      expect(mockSolanaConnector.signMessage).toHaveBeenCalledWith(session, { message: "hello" });
+      expect(mockSolanaConnector.signMessage).toHaveBeenCalledWith(session, {
+        message: "hello",
+      });
       expect(result).toBe("signed-message");
     });
 
     it("signMessage awaits solanaInit before routing", async () => {
       const client = createClient({ ...defaultConfig, enableSolana: true });
 
-      const session = { walletType: "solana", id: "sol-session", namespaces: {} } as any;
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
       const result = await client.signMessage(session, { message: "hello" });
 
       expect(mockSolanaConnector.signMessage).toHaveBeenCalled();
@@ -201,9 +258,13 @@ describe("createClient", () => {
     it("signMessage with no solana connector throws WalletError", async () => {
       const client = createClient(defaultConfig);
 
-      const session = { walletType: "solana", id: "sol-session", namespaces: {} } as any;
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
       await expect(
-        client.signMessage(session, { message: "hello" })
+        client.signMessage(session, { message: "hello" }),
       ).rejects.toThrow("Solana connector not available");
     });
 
@@ -211,11 +272,18 @@ describe("createClient", () => {
       const client = createClient({ ...defaultConfig, enableSolana: false });
       client._setSolanaConnector(mockSolanaConnector as any);
 
-      const session = { walletType: "solana", id: "sol-session", namespaces: {} } as any;
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
       const tx = { transaction: { from: "abc" } };
       const result = await client.sendTransaction(session, tx);
 
-      expect(mockSolanaConnector.sendTransaction).toHaveBeenCalledWith(session, tx);
+      expect(mockSolanaConnector.sendTransaction).toHaveBeenCalledWith(
+        session,
+        tx,
+      );
       expect(result).toBe("tx-hash");
     });
 
@@ -223,7 +291,11 @@ describe("createClient", () => {
       const client = createClient({ ...defaultConfig, enableSolana: false });
       client._setSolanaConnector(mockSolanaConnector as any);
 
-      const session = { walletType: "solana", id: "sol-session", namespaces: {} } as any;
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
       await client.disconnect(session);
 
       expect(mockSolanaConnector.disconnect).toHaveBeenCalledWith(session);
@@ -233,10 +305,164 @@ describe("createClient", () => {
       const client = createClient({ ...defaultConfig, enableSolana: false });
       client._setSolanaConnector(mockSolanaConnector as any);
 
-      const session = { walletType: "solana", id: "sol-session", namespaces: {} } as any;
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
       const result = await client.reconnect(session);
 
       expect(result).toBe(session);
+    });
+  });
+
+  /**
+   * Capability dispatch.
+   *
+   * getCapabilities has to route exactly like sendCalls. If the answer comes
+   * from one connector and the send goes through another, the caller is
+   * promised atomicity the executing wallet never claimed. The undefined
+   * return is load-bearing: it means "this connector cannot be asked", which
+   * getAccountCapabilities reports as discovered: false rather than as a no.
+   */
+  describe("getCapabilities dispatch", () => {
+    it("routes a WalletConnect session to the WalletConnect connector", async () => {
+      const client = createClient(defaultConfig);
+      const session = {
+        id: "wc-session",
+        walletType: "walletconnect",
+        namespaces: {},
+      } as any;
+      const caps = await client.getCapabilities!(session);
+      expect(mockWalletConnectConnector.getCapabilities).toHaveBeenCalledWith(
+        session,
+      );
+      expect(caps!["eip155:1"].atomicBatch.supported).toBe(true);
+    });
+
+    it("routes an embedded session to the embedded connector", async () => {
+      const client = createClient({ ...defaultConfig, enableEmbedded: true });
+      client._setEmbeddedConnector(mockEmbeddedConnector as any);
+      const session = {
+        id: "embedded-session",
+        walletType: "embedded",
+        namespaces: {},
+      } as any;
+      await client.getCapabilities!(session);
+      expect(mockEmbeddedConnector.getCapabilities).toHaveBeenCalled();
+      expect(mockWalletConnectConnector.getCapabilities).not.toHaveBeenCalled();
+    });
+
+    it("reports undefined for a connector that cannot answer", async () => {
+      // Not an empty object: a Solana connector with no implementation has not
+      // said the account lacks the capability, it has said nothing.
+      const client = createClient({ ...defaultConfig, enableSolana: false });
+      client._setSolanaConnector(mockSolanaConnector as any);
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
+      expect(await client.getCapabilities!(session)).toBeUndefined();
+    });
+
+    it("does not ask WalletConnect about a session it is not carrying", async () => {
+      const client = createClient({ ...defaultConfig, enableSolana: false });
+      client._setSolanaConnector(mockSolanaConnector as any);
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
+      await client.getCapabilities!(session);
+      expect(mockWalletConnectConnector.getCapabilities).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * Wallet-initiated account and chain changes.
+   *
+   * Subscription used to live in the React provider, which reached through
+   * `eip6963Connector.getDiscoveredWallets()` into the raw EIP-1193 provider.
+   * That worked for injected EVM wallets and nothing else: a Solana or
+   * WalletConnect account switch was never noticed, and the provider
+   * re-implemented CAIP-10 re-keying the connector already did. Routing it
+   * through the connector is what makes it work for every namespace.
+   */
+  describe("onAccountsChanged dispatch", () => {
+    it("routes a WalletConnect session to the WalletConnect connector", () => {
+      const client = createClient(defaultConfig);
+      const session = {
+        id: "wc-session",
+        walletType: "walletconnect",
+        namespaces: {},
+      } as any;
+      const handler = vi.fn();
+      client.onAccountsChanged!(session, handler);
+      expect(mockWalletConnectConnector.onAccountsChanged).toHaveBeenCalledWith(
+        session,
+        handler,
+      );
+    });
+
+    it("routes a Solana session to the Solana connector", () => {
+      const client = createClient({ ...defaultConfig, enableSolana: false });
+      client._setSolanaConnector(mockSolanaConnector as any);
+      const session = {
+        walletType: "solana",
+        id: "sol-session",
+        namespaces: {},
+      } as any;
+      const handler = vi.fn();
+      client.onAccountsChanged!(session, handler);
+      expect(mockSolanaConnector.onAccountsChanged).toHaveBeenCalled();
+      expect(
+        mockWalletConnectConnector.onAccountsChanged,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("returns a callable unsubscribe even when nothing can report", () => {
+      // The caller passes the result straight to useEffect's cleanup slot, so
+      // undefined here would crash on unmount.
+      const client = createClient(defaultConfig);
+      const session = {
+        walletType: "passkeys",
+        id: "pk",
+        namespaces: {},
+      } as any;
+      const unsubscribe = client.onAccountsChanged!(session, vi.fn());
+      expect(unsubscribe).toBeTypeOf("function");
+      expect(() => unsubscribe()).not.toThrow();
+    });
+
+    it("passes the connector's unsubscribe through", () => {
+      const unsubscribe = vi.fn();
+      mockWalletConnectConnector.onAccountsChanged.mockReturnValueOnce(
+        unsubscribe,
+      );
+      const client = createClient(defaultConfig);
+      const session = {
+        id: "wc-session",
+        walletType: "walletconnect",
+        namespaces: {},
+      } as any;
+      client.onAccountsChanged!(session, vi.fn())();
+      expect(unsubscribe).toHaveBeenCalled();
+    });
+
+    it("routes chain changes the same way", () => {
+      const client = createClient(defaultConfig);
+      const session = {
+        id: "wc-session",
+        walletType: "walletconnect",
+        namespaces: {},
+      } as any;
+      const handler = vi.fn();
+      client.onChainChanged!(session, handler);
+      expect(mockWalletConnectConnector.onChainChanged).toHaveBeenCalledWith(
+        session,
+        handler,
+      );
     });
   });
 });

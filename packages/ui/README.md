@@ -6,10 +6,10 @@
 
 | Framework | Package | Version |
 |-----------|---------|---------|
-| Web Components (base) | `@naculus/connect-appkit-wc` | `0.1.x` |
-| React | `@naculus/connect-appkit-react` | `0.1.x` |
-| Vue | `@naculus/connect-appkit-vue` | `0.1.x` |
-| **UI** (shared styles) | `@naculus/connect-appkit-ui` | `0.1.x` |
+| Web Components (base) | `@naculus/connect-appkit-wc` | `0.2.x` |
+| React | `@naculus/connect-appkit-react` | `0.2.x` |
+| Vue | `@naculus/connect-appkit-vue` | `0.2.x` |
+| **UI** (shared styles) | `@naculus/connect-appkit-ui` | `0.2.x` |
 
 ## Install
 

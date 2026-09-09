@@ -7,7 +7,7 @@ import {
   describeChain,
   resolveChain,
 } from "./chain-selection";
-import type { WalletChain } from "../types";
+import type { WalletChain } from "./types";
 
 const SOLANA_CHAIN = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 

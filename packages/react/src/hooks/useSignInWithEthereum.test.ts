@@ -89,6 +89,43 @@ describe("useSignInWithEthereum", () => {
     );
   });
 
+  it("should reject an active non-EVM chain when no override is supplied", async () => {
+    mockUseWeb3.mockReturnValue({
+      session: {
+        ...createEvmSession(),
+        namespaces: {
+          ...createEvmSession().namespaces,
+          solana: {
+            chains: ["solana:mainnet"],
+            accounts: ["solana:mainnet:address"],
+          },
+        },
+      },
+      chainId: "solana:mainnet",
+    });
+    mockGetClient.mockReturnValue({ signMessage: mockSignMessage });
+
+    const { result } = renderHook(() => useSignInWithEthereum());
+
+    await expect(result.current.signIn()).rejects.toThrow(
+      "Ethereum SIWx requires an eip155 chain",
+    );
+  });
+
+  it("should reject a non-EVM chain override", async () => {
+    mockUseWeb3.mockReturnValue({
+      session: createEvmSession(),
+      chainId: "eip155:1",
+    });
+    mockGetClient.mockReturnValue({ signMessage: mockSignMessage });
+
+    const { result } = renderHook(() => useSignInWithEthereum());
+
+    await expect(
+      result.current.signIn({ chainId: "solana:4sGjMW1s" }),
+    ).rejects.toThrow("Ethereum SIWx requires an eip155 chain");
+  });
+
   it("should sign in with Ethereum successfully", async () => {
     const mockSignature = "0xsiwsignature1234567890abcdef";
     mockSignMessage.mockResolvedValue(mockSignature);
@@ -113,7 +150,7 @@ describe("useSignInWithEthereum", () => {
     expect(siwxResult!).toBeDefined();
     expect(siwxResult!.signature).toBe(mockSignature);
     expect(siwxResult!.message.domain).toBe("localhost:3000");
-    expect(siwxResult!.message.address).toBe("eip155:1:0x1234567890123456789012345678901234567890");
+    expect(siwxResult!.message.address).toBe("0x1234567890123456789012345678901234567890");
     expect(siwxResult!.message.statement).toBe("Sign in to MyApp");
     expect(siwxResult!.message.version).toBe(1);
     expect(siwxResult!.message.chainId).toBe("eip155:1");

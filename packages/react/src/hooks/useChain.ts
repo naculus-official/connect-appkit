@@ -3,7 +3,7 @@ import {
   chainsForNamespace,
   describeChain,
   resolveChain,
-} from "../core/chain-selection";
+} from "@naculus/connect-appkit-core";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import type { ChainInfo, WalletChain } from "../types";
 

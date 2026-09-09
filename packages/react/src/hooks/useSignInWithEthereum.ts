@@ -8,11 +8,18 @@ export interface UseSignInWithEthereumOptions extends UseSignInWithXOptions {}
 
 export interface UseSignInWithEthereumReturn extends UseSignInWithXReturn {}
 
-function useEip155SessionGuard(): () => void {
-  const { session } = useWeb3();
-  return useCallback(() => {
+function useEip155SessionGuard(): (chainId?: string) => void {
+  const { session, chainId: activeChainId } = useWeb3();
+  return useCallback((chainId?: string) => {
     if (!session) {
       throw new WalletError("wallet_unavailable", "No active session");
+    }
+    const requestedChainId = chainId ?? activeChainId;
+    if (requestedChainId && !requestedChainId.startsWith("eip155:")) {
+      throw new WalletError(
+        "namespace_mismatch",
+        `Ethereum SIWx requires an eip155 chain, received ${requestedChainId}`,
+      );
     }
     const evmNamespace = session.namespaces["eip155"];
     if (!evmNamespace || evmNamespace.accounts.length === 0) {
@@ -21,7 +28,7 @@ function useEip155SessionGuard(): () => void {
         "No EVM (eip155) accounts found in session"
       );
     }
-  }, [session]);
+  }, [session, activeChainId]);
 }
 
 export function useSignInWithEthereum(): UseSignInWithEthereumReturn {
@@ -30,7 +37,7 @@ export function useSignInWithEthereum(): UseSignInWithEthereumReturn {
 
   const signIn = useCallback(
     async (options?: UseSignInWithEthereumOptions) => {
-      guard();
+      guard(options?.chainId);
       return siwx.signIn(options);
     },
     [guard, siwx.signIn]

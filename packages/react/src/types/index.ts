@@ -2,27 +2,18 @@ import type { UniversalWalletSession, Namespace, SessionNamespace } from "@nacul
 import type { PocketConfig } from "@naculus/connector-embedded";
 import type { Chain } from "viem";
 
-export type WalletChain = {
-  /**
-   * CAIP-2, and the chain's identity.
-   *
-   * This was `id: number` alongside a separate `namespace`, which could only
-   * ever describe an EIP-155 chain: a Solana reference is base58
-   * (`solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`) and an XRPL one is an
-   * unsigned network id. The registry structurally could not hold a non-EVM
-   * chain, so every non-EVM path fell back to "unknown".
-   *
-   * `namespace` is gone rather than kept alongside: two fields that must
-   * agree are two fields that eventually do not.
-   */
-  caip2: string;
-  name: string;
-  rpcUrl?: string;
-  explorerUrl?: string;
-  token?: string;
-};
+// Re-exported, not redefined. These are the shapes the framework-neutral
+// half of appkit is built on, so they live in @naculus/connect-appkit-core
+// and a Vue composable can name them too. A second declaration here would be
+// structurally identical today and would drift on the first edit.
+import type {
+  ChainInfo,
+  ConnectionStatus,
+  WalletChain,
+  Web3State,
+} from "@naculus/connect-appkit-core";
 
-export type ConnectionStatus = "disconnected" | "connecting" | "authenticating" | "connected" | "reconnecting";
+export type { ChainInfo, ConnectionStatus, WalletChain, Web3State };
 
 /** SIWx (Sign-In With X) CAIP-122 configuration */
 export interface SIWxConfig {
@@ -72,14 +63,6 @@ export interface Web3ConnectConfig {
   encryptionKey?: string;
 }
 
-export interface Web3State {
-  status: ConnectionStatus;
-  session: UniversalWalletSession | null;
-  accounts: string[];
-  chainId: string | null;
-  error: Error | null;
-}
-
 export interface Web3Actions {
   startPairing: () => Promise<string>;
   /**
@@ -117,9 +100,3 @@ export type EvmTransaction = {
   chainId?: number;
 };
 
-export interface ChainInfo {
-  namespace: Namespace;
-  chainId: string;
-  name: string;
-  selected: boolean;
-}

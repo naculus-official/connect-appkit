@@ -25,9 +25,20 @@ export interface QRCodeModalProps {
 }
 
 async function renderQR(canvas: HTMLCanvasElement, uri: string): Promise<void> {
-  const qrcode = (await import("qrcode")) as unknown as typeof QRCodeType;
+  // Import the browser entry explicitly: the package's generic entry points
+  // target Node's `require`, which is not available in browser-only bundles.
+  // Bundlers expose the renderer either on the namespace or under `default`.
+  const loaded = (await import("qrcode/lib/browser.js")) as unknown as {
+    default?: typeof QRCodeType;
+    toCanvas?: typeof QRCodeType.toCanvas;
+  };
+  const qrcode = loaded.default ?? loaded;
+  const toCanvas = qrcode.toCanvas ?? loaded.toCanvas;
+  if (typeof toCanvas !== "function") {
+    throw new Error("qrcode.toCanvas is unavailable");
+  }
   return new Promise((resolve, reject) => {
-    qrcode.toCanvas(canvas, uri, { width: 280, margin: 2 }, (err: Error | null | undefined) => {
+    toCanvas(canvas, uri, { width: 280, margin: 2 }, (err: Error | null | undefined) => {
       if (err) reject(err);
       else resolve();
     });
@@ -44,7 +55,7 @@ export function QRCodeModal({
   className,
 }: QRCodeModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [qrError, setQrError] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const isMobile = useIsMobile();
   const registry = useComponentRegistry();
@@ -54,8 +65,10 @@ export function QRCodeModal({
 
   useEffect(() => {
     if (!open || !uri || !canvasRef.current) return;
-    setQrError(false);
-    renderQR(canvasRef.current, uri).catch(() => setQrError(true));
+    setQrError(null);
+    renderQR(canvasRef.current, uri).catch((error: unknown) => {
+      setQrError(error instanceof Error ? error.message : "Unable to render QR code");
+    });
   }, [open, uri]);
 
   useEffect(() => {
@@ -89,6 +102,8 @@ export function QRCodeModal({
         ref={canvasRef}
         width={280}
         height={280}
+        role="img"
+        aria-label="WalletConnect pairing QR code"
         className="rounded-lg border border-border"
       />
     )

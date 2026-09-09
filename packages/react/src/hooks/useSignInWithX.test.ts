@@ -102,7 +102,7 @@ describe("useSignInWithX", () => {
     expect(siwxResult!).toBeDefined();
     expect(siwxResult!.signature).toBe(mockSignature);
     expect(siwxResult!.message.address).toBe(
-      "eip155:1:0x1234567890123456789012345678901234567890"
+      "0x1234567890123456789012345678901234567890"
     );
     expect(mockSignMessage).toHaveBeenCalledTimes(1);
   });
@@ -127,7 +127,7 @@ describe("useSignInWithX", () => {
     });
 
     expect(siwxResult!.message.address).toBe(
-      "solana:4sGjMW1s:5JG7DPRQAxJVCLx3GxsHTxP1KZbSyLmPQBLkLhFZPGrH"
+      "5JG7DPRQAxJVCLx3GxsHTxP1KZbSyLmPQBLkLhFZPGrH"
     );
     expect(siwxResult!.message.chainId).toBe("solana:4sGjMW1s");
   });

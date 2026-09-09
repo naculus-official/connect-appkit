@@ -112,6 +112,9 @@ export const AppkitConnectButton: StencilVueComponent<JSX.AppkitConnectButton> =
   'isBalanceLoading',
   'tokenBalancesJson',
   'explorerUrl',
+  'explorerLabel',
+  'isMobile',
+  'mobileWalletName',
   'walletsJson',
   'qrUri',
   'qrLoading',
@@ -120,6 +123,7 @@ export const AppkitConnectButton: StencilVueComponent<JSX.AppkitConnectButton> =
   'appkitDisconnect',
   'appkitStartPairing',
   'appkitRetry',
+  'appkitCancelPairing',
   'appkitMobileDeepLink',
   'appkitCopyAddress'
 ], [
@@ -127,6 +131,7 @@ export const AppkitConnectButton: StencilVueComponent<JSX.AppkitConnectButton> =
   'appkitDisconnect',
   'appkitStartPairing',
   'appkitRetry',
+  'appkitCancelPairing',
   'appkitMobileDeepLink',
   'appkitCopyAddress'
 ]);

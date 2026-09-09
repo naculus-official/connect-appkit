@@ -16,6 +16,7 @@ import type { Web3ContextValue } from "../provider/Web3ConnectProvider";
 
 function createMockWeb3(overrides: Partial<Web3ContextValue> = {}): Web3ContextValue {
   const base: Web3ContextValue = {
+    client: {} as Web3ContextValue["client"],
     status: "disconnected",
     session: null,
     accounts: [],
@@ -30,6 +31,7 @@ function createMockWeb3(overrides: Partial<Web3ContextValue> = {}): Web3ContextV
     reconnect: vi.fn(),
     switchChain: vi.fn(),
     startPairing: vi.fn(),
+    cancelPairing: vi.fn(),
     completePairing: vi.fn(),
     connectInjected: vi.fn(),
     connectEmbedded: vi.fn(),

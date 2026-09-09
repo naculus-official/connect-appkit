@@ -19,7 +19,21 @@ const { mockClient } = vi.hoisted(() => ({
     disconnect: vi.fn(),
     reconnect: vi.fn(),
     connectInjected: vi.fn(),
+    getAllConnectors: vi.fn(() => []),
   },
+}));
+
+const { mockCreateSessionManager } = vi.hoisted(() => ({
+  mockCreateSessionManager: vi.fn(() => ({
+    on: vi.fn(),
+    off: vi.fn(),
+    attach: vi.fn(),
+    registerConnector: vi.fn(),
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    restoreFromPersistence: vi.fn(),
+    switchChain: vi.fn(),
+  })),
 }));
 
 vi.mock("../client", () => ({
@@ -43,14 +57,7 @@ const { MockStorage } = vi.hoisted(() => {
 vi.mock("@naculus/connect-core", () => ({
   LocalStorageSessionStorage: MockStorage,
   createConnectorManager: vi.fn(() => ({ register: vi.fn() })),
-  createSessionManager: vi.fn(() => ({
-    on: vi.fn(),
-    off: vi.fn(),
-    connect: vi.fn(),
-    disconnect: vi.fn(),
-    restoreFromPersistence: vi.fn(),
-    switchChain: vi.fn(),
-  })),
+  createSessionManager: mockCreateSessionManager,
   SessionManager: class {},
   ConnectorManager: class {},
   WalletError: class WalletError extends Error {
@@ -78,13 +85,21 @@ const mockSession = {
   namespaces: {
     "eip155": {
       chains: ["eip155:1"],
-      accounts: ["eip155:1:0x1234567890abcdef"],
+      accounts: ["eip155:1:0x1234567890abcdef1234567890abcdef12345678"],
     },
   },
 };
 
 const siwxConfig = {
-  createMessage: vi.fn().mockResolvedValue("Sign this message"),
+  createMessage: vi.fn().mockResolvedValue(
+    "localhost wants you to sign in with your Ethereum account:\n" +
+      "0x1234567890abcdef1234567890abcdef12345678\n\n" +
+      "URI: https://test.com\n" +
+      "Version: 1\n" +
+      "Chain ID: eip155:1\n" +
+      "Nonce: testnonce123\n" +
+      "Issued At: 2026-08-26T00:00:00.000Z",
+  ),
   handleSignComplete: vi.fn().mockResolvedValue(undefined),
   required: true,
 };
@@ -124,7 +139,7 @@ describe("Web3ConnectProvider — SIWx", () => {
     });
 
     expect(siwxConfig.createMessage).toHaveBeenCalledWith({
-      address: "0x1234567890abcdef",
+      address: "0x1234567890abcdef1234567890abcdef12345678",
       chainId: "eip155:1",
     });
     expect(mockClient.signMessage).toHaveBeenCalled();
@@ -174,5 +189,26 @@ describe("Web3ConnectProvider — SIWx", () => {
 
     expect(session).toBe(mockSession);
     expect(result.current.status).toBe("disconnected");
+  });
+});
+
+describe("Web3ConnectProvider — session manager options", () => {
+  beforeEach(() => {
+    mockCreateSessionManager.mockClear();
+  });
+
+  it("forwards autoRefreshFeeOnSwitch and defaults it on", () => {
+    renderWithProvider({ autoRefreshFeeOnSwitch: false });
+    expect(mockCreateSessionManager).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ autoRefreshFeeOnSwitch: false }),
+    );
+
+    mockCreateSessionManager.mockClear();
+    renderWithProvider();
+    expect(mockCreateSessionManager).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ autoRefreshFeeOnSwitch: true }),
+    );
   });
 });

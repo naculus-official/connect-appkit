@@ -1,4 +1,4 @@
-import { chainNumber } from "../core/chain-selection";
+import { chainNumber } from "@naculus/connect-appkit-core";
 import { WalletError } from "@naculus/connect-core";
 /**
  * useTransactionSimulation — React hook for simulating transactions
@@ -11,7 +11,7 @@ import { WalletError } from "@naculus/connect-core";
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { resolveRevertReason } from "../core/revert-reason";
+import { resolveRevertReason } from "@naculus/connect-appkit-core";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import type { EvmTransaction } from "../types";
 import { useAccount } from "./useAccount";

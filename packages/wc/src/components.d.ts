@@ -196,6 +196,10 @@ export namespace Components {
          */
         "connecting": boolean;
         /**
+          * @default "Explorer"
+         */
+        "explorerLabel": string;
+        /**
           * @default ""
          */
         "explorerUrl": string;
@@ -203,6 +207,14 @@ export namespace Components {
           * @default false
          */
         "isBalanceLoading": boolean;
+        /**
+          * @default false
+         */
+        "isMobile": boolean;
+        /**
+          * @default ""
+         */
+        "mobileWalletName": string;
         /**
           * @default null
          */
@@ -583,6 +595,7 @@ declare global {
         "appkitDisconnect": void;
         "appkitStartPairing": void;
         "appkitRetry": void;
+        "appkitCancelPairing": void;
         "appkitMobileDeepLink": void;
         "appkitCopyAddress": string;
     }
@@ -984,6 +997,10 @@ declare namespace LocalJSX {
          */
         "connecting"?: boolean;
         /**
+          * @default "Explorer"
+         */
+        "explorerLabel"?: string;
+        /**
           * @default ""
          */
         "explorerUrl"?: string;
@@ -991,6 +1008,15 @@ declare namespace LocalJSX {
           * @default false
          */
         "isBalanceLoading"?: boolean;
+        /**
+          * @default false
+         */
+        "isMobile"?: boolean;
+        /**
+          * @default ""
+         */
+        "mobileWalletName"?: string;
+        "onAppkitCancelPairing"?: (event: AppkitConnectButtonCustomEvent<void>) => void;
         "onAppkitConnect"?: (event: AppkitConnectButtonCustomEvent<{ kind: string; walletId?: string }>) => void;
         "onAppkitCopyAddress"?: (event: AppkitConnectButtonCustomEvent<string>) => void;
         "onAppkitDisconnect"?: (event: AppkitConnectButtonCustomEvent<void>) => void;
@@ -1257,6 +1283,9 @@ declare namespace LocalJSX {
         "isBalanceLoading": boolean;
         "tokenBalancesJson": string;
         "explorerUrl": string;
+        "explorerLabel": string;
+        "isMobile": boolean;
+        "mobileWalletName": string;
         "walletsJson": string;
         "qrUri": string | null;
         "qrLoading": boolean;

@@ -6,9 +6,9 @@
  * @see SRS-009 §7.2
  */
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
+import { toChainSwitchError } from "@naculus/connect-appkit-core";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { WalletError } from "@naculus/connect-core";
 
 export interface UseSwitchChainReturn {
   /** Switch the active chain for the current session */
@@ -36,15 +36,10 @@ export function useSwitchChain(): UseSwitchChainReturn {
       try {
         await providerSwitchChain(targetChainId);
       } catch (err) {
-        const walletError =
-          err instanceof WalletError
-            ? err
-            : new WalletError(
-                "chain_unsupported",
-                err instanceof Error
-                  ? err.message
-                  : "Unknown error during chain switch",
-              );
+        // Every failure used to become chain_unsupported, so a user pressing
+        // Cancel was reported as the chain being unavailable — two states a UI
+        // must treat differently, since one is worth offering to retry.
+        const walletError = toChainSwitchError(err);
         setError(walletError);
         throw walletError;
       } finally {

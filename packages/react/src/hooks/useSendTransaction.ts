@@ -1,13 +1,13 @@
 import { useState, useCallback } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { getClient } from "../client";
 import { WalletError } from "@naculus/connect-core";
 import type { EvmTransaction } from "../types";
+import { resolveClient } from "./client-resolver";
 
 export type SendTransactionStatus = "idle" | "awaiting_approval" | "confirmed" | "failed";
 
 export function useSendTransaction() {
-  const { session, chainId } = useWeb3();
+  const { session, chainId, client } = useWeb3();
   const [status, setStatus] = useState<SendTransactionStatus>("idle");
   const [error, setError] = useState<Error | null>(null);
 
@@ -20,17 +20,9 @@ export function useSendTransaction() {
         throw err;
       }
 
-      const client = getClient();
-      if (!client) {
-        setStatus("failed");
-        const err = new WalletError("wallet_unavailable", "Client not initialized");
-        setError(err);
-        throw err;
-      }
-
-      const evmAccount = Object.values(session.namespaces)
-        .flatMap((ns) => ns.accounts)
-        .find((acc) => acc.includes("0x"));
+      const evmAccount = session.namespaces.eip155?.accounts.find((account) =>
+        /^eip155:\d+:0x[0-9a-fA-F]{40}$/.test(account) || /^0x[0-9a-fA-F]{40}$/.test(account),
+      );
 
       if (!evmAccount) {
         setStatus("failed");
@@ -48,7 +40,11 @@ export function useSendTransaction() {
           from: transaction.from ?? evmAccount.split(":").pop()
         };
 
-        const result = (await client.sendTransaction(session, {
+        const activeClient = resolveClient(client);
+        if (!activeClient) {
+          throw new WalletError("wallet_unavailable", "Client not initialized");
+        }
+        const result = (await activeClient.sendTransaction(session, {
           transaction: txWithFrom,
           chainId: chainId ?? undefined
         })) as string;
@@ -62,7 +58,7 @@ export function useSendTransaction() {
         throw err;
       }
     },
-    [session, chainId]
+    [session, chainId, client]
   );
 
   const reset = useCallback(() => {

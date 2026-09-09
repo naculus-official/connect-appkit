@@ -167,12 +167,29 @@ export function useUserOpStatus(
         clearTimers();
         setError(new Error("UserOperation not included after maximum retries"));
       }
-    } catch {
-      // Network error; retry
+    } catch (networkError) {
+      // Network error; retry until the same budget the no-receipt path uses.
       setAttempts(prev => prev + 1);
       if (attempts < maxRetries) {
         pollTimerRef.current = setTimeout(() => poll(hash), pollInterval);
+        return;
       }
+      // Giving up has to reach a terminal state. Without this the hook simply
+      // stopped scheduling: isPolling stayed true, status stayed "pending",
+      // no error was set and the elapsed-time interval kept counting, so a
+      // caller watched a spinner for a result that was never coming.
+      setStatus("not_found");
+      setIsPolling(false);
+      clearTimers();
+      setError(
+        networkError instanceof Error
+          ? new Error(
+              `UserOperation status unavailable after ${maxRetries} attempts: ${networkError.message}`,
+            )
+          : new Error(
+              `UserOperation status unavailable after ${maxRetries} attempts`,
+            ),
+      );
     }
   }, [bundlerUrl, pollInterval, maxRetries, attempts, clearTimers]);
 

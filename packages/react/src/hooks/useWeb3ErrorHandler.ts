@@ -2,10 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
-import {
-  getUserFriendlyError,
-  isRetryableError,
-} from "../utils/errorMessages";
+import { getUserFriendlyError, isRetryableError } from "../utils/errorMessages";
 
 export interface UserFriendlyError {
   title: string;
@@ -56,12 +53,12 @@ export function useWeb3ErrorHandler(): UseWeb3ErrorHandlerReturn {
 
   const friendlyError: UserFriendlyError | null = useMemo(
     () => (error ? getUserFriendlyError(error) : null),
-    [error]
+    [error],
   );
 
   const isRetryable = useMemo(
     () => (error ? isRetryableError(error) : false),
-    [error]
+    [error],
   );
 
   const clearError = useCallback(() => {
@@ -70,25 +67,56 @@ export function useWeb3ErrorHandler(): UseWeb3ErrorHandlerReturn {
 
   const formatError = useCallback(
     (err: unknown): UserFriendlyError => getUserFriendlyError(err),
-    []
+    [],
   );
 
   const wrapAsync = useCallback(
-    <T,>(fn: () => Promise<T>): (() => Promise<T>) => {
+    <T>(fn: () => Promise<T>): (() => Promise<T>) => {
       return async () => {
         try {
           return await fn();
         } catch (err) {
-          // Re-throw with user-friendly information attached
           const friendly = getUserFriendlyError(err);
-          const enhanced = new Error(friendly.description) as unknown as Record<string, unknown>;
-          enhanced.title = friendly.title;
-          enhanced.code = friendly.code;
-          throw enhanced;
+
+          // Attach to the original rather than replacing it. Building a fresh
+          // Error here discarded the only technical evidence of the failure:
+          // the wallet's own message, any `details`, and — the part callers
+          // actually notice — the class, so `err instanceof WalletError` never
+          // matched again. A convenience wrapper must not make the SDK's own
+          // error type unusable.
+          if (err instanceof Error) {
+            const target = err as Error & {
+              title?: string;
+              code?: unknown;
+              friendlyMessage?: string;
+            };
+            try {
+              target.title = friendly.title;
+              target.friendlyMessage = friendly.description;
+              // Only fill a code in when the error has none. Overwriting a
+              // wallet's own code with one this module inferred from the
+              // message text would hide the real reason behind a guess.
+              if (target.code === undefined && friendly.code !== undefined) {
+                target.code = friendly.code;
+              }
+            } catch {
+              // A frozen error cannot be annotated; it is still the better
+              // thing to re-throw.
+            }
+            throw target;
+          }
+
+          // Not an Error, so there is nothing to preserve the identity of.
+          // `cause` keeps the original value reachable.
+          throw Object.assign(new Error(friendly.description, { cause: err }), {
+            title: friendly.title,
+            code: friendly.code,
+            friendlyMessage: friendly.description,
+          });
         }
       };
     },
-    []
+    [],
   );
 
   return {

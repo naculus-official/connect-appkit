@@ -29,7 +29,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 // ── Local type definitions (hook domain types, not core exports) ──────
 
 export interface CostComparison {
@@ -40,14 +40,17 @@ export interface CostComparison {
   estimatedTimeMs: number;
 }
 
-export type CostComparisonOperation = "send_erc20" | "swap" | "bridge" | (string & {});
+export type CostComparisonOperation =
+  | "send_erc20"
+  | "swap"
+  | "bridge"
+  | (string & {});
 
 export interface CostComparisonOptions {
   amount?: string;
   token?: string;
   [key: string]: unknown;
 }
-
 
 export interface UseCompareCostsInput {
   operation: CostComparisonOperation;
@@ -75,6 +78,26 @@ export interface UseCompareCostsReturn {
  * @param input - Comparison parameters
  * @param compareCostsFn - Function that performs the actual comparison
  */
+/**
+ * Order-independent key for the options bag.
+ *
+ * JSON.stringify would make `{a,b}` and `{b,a}` different inputs and refetch
+ * for nothing; it would also throw on a cyclic object a caller passed by
+ * mistake, taking the render down with it.
+ */
+function stableOptionsKey(options: CostComparisonOptions | undefined): string {
+  if (!options) return "";
+  return Object.keys(options)
+    .sort()
+    .map((key) => {
+      const value = options[key];
+      return `${key}=${
+        typeof value === "object" && value !== null ? "[object]" : String(value)
+      }`;
+    })
+    .join("&");
+}
+
 export function useCompareCosts(
   input: UseCompareCostsInput,
   compareCostsFn?: (
@@ -88,6 +111,14 @@ export function useCompareCosts(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const mountedRef = useRef(true);
+  const generationRef = useRef(0);
+
+  // `chains` is an array and `options` an object. Depending on them by
+  // reference meant a caller writing the natural
+  // `useCompareCosts({ operation, chains: ["eip155:1"] })` rebuilt both every
+  // render, so this callback changed identity every render and the effect
+  // below re-fired — an unbounded loop against a cost API. Key on the values.
+  const inputKey = `${operation}|${(chains ?? []).join(",")}|${stableOptionsKey(options)}`;
 
   const fetchComparisons = useCallback(async () => {
     if (!chains || chains.length === 0) {
@@ -97,26 +128,31 @@ export function useCompareCosts(
 
     if (!compareCostsFn) return;
 
+    // Only the newest request may write. A comparison for a previous chain set
+    // resolving last would otherwise decide which route the user is shown as
+    // cheapest, using costs for chains they are no longer looking at.
+    const generation = ++generationRef.current;
     setLoading(true);
     setError(null);
 
     try {
       const result = await compareCostsFn(operation, chains, options);
 
-      if (mountedRef.current) {
+      if (mountedRef.current && generation === generationRef.current) {
         setComparisons(result);
       }
     } catch (err) {
-      if (mountedRef.current) {
+      if (mountedRef.current && generation === generationRef.current) {
         setError(err instanceof Error ? err : new Error(String(err)));
         setComparisons([]);
       }
     } finally {
-      if (mountedRef.current) {
+      if (mountedRef.current && generation === generationRef.current) {
         setLoading(false);
       }
     }
-  }, [operation, chains, options, compareCostsFn]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on inputKey by value; see the comment above.
+  }, [inputKey, compareCostsFn]);
 
   useEffect(() => {
     fetchComparisons();

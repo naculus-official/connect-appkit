@@ -1,9 +1,26 @@
 {
   "name": "@naculus/connect-appkit-react",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "require": "./dist/client.cjs"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run"
@@ -12,14 +29,15 @@
     "@naculus/connect-appkit-wc": "workspace:*",
     "@stencil/react-output-target": "^1.6.1",
     "viem": "^2.54.6",
-    "@naculus/connect-core": "^0.1.2",
-    "@naculus/connector-walletconnect": "^0.1.2",
-    "@naculus/connector-evm-injected": "^0.1.2",
-    "@naculus/connector-embedded": "^0.1.2",
-    "@naculus/connector-passkeys": "^0.1.2",
-    "@naculus/connector-solana": "^0.1.2",
-    "@naculus/siwx": "^0.1.2",
-    "@naculus/wallet-engine": "^0.1.2"
+    "@naculus/connect-core": "^0.2.0",
+    "@naculus/connector-walletconnect": "^0.2.0",
+    "@naculus/connector-evm-injected": "^0.2.0",
+    "@naculus/connector-embedded": "^0.2.0",
+    "@naculus/connector-passkeys": "^0.2.0",
+    "@naculus/connector-solana": "^0.2.0",
+    "@naculus/siwx": "^0.2.0",
+    "@naculus/wallet-engine": "^0.2.0",
+    "@naculus/connect-appkit-core": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"

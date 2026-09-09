@@ -5,6 +5,7 @@ export function getAliases(root: string) {
   const r = (p: string) => path.resolve(root, p);
   const stub = r("test-utils/module-stub.js");
   return {
+    "@naculus/connect-appkit-core": r("packages/core/src"),
     "@naculus/connect-appkit-react": r("packages/react/src"),
     "@naculus/connect-appkit-ui": r("packages/ui/src"),
     "@naculus/connect-appkit-wc": r("packages/wc/dist"),

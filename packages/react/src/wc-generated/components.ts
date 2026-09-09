@@ -207,6 +207,7 @@ export type AppkitConnectButtonEvents = {
     onAppkitDisconnect: EventName<AppkitConnectButtonCustomEvent<void>>,
     onAppkitStartPairing: EventName<AppkitConnectButtonCustomEvent<void>>,
     onAppkitRetry: EventName<AppkitConnectButtonCustomEvent<void>>,
+    onAppkitCancelPairing: EventName<AppkitConnectButtonCustomEvent<void>>,
     onAppkitMobileDeepLink: EventName<AppkitConnectButtonCustomEvent<void>>,
     onAppkitCopyAddress: EventName<AppkitConnectButtonCustomEvent<string>>
 };
@@ -221,6 +222,7 @@ export const AppkitConnectButton: StencilReactComponent<AppkitConnectButtonEleme
         onAppkitDisconnect: 'appkitDisconnect',
         onAppkitStartPairing: 'appkitStartPairing',
         onAppkitRetry: 'appkitRetry',
+        onAppkitCancelPairing: 'appkitCancelPairing',
         onAppkitMobileDeepLink: 'appkitMobileDeepLink',
         onAppkitCopyAddress: 'appkitCopyAddress'
     } as AppkitConnectButtonEvents,

@@ -8,8 +8,8 @@ import { QRCodeModal } from "./QRCodeModal";
 
 afterEach(() => cleanup());
 
-// Mock qrcode module
-vi.mock("qrcode", () => ({
+// Mock the browser entry used by the production renderer.
+vi.mock("qrcode/lib/browser.js", () => ({
   default: {
     toCanvas: vi.fn((_canvas: HTMLCanvasElement, _uri: string, _opts: unknown, cb: (err: Error | null) => void) => {
       cb(null);

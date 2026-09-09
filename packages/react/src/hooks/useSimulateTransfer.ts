@@ -1,3 +1,5 @@
+import { WalletError } from "@naculus/connect-core";
+
 /**
  * useSimulateTransfer — React hook for simulating ERC-20 token transfers.
  *
@@ -25,9 +27,9 @@
  * ```
  */
 
-import { useState, useCallback, useRef } from "react";
-import { SimulationManager } from "@naculus/wallet-engine";
 import type { SimulationResult } from "@naculus/wallet-engine";
+import { SimulationManager } from "@naculus/wallet-engine";
+import { useCallback, useRef, useState } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -125,7 +127,19 @@ export function useSimulateTransfer(
 
       try {
         const manager = getManager();
-        const actualChainId = simOptions?.chainId ?? chainId ?? 1;
+        // No `?? 1`. Simulating an ERC-20 transfer on the wrong chain reads a
+        // different contract at the same address, so the preview describes a
+        // transfer that will not happen.
+        const actualChainId = simOptions?.chainId ?? chainId;
+        if (actualChainId === undefined) {
+          throw new WalletError(
+            "invalid_chain",
+            "No chain to simulate on. Connect a wallet or pass a chainId.",
+          );
+        }
+        // Forwarded rather than computed and dropped. Without it a caller's
+        // per-call endpoint did nothing, and the simulation ran against
+        // whichever URL happened to be baked into the manager on first use.
         const actualRpcUrl = simOptions?.rpcUrl ?? rpcUrl;
 
         const simResult = await manager.simulateERC20Transfer(
@@ -135,13 +149,13 @@ export function useSimulateTransfer(
           amount,
           actualChainId,
           simOptions?.decimals,
+          actualRpcUrl,
         );
 
         setResult(simResult);
         return simResult;
       } catch (err) {
-        const errorObj =
-          err instanceof Error ? err : new Error(String(err));
+        const errorObj = err instanceof Error ? err : new Error(String(err));
         setError(errorObj);
         throw errorObj;
       } finally {

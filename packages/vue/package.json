@@ -26,7 +26,8 @@
   },
   "peerDependencies": {
     "vue": "^3.5.0",
-    "@naculus/connect-core": "^0.2.0"
+    "@naculus/connect-core": "^0.2.0",
+    "@naculus/connect-appkit-core": "^0.2.0"
   },
   "publishConfig": {
     "access": "public"
@@ -34,7 +35,8 @@
   "devDependencies": {
     "vue": "^3.5.40",
     "@naculus/connect-core": "^0.2.0",
-    "vitest": "^4.0.0"
+    "vitest": "^4.0.0",
+    "@naculus/connect-appkit-core": "workspace:*"
   },
   "repository": {
     "type": "git",

@@ -6,7 +6,7 @@
  */
 
 import { eip155Reference, namespaceOf } from "@naculus/connect-core";
-import type { ChainInfo, WalletChain } from "../types";
+import type { ChainInfo, WalletChain } from "./types";
 
 /**
  * The EIP-155 chain number, or null when this is not an EVM chain.

@@ -114,6 +114,7 @@ vi.mock("@naculus/siwx", () => {
   return {
     createSiwxMessage: mockCreateSiwxMessage,
     generateNonce: vi.fn(() => "mockNonce123"),
+    issueNonce: vi.fn(async () => undefined),
     nowISO: vi.fn(() => new Date().toISOString()),
     getBlockchainName: vi.fn((chainId) => {
       if (chainId.startsWith("eip155:")) return "Ethereum";

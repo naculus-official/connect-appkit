@@ -7,26 +7,30 @@
 
 ## Properties
 
-| Property            | Attribute             | Description | Type             | Default |
-| ------------------- | --------------------- | ----------- | ---------------- | ------- |
-| `address`           | `address`             |             | `string`         | `""`    |
-| `balance`           | `balance`             |             | `null \| string` | `null`  |
-| `balanceSymbol`     | `balance-symbol`      |             | `string`         | `"ETH"` |
-| `connected`         | `connected`           |             | `boolean`        | `false` |
-| `connecting`        | `connecting`          |             | `boolean`        | `false` |
-| `explorerUrl`       | `explorer-url`        |             | `string`         | `""`    |
-| `isBalanceLoading`  | `is-balance-loading`  |             | `boolean`        | `false` |
-| `qrError`           | `qr-error`            |             | `null \| string` | `null`  |
-| `qrLoading`         | `qr-loading`          |             | `boolean`        | `false` |
-| `qrUri`             | `qr-uri`              |             | `null \| string` | `null`  |
-| `tokenBalancesJson` | `token-balances-json` |             | `string`         | `"[]"`  |
-| `walletsJson`       | `wallets-json`        |             | `string`         | `"[]"`  |
+| Property            | Attribute             | Description | Type             | Default      |
+| ------------------- | --------------------- | ----------- | ---------------- | ------------ |
+| `address`           | `address`             |             | `string`         | `""`         |
+| `balance`           | `balance`             |             | `null \| string` | `null`       |
+| `balanceSymbol`     | `balance-symbol`      |             | `string`         | `"ETH"`      |
+| `connected`         | `connected`           |             | `boolean`        | `false`      |
+| `connecting`        | `connecting`          |             | `boolean`        | `false`      |
+| `explorerLabel`     | `explorer-label`      |             | `string`         | `"Explorer"` |
+| `explorerUrl`       | `explorer-url`        |             | `string`         | `""`         |
+| `isBalanceLoading`  | `is-balance-loading`  |             | `boolean`        | `false`      |
+| `isMobile`          | `is-mobile`           |             | `boolean`        | `false`      |
+| `mobileWalletName`  | `mobile-wallet-name`  |             | `string`         | `""`         |
+| `qrError`           | `qr-error`            |             | `null \| string` | `null`       |
+| `qrLoading`         | `qr-loading`          |             | `boolean`        | `false`      |
+| `qrUri`             | `qr-uri`              |             | `null \| string` | `null`       |
+| `tokenBalancesJson` | `token-balances-json` |             | `string`         | `"[]"`       |
+| `walletsJson`       | `wallets-json`        |             | `string`         | `"[]"`       |
 
 
 ## Events
 
 | Event                  | Description | Type                                                             |
 | ---------------------- | ----------- | ---------------------------------------------------------------- |
+| `appkitCancelPairing`  |             | `CustomEvent<void>`                                              |
 | `appkitConnect`        |             | `CustomEvent<{ kind: string; walletId?: string \| undefined; }>` |
 | `appkitCopyAddress`    |             | `CustomEvent<string>`                                            |
 | `appkitDisconnect`     |             | `CustomEvent<void>`                                              |

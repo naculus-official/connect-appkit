@@ -15,11 +15,13 @@ const mockUseAccount = vi.fn()
 const mockUseChain = vi.fn()
 const mockUseEmbeddedWallet = vi.fn()
 const mockUseDisconnect = vi.fn()
+const mockUseWeb3 = vi.fn()
 const mockWeb3ConnectProvider = vi.fn()
 const mockWeb3 = vi.fn()
 
 vi.mock("@naculus/connect-appkit-react", () => ({
   useWallet: () => mockUseWallet(),
+  useWeb3: () => mockUseWeb3(),
   useAccount: () => mockUseAccount(),
   useChain: () => mockUseChain(),
   useEmbeddedWallet: () => mockUseEmbeddedWallet(),
@@ -31,7 +33,17 @@ vi.mock("@naculus/connect-appkit-react", () => ({
   },
   AppkitConnectButton: (props: any) => (
     <div data-testid="wc-connect-button">
-      {!props.isConnected && <span>Connect Wallet</span>}
+      {!props.connected && (
+        <>
+          <span>Connect Wallet</span>
+          <button
+            data-testid="mock-injected-wallet"
+            onClick={() => props.onAppkitConnect?.({ detail: { kind: "injected", walletId: "io.test.wallet" } })}
+          >
+            Mock injected wallet
+          </button>
+        </>
+      )}
     </div>
   ),
 }))
@@ -130,6 +142,7 @@ describe("AppKit", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseWallet.mockReturnValue({ isConnected: false, isConnecting: false })
+    mockUseWeb3.mockReturnValue({ connectInjected: vi.fn().mockResolvedValue(undefined) })
     mockUseAccount.mockReturnValue({ primaryAccount: null })
     mockUseChain.mockReturnValue(chainState)
     mockUseEmbeddedWallet.mockReturnValue({
@@ -175,6 +188,35 @@ describe("AppKit", () => {
           }),
         })
       )
+    })
+
+    it("forwards chain and security configuration to the React provider", () => {
+      const embeddedConfig = {
+        encryptionPassphrase: async () => "test-only-passphrase",
+        isolation: "worker" as const,
+      }
+      const chains = [{
+        id: 11155111,
+        namespace: "eip155" as const,
+        name: "Sepolia",
+        rpcUrl: "https://rpc.example.test",
+        token: "ETH",
+      }]
+
+      renderAppKit({
+        chains,
+        embeddedConfig,
+        encryptionKey: "test-session-key",
+        siwx: { createMessage: vi.fn() },
+      })
+
+      expect(mockWeb3ConnectProvider).toHaveBeenCalledWith(expect.objectContaining({
+        config: expect.objectContaining({
+          chains,
+          embeddedConfig,
+          encryptionKey: "test-session-key",
+        }),
+      }))
     })
   })
 
@@ -307,11 +349,12 @@ describe("AppKit", () => {
       expect(confirmBackup).toHaveBeenCalled()
     })
 
-    it("calls skipBackup when backup is skipped", () => {
+    it("clears the seed phrase when backup is skipped", () => {
+      const confirmBackup = vi.fn()
       mockUseEmbeddedWallet.mockReturnValue({
         backupPending: true,
         seedPhrase: "test seed phrase twelve words here",
-        confirmBackup: vi.fn(),
+        confirmBackup,
         wallet: null,
       })
 
@@ -319,6 +362,7 @@ describe("AppKit", () => {
 
       const skipBtn = screen.getByTestId("mock-seed-skip")
       fireEvent.click(skipBtn)
+      expect(confirmBackup).toHaveBeenCalled()
     })
 
     it("closes backup dialog when embedded wallet is no longer pending", () => {
@@ -354,6 +398,21 @@ describe("AppKit", () => {
 
       // WC renders "Connect Wallet" via the mock
       expect(screen.getByText("Connect Wallet")).toBeTruthy()
+    })
+
+    it("connects the selected injected wallet through the provider", async () => {
+      const connectInjected = vi.fn().mockResolvedValue(undefined)
+      mockUseWeb3.mockReturnValue({ connectInjected })
+
+      render(
+        <AppKit {...defaultConfig}>
+          <AppKitButton />
+        </AppKit>
+      )
+
+      fireEvent.click(screen.getByTestId("mock-injected-wallet"))
+      await act(async () => {})
+      expect(connectInjected).toHaveBeenCalledWith("io.test.wallet")
     })
   })
 

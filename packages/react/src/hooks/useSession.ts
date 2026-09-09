@@ -43,37 +43,69 @@ function subscribeToSessionManager(
   };
 }
 
+const EMPTY_SESSION: UseSessionReturn = Object.freeze({
+  session: null,
+  chainSessions: [],
+  activeChainId: null,
+  isConnected: false,
+  connectorId: null,
+}) as UseSessionReturn;
+
+/**
+ * Last snapshot handed to React, per SessionManager.
+ *
+ * useSyncExternalStore compares snapshots with Object.is and re-renders when
+ * they differ, so returning a fresh object literal on every call meant the
+ * comparison never succeeded: React re-rendered, called getSnapshot again, got
+ * another new object, and threw "Maximum update depth exceeded". Any component
+ * calling useSession() crashed on first render, which is also why this file
+ * had no coverage — it had never actually run.
+ *
+ * The bundle is mutated in place rather than replaced, so identity alone is
+ * not a usable signal; the derived fields are compared instead and a new
+ * object is produced only when one of them actually changed.
+ */
+const snapshotCache = new WeakMap<object, UseSessionReturn>();
+
+function sameChainSessions(a: ChainSession[], b: ChainSession[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
 function getSessionSnapshot(
   sm: import("@naculus/connect-core").SessionManager | null,
 ): UseSessionReturn {
-  if (!sm) {
-    return {
-      session: null,
-      chainSessions: [],
-      activeChainId: null,
-      isConnected: false,
-      connectorId: null,
-    };
-  }
+  if (!sm) return EMPTY_SESSION;
 
   const bundle = sm.getActiveBundle();
+  const previous = snapshotCache.get(sm as unknown as object);
+
   if (!bundle) {
-    return {
-      session: null,
-      chainSessions: [],
-      activeChainId: null,
-      isConnected: false,
-      connectorId: null,
-    };
+    if (previous && previous.session === null) return previous;
+    snapshotCache.set(sm as unknown as object, EMPTY_SESSION);
+    return EMPTY_SESSION;
   }
 
-  return {
+  const chainSessions = Array.from(bundle.chainSessions.values());
+  if (
+    previous &&
+    previous.session === bundle.walletSession &&
+    previous.activeChainId === bundle.activeChainId &&
+    sameChainSessions(previous.chainSessions, chainSessions)
+  ) {
+    return previous;
+  }
+
+  const next: UseSessionReturn = {
     session: bundle.walletSession,
-    chainSessions: Array.from(bundle.chainSessions.values()),
+    chainSessions,
     activeChainId: bundle.activeChainId,
     isConnected: true,
     connectorId: bundle.walletSession.walletType,
   };
+  snapshotCache.set(sm as unknown as object, next);
+  return next;
 }
 
 export function useSession(

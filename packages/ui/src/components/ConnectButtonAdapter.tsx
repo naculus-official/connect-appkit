@@ -10,7 +10,7 @@ export interface ConnectButtonProps {
   className?: string
   isConnected?: boolean
   isConnecting?: boolean
-  onConnect?: (walletKind: "injected" | "walletconnect", closeModal: () => void, walletId?: string) => void
+  onConnect?: (walletKind: "injected" | "walletconnect", closeModal: () => void, walletId?: string) => void | Promise<void>
   onDisconnect?: () => void
   onMobileDeepLink?: () => void
   mobileWalletName?: string
@@ -55,6 +55,14 @@ export function ConnectButtonAdapter({
   const [qrError, setQrError] = useState<string | null>(null)
   const pairingRef = useRef({ aborted: false })
 
+  const cancelPairing = useCallback(() => {
+    pairingRef.current.aborted = true
+    wcCtx?.cancelQR()
+    setQrLoading(false)
+    setQrUri(null)
+    setQrError(null)
+  }, [wcCtx])
+
   // Sync WC context to WC props
   useEffect(() => {
     if (!wcCtx) return
@@ -62,7 +70,7 @@ export function ConnectButtonAdapter({
     if (qrStatus === "loading") { setQrLoading(true); setQrUri(null); setQrError(null) }
     else if (qrStatus === "ready" && ctxUri) { setQrLoading(false); setQrUri(ctxUri); setQrError(null) }
     else if (qrStatus === "error") { setQrLoading(false); setQrError(ctxErr) }
-    else if (qrStatus === "idle") { setQrLoading(false); setQrUri(null); setQrError(null) }
+    else if (qrStatus === "idle" || qrStatus === "cancelled") { setQrLoading(false); setQrUri(null); setQrError(null) }
   }, [wcCtx?.state?.qrStatus, wcCtx?.state?.qrUri, wcCtx?.state?.error])
 
   const emitConnect = useCallback((kind: string, walletId?: string) => {
@@ -112,6 +120,7 @@ export function ConnectButtonAdapter({
       onAppkitDisconnect={() => onDisconnect?.()}
       onAppkitStartPairing={() => emitConnect("walletconnect")}
       onAppkitRetry={() => { pairingRef.current.aborted = true; setQrError(null); setQrUri(null); emitConnect("walletconnect") }}
+      onAppkitCancelPairing={cancelPairing}
       onAppkitMobileDeepLink={() => onMobileDeepLink?.()}
       onAppkitCopyAddress={(e: CustomEvent<string>) => {
         navigator.clipboard?.writeText(e.detail).catch(() => {})

@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { TokenListManager } from "@naculus/connect-core";
 import type { TokenListEntry, TokenListSource, TokenListManagerConfig } from "@naculus/connect-core";
+import { eip155ChainIdToNumber } from "@naculus/connect-appkit-core";
 
 export interface UseTokenListOptions {
   /** Auto-load on mount (default: true) */
@@ -64,7 +65,7 @@ export function useTokenList(
 
     try {
       await manager.load();
-      const numericChainId = chainId ? parseChainId(chainId) : undefined;
+      const numericChainId = chainId ? eip155ChainIdToNumber(chainId) : undefined;
       const loaded = manager.getTokens(
         numericChainId !== undefined ? { chainId: numericChainId } : undefined,
       );
@@ -86,7 +87,7 @@ export function useTokenList(
 
     try {
       await manager.refresh();
-      const numericChainId = chainId ? parseChainId(chainId) : undefined;
+      const numericChainId = chainId ? eip155ChainIdToNumber(chainId) : undefined;
       const loaded = manager.getTokens(
         numericChainId !== undefined ? { chainId: numericChainId } : undefined,
       );
@@ -112,8 +113,4 @@ export function useTokenList(
  * Parse a CAIP-2 chain ID like "eip155:1" into a numeric chain ID (1).
  * Returns undefined for non-numeric chains.
  */
-function parseChainId(chainId: string): number | undefined {
-  const parts = chainId.split(":");
-  const numeric = parseInt(parts[parts.length - 1], 10);
-  return isNaN(numeric) ? undefined : numeric;
-}
+

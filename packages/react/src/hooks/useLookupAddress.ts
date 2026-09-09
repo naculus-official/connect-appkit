@@ -1,21 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { NameResolver } from "@naculus/connect-core";
-import type { NameResult, NameResolverConfig } from "@naculus/connect-core";
+import type {
+  NameResolver,
+  NameResolverConfig,
+  NameResult,
+} from "@naculus/connect-core";
+import { useCallback } from "react";
+import { useNameLookup } from "../core/name-lookup";
 
 /**
- * Options for the useLookupAddress hook.
- */
-export interface UseLookupAddressOptions {
-  /** Optional CAIP-2 chain ID to hint which provider to use. */
-  chainId?: string;
-  /** Whether to skip lookup. Default: false. */
-  skip?: boolean;
-  /** Custom resolver configuration (overrides default RPC URLs). */
-  resolverConfig?: NameResolverConfig;
-}
-
-/**
- * Result of an address reverse-lookup query.
+ * Result of a reverse resolution query.
  */
 export interface UseLookupAddressResult {
   /** Resolved name, or null if not found / not started. */
@@ -28,29 +20,27 @@ export interface UseLookupAddressResult {
   refetch: () => void;
 }
 
-// Lazy singleton resolver to avoid creating one per component instance.
-let sharedResolver: NameResolver | null = null;
-
-function getResolver(config?: NameResolverConfig): NameResolver {
-  if (config) {
-    return new NameResolver(config);
-  }
-  if (!sharedResolver) {
-    sharedResolver = new NameResolver();
-  }
-  return sharedResolver;
+/**
+ * Options for the useLookupAddress hook.
+ */
+export interface UseLookupAddressOptions {
+  /** Chain to resolve against, CAIP-2. */
+  chainId?: string;
+  /** Whether to skip the lookup (e.g. if the input is incomplete). */
+  skip?: boolean;
+  /** Custom resolver configuration (overrides default RPC URLs). */
+  resolverConfig?: NameResolverConfig;
 }
 
 /**
- * React hook to reverse-lookup a blockchain address to find its human-readable name.
+ * React hook to resolve a blockchain address to a human-readable name.
  *
- * Supports ENS (.eth) and SNS (.sol) names.
- * Auto-detects the name service from the address format or chainId hint.
+ * Reverse resolution for ENS and SNS.
  *
  * @example
  * ```tsx
- * function TransactionRow({ address }: { address: string }) {
- *   const { data, isLoading } = useLookupAddress(address);
+ * function AccountLabel({ address }) {
+ *   const { data } = useLookupAddress(address);
  *   return <span>{data?.name ?? address}</span>;
  * }
  * ```
@@ -59,73 +49,17 @@ export function useLookupAddress(
   address: string,
   options?: UseLookupAddressOptions,
 ): UseLookupAddressResult {
-  const [data, setData] = useState<NameResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const chainId = options?.chainId;
-  const skip = options?.skip ?? false;
-  const resolverRef = useRef<NameResolver | null>(null);
-  const activeAddrRef = useRef<string>("");
-  const mountedRef = useRef(true);
+  const query = useCallback(
+    (resolver: NameResolver, input: string, scope?: string) =>
+      resolver.lookupAddress(input, scope),
+    [],
+  );
 
-  // Keep mounted ref current
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  const resolver = resolverRef.current ?? getResolver(options?.resolverConfig);
-  resolverRef.current = resolver;
-
-  const lookup = useCallback(() => {
-    const cleanAddr = address.trim();
-
-    if (!cleanAddr || skip) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    // Avoid re-looking-up the same address
-    if (activeAddrRef.current === cleanAddr && data) {
-      return;
-    }
-
-    activeAddrRef.current = cleanAddr;
-    setIsLoading(true);
-    setError(null);
-
-    resolver
-      .lookupAddress(cleanAddr, chainId)
-      .then((result) => {
-        if (mountedRef.current) {
-          setData(result);
-          setIsLoading(false);
-        }
-      })
-      .catch((err: unknown) => {
-        if (mountedRef.current) {
-          const resolutionError =
-            err instanceof Error ? err : new Error(String(err));
-          setError(resolutionError);
-          setData(null);
-          setIsLoading(false);
-        }
-      });
-  }, [address, chainId, skip]);
-
-  // Lookup when address or chainId changes
-  useEffect(() => {
-    lookup();
-  }, [lookup]);
-
-  const refetch = useCallback(() => {
-    activeAddrRef.current = "";
-    lookup();
-  }, [lookup]);
-
-  return { data, isLoading, error, refetch };
+  return useNameLookup<NameResult>({
+    input: address,
+    skip: options?.skip,
+    resolverConfig: options?.resolverConfig,
+    scope: options?.chainId,
+    query,
+  });
 }

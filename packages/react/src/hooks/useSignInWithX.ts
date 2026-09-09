@@ -1,14 +1,16 @@
-import { useState, useCallback } from "react";
-import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { getClient } from "../client";
 import { WalletError } from "@naculus/connect-core";
 import {
   createSiwxMessage,
   generateNonce,
-  nowISO,
   getBlockchainName,
+  issueNonce,
+  nowISO,
   type SiwxResult,
 } from "@naculus/siwx";
+import { useCallback, useState } from "react";
+import { useWeb3 } from "../provider/Web3ConnectProvider";
+import { resolveClient } from "./client-resolver";
+import { selectSiwxAccount } from "./siwx-accounts";
 
 export interface UseSignInWithXOptions {
   domain?: string;
@@ -39,7 +41,7 @@ function getDefaultUri(): string {
 }
 
 export function useSignInWithX(): UseSignInWithXReturn {
-  const { session, chainId: currentChainId } = useWeb3();
+  const { session, chainId: currentChainId, client } = useWeb3();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [result, setResult] = useState<SiwxResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -52,48 +54,53 @@ export function useSignInWithX(): UseSignInWithXReturn {
         throw new WalletError("wallet_unavailable", "No active session");
       }
 
-      const client = getClient();
-      if (!client) {
-        throw new WalletError("wallet_unavailable", "Client not initialized");
+      // No mainnet default. This value becomes the `Chain ID:` field of the
+      // CAIP-122 message the user signs, so an assumed chain is an assertion
+      // the user never made — and on a wallet sitting on another chain, a
+      // signature that binds to the wrong one.
+      const chainId = options?.chainId ?? currentChainId;
+      if (!chainId) {
+        throw new WalletError(
+          "invalid_chain",
+          "No chain to sign for. Connect a wallet or pass options.chainId.",
+        );
       }
-
-      const allAccounts = Object.entries(session.namespaces).flatMap(
-        ([ns, info]) =>
-          info.accounts.map((acc: string) => ({ ns, acc }))
-      );
-
-      if (allAccounts.length === 0) {
+      const account = selectSiwxAccount(session, chainId);
+      if (!account) {
         throw new WalletError("wallet_unavailable", "No account found");
       }
-
-      const { acc: address } = allAccounts[0];
-      const chainId = options?.chainId ?? currentChainId ?? "eip155:1";
+      const activeClient = resolveClient(client);
+      if (!activeClient) {
+        throw new WalletError("wallet_unavailable", "Client not initialized");
+      }
+      const { address } = account;
       const domain = options?.domain ?? getDefaultDomain();
       const uri = options?.uri ?? getDefaultUri();
-      const nonce = generateNonce();
-      const issuedAt = nowISO();
-
-      const message = createSiwxMessage({
-        domain,
-        address,
-        uri,
-        version: 1,
-        chainId,
-        nonce,
-        issuedAt,
-        statement: options?.statement,
-        expirationTime: options?.expirySeconds
-          ? new Date(Date.now() + options.expirySeconds * 1000).toISOString()
-          : undefined,
-        resources: options?.resources,
-        requestId: options?.requestId,
-      });
-
       setIsSigningIn(true);
       setError(null);
 
       try {
-        const signature = (await client.signMessage(session, {
+        const nonce = generateNonce();
+        await issueNonce(nonce);
+        const issuedAt = nowISO();
+
+        const message = createSiwxMessage({
+          domain,
+          address,
+          uri,
+          version: 1,
+          chainId,
+          nonce,
+          issuedAt,
+          statement: options?.statement,
+          expirationTime: options?.expirySeconds
+            ? new Date(Date.now() + options.expirySeconds * 1000).toISOString()
+            : undefined,
+          resources: options?.resources,
+          requestId: options?.requestId,
+        });
+
+        const signature = (await activeClient.signMessage(session, {
           message,
           address,
           chainId: chainId ?? undefined,
@@ -134,7 +141,7 @@ export function useSignInWithX(): UseSignInWithXReturn {
         setIsSigningIn(false);
       }
     },
-    [session, currentChainId]
+    [session, currentChainId, client],
   );
 
   return { signIn, isSigningIn, result, error, clearError };

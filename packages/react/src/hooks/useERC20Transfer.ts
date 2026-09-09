@@ -1,4 +1,4 @@
-import { chainNumber } from "../core/chain-selection";
+import { chainNumber } from "@naculus/connect-appkit-core";
 import { useState, useCallback, useRef } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { useAccount } from "./useAccount";
@@ -14,7 +14,7 @@ import {
   createDecimalsCache,
   readDecimals,
   writeDecimals,
-} from "../core/token-decimals";
+} from "@naculus/connect-appkit-core";
 import { useERC20Context } from "./useERC20Context";
 
 // ── Helpers ───────────────────────────────────────────────────────

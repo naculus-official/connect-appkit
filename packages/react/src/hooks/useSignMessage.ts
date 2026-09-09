@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { getClient } from "../client";
 import { WalletError } from "@naculus/connect-core";
+import { resolveClient } from "./client-resolver";
 
 export function useSignMessage() {
-  const { session, chainId } = useWeb3();
+  const { session, chainId, client } = useWeb3();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -17,16 +17,8 @@ export function useSignMessage() {
         throw err;
       }
 
-      const client = getClient();
-      if (!client) {
-        const err = new WalletError("wallet_unavailable", "Client not initialized");
-        setError(err);
-        throw err;
-      }
-
-      const address = Object.values(session.namespaces)
-        .flatMap((ns) => ns.accounts)
-        .find((acc) => acc.includes("0x")) ?? Object.values(session.namespaces)[0]?.accounts[0];
+      const address = session.namespaces.eip155?.accounts[0]
+        ?? Object.values(session.namespaces)[0]?.accounts[0];
 
       if (!address) {
         const err = new WalletError("wallet_unavailable", "No account found");
@@ -38,7 +30,11 @@ export function useSignMessage() {
       setError(null);
 
       try {
-        const result = (await client.signMessage(session, {
+        const activeClient = resolveClient(client);
+        if (!activeClient) {
+          throw new WalletError("wallet_unavailable", "Client not initialized");
+        }
+        const result = (await activeClient.signMessage(session, {
           message,
           address,
           chainId: chainId ?? undefined
@@ -54,7 +50,7 @@ export function useSignMessage() {
         setIsLoading(false);
       }
     },
-    [session, chainId]
+    [session, chainId, client]
   );
 
   return {

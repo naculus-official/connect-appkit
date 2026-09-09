@@ -1,4 +1,4 @@
-import { chainNumber } from "../core/chain-selection";
+import { chainNumber } from "@naculus/connect-appkit-core";
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useViemClient } from "./useViemClient";
 import { useChain } from "./useChain";

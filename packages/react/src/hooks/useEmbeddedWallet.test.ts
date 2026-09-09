@@ -144,7 +144,7 @@ describe("useEmbeddedWallet", () => {
     expect(result.current.backupPending).toBe(false);
   });
 
-  it("wipe should clear wallet and seed phrase", () => {
+  it("wipe should clear wallet and seed phrase", async () => {
     mockUseWeb3.mockReturnValue({
       connectEmbedded: vi.fn(),
       status: "disconnected",
@@ -158,8 +158,8 @@ describe("useEmbeddedWallet", () => {
 
     const { result } = renderHook(() => useEmbeddedWallet());
 
-    act(() => {
-      result.current.wipe();
+    await act(async () => {
+      await result.current.wipe();
     });
 
     expect(mockConnector.wipe).toHaveBeenCalled();

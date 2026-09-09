@@ -8,7 +8,6 @@ import { QRCodeModal as BizQRCodeModal } from '../components/QRCodeModal'
 import { SignInButton as BizSignInButton } from '../components/SignInButton'
 import { SeedPhraseBackup as BizSeedPhraseBackup } from '../components/SeedPhraseBackup'
 import { ErrorBoundary as BizErrorBoundary } from '../components/ErrorBoundary'
-import { AppKit as BizAppKit, AppKitButton as BizAppKitButton, AppKitChainSelector as BizAppKitChainSelector } from '../components/AppKit'
 import { Web3ConnectUI as BizWeb3ConnectUI } from '../components/Web3ConnectUI'
 
 export interface ComponentRegistry {
@@ -54,7 +53,31 @@ export interface ComponentRegistry {
   Web3ConnectUI?: React.ComponentType<any>
 }
 
+/**
+ * Safe base control for the standalone AppKit build. Consumers can still
+ * replace it with their design-system button through Web3ComponentProvider.
+ */
+function DefaultButton({
+  className,
+  variant,
+  size,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }) {
+  const classes = [
+    "inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2",
+    "text-sm font-medium transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    "disabled:pointer-events-none disabled:opacity-50",
+    variant === "outline" ? "border-input bg-transparent hover:bg-accent" : "border-primary bg-primary text-primary-foreground hover:bg-primary/90",
+    size === "sm" ? "h-9 px-3" : size === "icon" ? "h-10 w-10 p-0" : "h-10",
+    className,
+  ].filter(Boolean).join(" ")
+
+  return <button type="button" className={classes} {...props} />
+}
+
 export const DEFAULT_COMPONENTS: ComponentRegistry = {
+  Button: DefaultButton,
   // Business defaults
   ConnectButton: BizConnectButton,
   AccountButton: BizAccountButton,
@@ -63,9 +86,6 @@ export const DEFAULT_COMPONENTS: ComponentRegistry = {
   SignInButton: BizSignInButton,
   SeedPhraseBackup: BizSeedPhraseBackup,
   ErrorBoundary: BizErrorBoundary,
-  AppKit: BizAppKit,
-  AppKitButton: BizAppKitButton,
-  AppKitChainSelector: BizAppKitChainSelector,
   Web3ConnectUI: BizWeb3ConnectUI,
 }
 

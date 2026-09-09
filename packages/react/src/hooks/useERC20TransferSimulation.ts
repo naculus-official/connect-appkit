@@ -1,4 +1,4 @@
-import { chainNumber } from "../core/chain-selection";
+import { chainNumber } from "@naculus/connect-appkit-core";
 /**
  * useERC20TransferSimulation — React hook for simulating ERC-20 token
  *                              transfers before signing/submitting.

@@ -1,11 +1,11 @@
 {
   "name": "@naculus/connect-appkit-wc",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.cjs.js",
   "module": "./dist/index.js",
   "collection": "dist/collection/collection-manifest.json",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/types/components.d.ts",
   "exports": {
     ".": {
       "types": "./dist/types/components.d.ts",
@@ -24,15 +24,10 @@
       "types": "./dist/types/*",
       "import": "./dist/*"
     },
-    "./i18n": {
-      "types": "./dist/types/i18n/index.d.ts",
-      "import": "./dist/i18n/index.js"
-    },
-    "./styles/tokens": "./dist/styles/tokens.css",
     "./loader": {
       "types": "./loader/index.d.ts",
       "import": "./loader/index.js",
-      "require": "./loader/index.cjs"
+      "require": "./loader/index.cjs.js"
     }
   },
   "files": [
@@ -76,8 +71,5 @@
     "components",
     "stencil",
     "web-components"
-  ],
-  "optionalDependencies": {
-    "@naculus/connect-appkit-ui": "workspace:*"
-  }
+  ]
 }

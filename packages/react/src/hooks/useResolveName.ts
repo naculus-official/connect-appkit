@@ -1,16 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { NameResolver } from "@naculus/connect-core";
-import type { AddressResult, NameResolverConfig } from "@naculus/connect-core";
-
-/**
- * Options for the useResolveName hook.
- */
-export interface UseResolveNameOptions {
-  /** Whether to skip resolution (e.g. if input is invalid). Default: false. */
-  skip?: boolean;
-  /** Custom resolver configuration (overrides default RPC URLs). */
-  resolverConfig?: NameResolverConfig;
-}
+import type {
+  AddressResult,
+  NameResolver,
+  NameResolverConfig,
+} from "@naculus/connect-core";
+import { useCallback } from "react";
+import { useNameLookup } from "../core/name-lookup";
 
 /**
  * Result of a name resolution query.
@@ -26,17 +20,14 @@ export interface UseResolveNameResult {
   refetch: () => void;
 }
 
-// Lazy singleton resolver to avoid creating one per component instance.
-let sharedResolver: NameResolver | null = null;
-
-function getResolver(config?: NameResolverConfig): NameResolver {
-  if (config) {
-    return new NameResolver(config);
-  }
-  if (!sharedResolver) {
-    sharedResolver = new NameResolver();
-  }
-  return sharedResolver;
+/**
+ * Options for the useResolveName hook.
+ */
+export interface UseResolveNameOptions {
+  /** Whether to skip resolution (e.g. if input is invalid). Default: false. */
+  skip?: boolean;
+  /** Custom resolver configuration (overrides default RPC URLs). */
+  resolverConfig?: NameResolverConfig;
 }
 
 /**
@@ -57,72 +48,15 @@ export function useResolveName(
   name: string,
   options?: UseResolveNameOptions,
 ): UseResolveNameResult {
-  const [data, setData] = useState<AddressResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const skip = options?.skip ?? false;
-  const resolverRef = useRef<NameResolver | null>(null);
-  const activeNameRef = useRef<string>("");
-  const mountedRef = useRef(true);
+  const query = useCallback(
+    (resolver: NameResolver, input: string) => resolver.resolveName(input),
+    [],
+  );
 
-  // Keep mounted ref current
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  const resolver = resolverRef.current ?? getResolver(options?.resolverConfig);
-  resolverRef.current = resolver;
-
-  const resolve = useCallback(() => {
-    const cleanName = name.trim();
-
-    if (!cleanName || skip) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    // Avoid re-resolving the same name
-    if (activeNameRef.current === cleanName && data) {
-      return;
-    }
-
-    activeNameRef.current = cleanName;
-    setIsLoading(true);
-    setError(null);
-
-    resolver
-      .resolveName(cleanName)
-      .then((result) => {
-        if (mountedRef.current) {
-          setData(result);
-          setIsLoading(false);
-        }
-      })
-      .catch((err: unknown) => {
-        if (mountedRef.current) {
-          const resolutionError =
-            err instanceof Error ? err : new Error(String(err));
-          setError(resolutionError);
-          setData(null);
-          setIsLoading(false);
-        }
-      });
-  }, [name, skip]);
-
-  // Resolve when name changes
-  useEffect(() => {
-    resolve();
-  }, [resolve]);
-
-  const refetch = useCallback(() => {
-    activeNameRef.current = "";
-    resolve();
-  }, [resolve]);
-
-  return { data, isLoading, error, refetch };
+  return useNameLookup<AddressResult>({
+    input: name,
+    skip: options?.skip,
+    resolverConfig: options?.resolverConfig,
+    query,
+  });
 }

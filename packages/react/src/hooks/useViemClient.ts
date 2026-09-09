@@ -1,4 +1,4 @@
-import { chainNumber } from "../core/chain-selection";
+import { chainNumber } from "@naculus/connect-appkit-core";
 import { useMemo } from "react";
 import { createPublicClient, http, createWalletClient, type PublicClient, type WalletClient } from "viem";
 import type { WalletChain } from "../types";

@@ -94,18 +94,21 @@ export function getUserFriendlyError(
         code: "deeplink_timeout",
       };
     }
-    if (/network/i.test(message) || /chain/i.test(message)) {
-      return {
-        title: "Network Error",
-        description: message,
-        code: "chain_unsupported",
-      };
-    }
+    // Specific before generic: "insufficient funds on chain 1" also matches
+    // /chain/i, and reporting that as a network problem sends the user to
+    // check their connection instead of their balance.
     if (/insufficient funds/i.test(message)) {
       return {
         title: "Insufficient Funds",
         description: "You don't have enough funds to complete this transaction.",
         code: "tx_failed",
+      };
+    }
+    if (/network/i.test(message) || /chain/i.test(message)) {
+      return {
+        title: "Network Error",
+        description: message,
+        code: "chain_unsupported",
       };
     }
 
@@ -130,6 +133,10 @@ export function getUserFriendlyError(
  * Check if an error is retryable (transient).
  */
 export function isRetryableError(error: unknown): boolean {
+  // A rejected promise with no reason gives `undefined` here. Reading `.name`
+  // off it threw, so the error handler crashed while handling an error and
+  // buried whatever actually went wrong.
+  if (error === null || typeof error !== "object") return false;
   const maybe = error as { name?: string; code?: string; message?: string };
   if (maybe.name !== "WalletError" || !maybe.code) return false;
   const retryableCodes: WalletErrorCode[] = [

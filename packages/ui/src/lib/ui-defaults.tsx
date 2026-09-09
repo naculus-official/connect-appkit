@@ -58,11 +58,13 @@ export function DefaultDialog({
   onClose,
   children,
   closable,
+  className,
 }: {
   open: boolean
   onClose?: () => void
   children: React.ReactNode
   closable?: boolean
+  className?: string
 }) {
   useEffect(() => {
     if (!open) return
@@ -82,12 +84,41 @@ export function DefaultDialog({
 
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80" aria-hidden="true" onClick={onClose} />
+    <div
+      className={cn("fixed inset-0 z-50 flex items-center justify-center p-4", className)}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
+      }}
+    >
+      <div
+        className="absolute inset-0 bg-black/80"
+        aria-hidden="true"
+        onClick={onClose}
+        style={{ position: "absolute", inset: 0, background: "rgb(0 0 0 / 0.8)" }}
+      />
       <div
         role="dialog"
         aria-modal="true"
         className="relative z-10 w-full max-w-sm rounded-xl border bg-card text-card-foreground shadow-2xl max-h-[85vh] overflow-y-auto p-6"
+        style={{
+          position: "relative",
+          zIndex: 10,
+          width: "100%",
+          maxWidth: "24rem",
+          maxHeight: "85vh",
+          overflowY: "auto",
+          borderRadius: "0.75rem",
+          padding: "1.5rem",
+          background: "hsl(var(--card, 0 0% 100%))",
+          color: "hsl(var(--card-foreground, 222.2 84% 4.9%))",
+          boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.4)",
+        }}
       >
         {closable && onClose && (
           <button
@@ -95,6 +126,16 @@ export function DefaultDialog({
             type="button"
             aria-label="Close modal"
             className="absolute right-4 top-4 z-20 rounded-md p-1 text-muted-foreground hover:text-foreground"
+            style={{
+              position: "absolute",
+              right: "1rem",
+              top: "1rem",
+              zIndex: 20,
+              border: 0,
+              background: "transparent",
+              cursor: "pointer",
+              color: "inherit",
+            }}
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" data-testid="x-icon" /></svg>
           </button>
