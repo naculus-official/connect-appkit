@@ -8,6 +8,12 @@ export { useAccount } from "./hooks/useAccount";
 export { useChain } from "./hooks/useChain";
 export { useSignMessage } from "./hooks/useSignMessage";
 export { useSendTransaction } from "./hooks/useSendTransaction";
+export { useCapabilities } from "./hooks/useCapabilities";
+export type {
+  AtomicSupport,
+  ChainCapabilities,
+  UseCapabilitiesReturn,
+} from "./hooks/useCapabilities";
 export { useSendCalls } from "./hooks/useSendCalls";
 export type { SendCallsStatus } from "./hooks/useSendCalls";
 export { useBalance } from "./hooks/useBalance";
