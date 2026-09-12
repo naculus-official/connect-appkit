@@ -607,6 +607,16 @@ export function Web3ConnectProvider({
         ) {
           await eip6963Connector.switchChain(state.session, chainId);
         } else if (
+          state.session.walletType === "embedded" &&
+          client.embeddedConnector
+        ) {
+          await client.embeddedConnector.switchChain?.(state.session, chainId);
+        } else if (
+          state.session.walletType === "passkeys" &&
+          client.passkeysConnector
+        ) {
+          await client.passkeysConnector.switchChain?.(state.session, chainId);
+        } else if (
           state.session.walletType === "solana" &&
           client.solanaConnector
         ) {

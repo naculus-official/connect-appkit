@@ -59,8 +59,13 @@ vi.mock("@naculus/connect-appkit-react", () => ({
 }))
 
 // Mock EIP-6963
+const mockUseEIP6963 = vi.fn().mockReturnValue({
+  wallets: [],
+  isDetecting: false,
+  hasWallets: false,
+})
 vi.mock("../hooks/useEIP6963", () => ({
-  useEIP6963: () => ({ wallets: [], isDetecting: false, hasWallets: false }),
+  useEIP6963: () => mockUseEIP6963(),
 }))
 
 // Mock qrcode
@@ -74,6 +79,11 @@ describe("ConnectButton", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseIsMobile.mockReturnValue(false)
+    mockUseEIP6963.mockReturnValue({
+      wallets: [],
+      isDetecting: false,
+      hasWallets: false,
+    })
     lastWcProps.current = {}
   })
 
@@ -136,6 +146,35 @@ describe("ConnectButton", () => {
   it("passes explorerUrl through", () => {
     render(<ConnectButton explorerUrl="https://etherscan.io" />)
     expect(lastWcProps.current.explorerUrl).toBe("https://etherscan.io")
+  })
+
+  it("serializes only display metadata from circular EIP-6963 providers", () => {
+    const provider: Record<string, unknown> = {}
+    provider.self = provider
+    mockUseEIP6963.mockReturnValue({
+      wallets: [
+        {
+          id: "io.metamask",
+          name: "MetaMask",
+          icon: "data:image/svg+xml;base64,PHN2Zy8+",
+          rdns: "io.metamask",
+          provider,
+        },
+      ],
+      isDetecting: false,
+      hasWallets: true,
+    })
+
+    render(<ConnectButton />)
+
+    expect(JSON.parse(lastWcProps.current.walletsJson)).toEqual([
+      {
+        id: "io.metamask",
+        name: "MetaMask",
+        icon: "data:image/svg+xml;base64,PHN2Zy8+",
+        rdns: "io.metamask",
+      },
+    ])
   })
 
   describe("mobile deep link", () => {

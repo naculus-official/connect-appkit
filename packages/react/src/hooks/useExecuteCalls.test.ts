@@ -100,7 +100,9 @@ describe("useExecuteCalls — preview", () => {
       withAtomic(atomic);
       const { result } = renderHook(() => useExecuteCalls());
       for (const req of ["required", "preferred", "any"] as const) {
-        expect(result.current.preview(2, req).reason.length).toBeGreaterThan(20);
+        expect(result.current.preview(2, req).reason.length).toBeGreaterThan(
+          20,
+        );
       }
     }
   });
@@ -113,7 +115,9 @@ describe("useExecuteCalls — execute", () => {
     await act(async () => {
       await result.current.execute(CALLS, "required");
     });
-    expect(mockSendCalls).toHaveBeenCalledWith(CALLS);
+    expect(mockSendCalls).toHaveBeenCalledWith(CALLS, {
+      strategy: "atomic-batch",
+    });
     expect(result.current.lastRoute).toBe("wallet-batch");
   });
 
@@ -121,9 +125,9 @@ describe("useExecuteCalls — execute", () => {
     withAtomic("unsupported");
     const { result } = renderHook(() => useExecuteCalls());
     await act(async () => {
-      await expect(
-        result.current.execute(CALLS, "required"),
-      ).rejects.toThrow(/cannot execute several calls atomically/);
+      await expect(result.current.execute(CALLS, "required")).rejects.toThrow(
+        /cannot execute several calls atomically/,
+      );
     });
     expect(mockSendCalls).not.toHaveBeenCalled();
     expect(result.current.lastRoute).toBeNull();
@@ -148,8 +152,21 @@ describe("useExecuteCalls — execute", () => {
     await act(async () => {
       await result.current.execute(CALLS, "preferred");
     });
-    expect(mockSendCalls).toHaveBeenCalled();
+    expect(mockSendCalls).toHaveBeenCalledWith(CALLS, {
+      strategy: "sequential",
+    });
     expect(result.current.lastRoute).toBe("sequential");
+  });
+
+  it("executes the promised batch when capability discovery was unavailable", async () => {
+    withAtomic("unknown");
+    const { result } = renderHook(() => useExecuteCalls());
+    await act(async () => {
+      await result.current.execute(CALLS, "required");
+    });
+    expect(mockSendCalls).toHaveBeenCalledWith(CALLS, {
+      strategy: "atomic-batch",
+    });
   });
 
   it("surfaces an executor failure rather than swallowing it", async () => {
@@ -174,6 +191,104 @@ describe("useExecuteCalls — sponsorship and delegation", () => {
     const plan = result.current.preview(2, "required");
     expect(plan.route).toBeNull();
     expect(plan.reason).toMatch(/no paymaster/);
+  });
+
+  it("does not promise sponsorship from capability plus URL alone", () => {
+    mockUseCapabilities.mockReturnValue({
+      atomic: "supported",
+      current: {
+        raw: { paymasterService: { supported: true } },
+      },
+    });
+    const { result } = renderHook(() =>
+      useExecuteCalls({
+        sponsorship: "required",
+        paymasterService: { url: "https://paymaster.example" },
+      }),
+    );
+    const plan = result.current.preview(2, "required");
+    expect(plan.route).toBeNull();
+    expect(plan.sponsored).toBe(false);
+  });
+
+  it("does not mistake advertised paymaster support for active sponsorship", () => {
+    mockUseCapabilities.mockReturnValue({
+      atomic: "supported",
+      current: {
+        raw: { paymasterService: { supported: true } },
+      },
+    });
+    const { result } = renderHook(() =>
+      useExecuteCalls({ sponsorship: "required" }),
+    );
+    expect(result.current.preview(2, "required").route).toBeNull();
+  });
+
+  it("passes the executable paymaster service to the wallet batch", async () => {
+    mockUseCapabilities.mockReturnValue({
+      atomic: "supported",
+      current: {
+        raw: { paymasterService: { supported: true } },
+      },
+    });
+    const paymasterService = {
+      url: "https://paymaster.example",
+      context: { mode: "sponsor" },
+    };
+    const { result } = renderHook(() =>
+      useExecuteCalls({ sponsorship: "preferred", paymasterService }),
+    );
+    await act(async () => {
+      await result.current.execute(CALLS, "required");
+    });
+    expect(mockSendCalls).toHaveBeenCalledWith(CALLS, {
+      strategy: "atomic-batch",
+      paymasterService,
+    });
+  });
+
+  it("refuses sponsorship when the only wallet route is sequential", () => {
+    mockUseCapabilities.mockReturnValue({
+      atomic: "unsupported",
+      current: {
+        raw: { paymasterService: { supported: true } },
+      },
+    });
+    const { result } = renderHook(() =>
+      useExecuteCalls({
+        sponsorship: "required",
+        paymasterService: { url: "https://paymaster.example" },
+      }),
+    );
+    const plan = result.current.preview(2, "preferred");
+    expect(plan.route).toBeNull();
+    expect(plan.sponsored).toBe(false);
+    expect(plan.reason).toMatch(/no executable sponsored route/);
+  });
+
+  it("does not let a UserOperation bypass required sponsorship", () => {
+    withAtomic("unsupported");
+    const { result } = renderHook(() =>
+      useExecuteCalls({
+        sponsorship: "required",
+        userOperation: async () => "0xuserop",
+      }),
+    );
+    expect(result.current.preview(2, "required").route).toBeNull();
+  });
+
+  it("accepts an explicitly sponsored UserOperation executor", () => {
+    withAtomic("unsupported");
+    const { result } = renderHook(() =>
+      useExecuteCalls({
+        sponsorship: "required",
+        userOperation: async () => "0xuserop",
+        userOperationSponsored: true,
+      }),
+    );
+    const plan = result.current.preview(2, "required");
+    expect(plan.route).toBe("user-operation");
+    expect(plan.sponsored).toBe(true);
   });
 
   it("does not mention sponsorship when it was not asked for", () => {

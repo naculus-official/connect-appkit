@@ -15,6 +15,8 @@ const { mockClient } = vi.hoisted(() => ({
     signMessage: vi.fn(),
     startPairing: vi.fn(),
     connector: { onSessionExpiry: vi.fn() },
+    embeddedConnector: null,
+    passkeysConnector: null,
     solanaConnector: null,
     disconnect: vi.fn(),
     reconnect: vi.fn(),
@@ -23,8 +25,8 @@ const { mockClient } = vi.hoisted(() => ({
   },
 }));
 
-const { mockCreateSessionManager } = vi.hoisted(() => ({
-  mockCreateSessionManager: vi.fn(() => ({
+const { mockCreateSessionManager, mockSessionManager } = vi.hoisted(() => {
+  const mockSessionManager = {
     on: vi.fn(),
     off: vi.fn(),
     attach: vi.fn(),
@@ -33,8 +35,13 @@ const { mockCreateSessionManager } = vi.hoisted(() => ({
     disconnect: vi.fn(),
     restoreFromPersistence: vi.fn(),
     switchChain: vi.fn(),
-  })),
-}));
+    getActiveBundle: vi.fn(),
+  };
+  return {
+    mockSessionManager,
+    mockCreateSessionManager: vi.fn(() => mockSessionManager),
+  };
+});
 
 vi.mock("../client", () => ({
   createClient: vi.fn(() => mockClient),
@@ -198,6 +205,44 @@ describe("Web3ConnectProvider — SIWx", () => {
 
     expect(session).toBe(mockSession);
     expect(result.current.status).toBe("disconnected");
+  });
+});
+
+describe("Web3ConnectProvider — connector routing", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    MockStorage.saved = null;
+    mockSessionManager.getActiveBundle.mockReturnValue(null);
+    (mockClient as any).embeddedConnector = null;
+    (mockClient as any).passkeysConnector = null;
+  });
+
+  it("routes an embedded fallback chain switch to the embedded connector", async () => {
+    const embeddedSession = {
+      ...mockSession,
+      id: "pocket-session",
+      walletType: "embedded",
+      connectorId: "pocket",
+    };
+    const embeddedConnector = { switchChain: vi.fn().mockResolvedValue(undefined) };
+    (mockClient as any).embeddedConnector = embeddedConnector;
+    mockClient.connectEmbedded.mockResolvedValue(embeddedSession);
+    const { result } = renderWithProvider({ enableEmbedded: true });
+
+    await act(async () => {
+      await result.current.connectEmbedded();
+    });
+    await act(async () => {
+      await result.current.switchChain("eip155:11155111");
+    });
+
+    expect(embeddedConnector.switchChain).toHaveBeenCalledWith(
+      embeddedSession,
+      "eip155:11155111",
+    );
+    expect(
+      (mockClient.connector as { switchChain?: unknown }).switchChain,
+    ).toBeUndefined();
   });
 });
 

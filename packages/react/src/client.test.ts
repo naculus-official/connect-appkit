@@ -192,6 +192,14 @@ describe("createClient", () => {
       expect(client.embeddedConnector!.id).toBe("embedded");
     });
 
+    it("should expose the embedded connector after lazy initialization", async () => {
+      const client = createClient({ ...defaultConfig, enableEmbedded: true });
+
+      await expect(client.getEmbeddedConnector()).resolves.toBe(
+        mockEmbeddedConnector,
+      );
+    });
+
     it("should include embedded in getAllConnectors", async () => {
       const client = createClient({ ...defaultConfig, enableEmbedded: true });
       await client.connectEmbedded();

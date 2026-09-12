@@ -13,6 +13,16 @@ export interface ChainSelectorProps {
   variant?: "dropdown" | "buttons" | "minimal";
 }
 
+function logSwitchFailure(error: unknown): void {
+  const details =
+    error && typeof error === "object" && "details" in error
+      ? (error as { details?: unknown }).details
+      : undefined
+  const causeMessage =
+    details instanceof Error ? `${details.name}: ${details.message}` : details
+  logger.error("ui/ChainSelector", "switchChain failed", error, causeMessage)
+}
+
 function ChainLogo({ chainId, className }: { chainId: string; className?: string }) {
   const svgStr = getChainLogo(chainId)
   if (!svgStr) return null
@@ -76,7 +86,7 @@ export function ChainSelector({
               className={isActive ? cn("bg-accent", "border-primary") : ""}
               onClick={() => {
                 if (!isActive) {
-                  switchChain(chainId).catch((e: unknown) => logger.error("ui/ChainSelector", "switchChain failed", e));
+                  switchChain(chainId).catch(logSwitchFailure);
                 }
               }}
             >
@@ -128,7 +138,7 @@ export function ChainSelector({
                 key={chainId}
                 onClick={() => {
                   if (!isActive) {
-                    switchChain(chainId).catch((e: unknown) => logger.error("ui/ChainSelector", "switchChain failed", e));
+                    switchChain(chainId).catch(logSwitchFailure);
                   }
                   setIsOpen(false);
                 }}

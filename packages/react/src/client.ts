@@ -80,6 +80,8 @@ export type TransactionInput = {
 export interface Web3Client {
   connector: WalletConnectConnector;
   embeddedConnector: EmbeddedWalletConnector | null;
+  /** Wait for the lazily imported embedded connector to become available. */
+  getEmbeddedConnector: () => Promise<EmbeddedWalletConnector | null>;
   /** The Passkeys connector if enabled */
   passkeysConnector: PasskeysConnectorImpl | null;
   /**
@@ -300,6 +302,10 @@ export function createClient(config: ClientConfig): Web3Client {
   const client: Web3Client = {
     connector,
     get embeddedConnector() {
+      return _embeddedConnector;
+    },
+    getEmbeddedConnector: async () => {
+      if (embeddedInit) await embeddedInit;
       return _embeddedConnector;
     },
     get passkeysConnector() {

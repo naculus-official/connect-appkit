@@ -49,6 +49,9 @@ export function ConnectButtonAdapter({
   const wcCtx = useWalletConnectOptional()
   const { wallets } = useEIP6963()
   const isMobile = useIsMobile()
+  const walletsJson = JSON.stringify(
+    wallets.map(({ id, name, icon, rdns }) => ({ id, name, icon, rdns })),
+  )
 
   const [qrUri, setQrUri] = useState<string | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
@@ -111,7 +114,7 @@ export function ConnectButtonAdapter({
       tokenBalancesJson={JSON.stringify(tokenBalances ?? [])}
       explorerUrl={explorerUrl ?? ""}
       explorerLabel={explorerLabel ?? ""}
-      walletsJson={JSON.stringify(wallets)}
+      walletsJson={walletsJson}
       isMobile={isMobile}
       mobileWalletName={mobileWalletName ?? ""}
       qrUri={qrUri}
