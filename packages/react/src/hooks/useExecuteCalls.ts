@@ -30,6 +30,15 @@ export interface UseExecuteCallsOptions {
    */
   sponsorship?: AtomicityRequirement;
   /**
+   * ERC-7677 service passed to `wallet_sendCalls` when the wallet advertises
+   * paymaster support. Advertising support alone does not sponsor a call: the
+   * service URL (and optional context) is the executable configuration.
+   */
+  paymasterService?: {
+    url: string;
+    context?: Record<string, unknown>;
+  };
+  /**
    * A smart-account executor, typically `sendUserOp` from
    * `useSendUserOperation`.
    *
@@ -38,6 +47,8 @@ export interface UseExecuteCallsOptions {
    * route that still satisfies `"required"` instead of a refusal.
    */
   userOperation?: (calls: BatchCall[]) => Promise<string>;
+  /** Whether the supplied UserOperation executor is configured to sponsor gas. */
+  userOperationSponsored?: boolean;
 }
 
 export interface UseExecuteCallsReturn {
@@ -86,7 +97,12 @@ export function useExecuteCalls(
 
   const defaultAtomicity = options.atomicity ?? "preferred";
   const defaultSponsorship = options.sponsorship ?? "any";
+  const paymasterService = options.paymasterService;
   const userOperation = options.userOperation;
+  const userOperationSponsored = options.userOperationSponsored ?? false;
+  const walletPaymasterAvailable = Boolean(
+    current?.raw?.paymasterService?.supported && paymasterService,
+  );
 
   const preview = useCallback(
     (callCount: number, atomicity = defaultAtomicity): ExecutionPreview => {
@@ -96,6 +112,11 @@ export function useExecuteCalls(
           // "The wallet said no" and "the wallet has no way to say" are
           // different facts, and the planner treats them differently.
           discovered: atomic !== "unknown",
+          // ERC-7677 explicitly says an app MUST NOT assume the paymaster it
+          // supplies is ultimately used. A supported capability plus a URL is
+          // therefore a requestable route, not proof that the user will not
+          // pay. Only an app-controlled sponsored executor can satisfy the
+          // strict preflight guarantee.
           sponsoredTransactions: false,
           ...(current?.maxBatchSize === undefined
             ? {}
@@ -105,8 +126,22 @@ export function useExecuteCalls(
         { atomicity, sponsorship: defaultSponsorship },
       );
 
-      if (plan.strategy === "atomic-batch") {
-        return { ...plan, route: "wallet-batch" };
+      // Capability advertising plus a paymaster URL is only a request for
+      // sponsorship; EIP-7677 does not guarantee who ultimately paid. Keep a
+      // strict sponsorship requirement fail-closed unless the app controls a
+      // sponsored UserOperation route.
+      const sponsorshipRefused =
+        defaultSponsorship === "required" && !userOperationSponsored;
+      if (plan.strategy === "atomic-batch" && !sponsorshipRefused) {
+        return {
+          ...plan,
+          reason:
+            plan.reason +
+            (walletPaymasterAvailable
+              ? " A paymaster service will be requested, but the wallet's final fee payer must be checked after execution."
+              : ""),
+          route: "wallet-batch",
+        };
       }
       // Delegation is evidence about the account, not about the wallet's RPC
       // surface, so it never upgrades a capability — a delegated EOA behind a
@@ -119,14 +154,29 @@ export function useExecuteCalls(
           : "";
       // A UserOperation executes its calls in one transaction, so it rescues
       // both a refusal and a non-atomic fallback the caller did not want.
-      if (userOperation && atomicity !== "any" && !plan.atomic) {
+      const needsUserOperation =
+        (atomicity !== "any" && !plan.atomic) ||
+        defaultSponsorship === "required";
+      if (userOperation && needsUserOperation && !sponsorshipRefused) {
         return {
           strategy: "atomic-batch",
           atomic: true,
-          sponsored: plan.sponsored,
+          sponsored: userOperationSponsored,
           reason:
-            "This wallet cannot batch, so the calls are executed as a single UserOperation through the smart account, which lands as one transaction.",
+            defaultSponsorship === "required" && !plan.sponsored
+              ? "The wallet batch is not configured for sponsored gas, so the calls are executed through the configured sponsored UserOperation route."
+              : "This wallet cannot batch, so the calls are executed as a single UserOperation through the smart account, which lands as one transaction.",
           route: "user-operation",
+        };
+      }
+      if (sponsorshipRefused) {
+        return {
+          strategy: "refuse",
+          atomic: plan.atomic,
+          sponsored: false,
+          reason:
+            "Sponsored gas was required, but there is no executable sponsored route: no paymaster is configured for a wallet batch, and capability advertising alone cannot pay for a sequential transaction.",
+          route: null,
         };
       }
       if (plan.strategy === "refuse") {
@@ -141,7 +191,10 @@ export function useExecuteCalls(
     [
       atomic,
       current,
+      paymasterService,
+      walletPaymasterAvailable,
       userOperation,
+      userOperationSponsored,
       defaultAtomicity,
       defaultSponsorship,
       delegated,
@@ -165,7 +218,13 @@ export function useExecuteCalls(
         if (chosen.route === "user-operation") {
           return await userOperation!(calls);
         }
-        return await sendCalls(calls);
+        return await sendCalls(calls, {
+          strategy:
+            chosen.route === "wallet-batch" ? "atomic-batch" : "sequential",
+          ...(chosen.route === "wallet-batch" && walletPaymasterAvailable
+            ? { paymasterService }
+            : {}),
+        });
       } catch (err) {
         const e = err instanceof Error ? err : new Error("Execution failed");
         setError(e);
@@ -174,7 +233,14 @@ export function useExecuteCalls(
         setIsExecuting(false);
       }
     },
-    [preview, sendCalls, userOperation, defaultAtomicity],
+    [
+      preview,
+      sendCalls,
+      userOperation,
+      defaultAtomicity,
+      paymasterService,
+      walletPaymasterAvailable,
+    ],
   );
 
   return {
