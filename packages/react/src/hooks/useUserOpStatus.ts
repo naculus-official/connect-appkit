@@ -18,12 +18,12 @@
  * ```
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
 import type {
-  UserOperationReceipt,
   Address,
   Hex,
+  UserOperationReceipt,
 } from "@naculus/connect-core";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type UserOpStatus = "idle" | "pending" | "confirmed" | "failed" | "not_found";
 
@@ -63,6 +63,120 @@ export interface UseUserOpStatusReturn {
   reset: () => void;
 }
 
+class InvalidUserOperationReceiptError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidUserOperationReceiptError";
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isAddress(value: unknown): value is Address {
+  return typeof value === "string" && /^0x[0-9a-fA-F]{40}$/.test(value);
+}
+
+function isHash(value: unknown): value is Hex {
+  return typeof value === "string" && /^0x[0-9a-fA-F]{64}$/.test(value);
+}
+
+function isHexData(value: unknown): value is Hex {
+  return typeof value === "string" && /^0x(?:[0-9a-fA-F]{2})*$/.test(value);
+}
+
+function parseQuantity(value: unknown, field: string): bigint {
+  if (
+    typeof value !== "string" ||
+    !/^(?:0x(?:0|[1-9a-fA-F][0-9a-fA-F]*)|(?:0|[1-9][0-9]*))$/.test(
+      value,
+    )
+  ) {
+    throw new InvalidUserOperationReceiptError(
+      `Bundler returned an invalid ${field}.`,
+    );
+  }
+  return BigInt(value);
+}
+
+function parseReceipt(
+  value: unknown,
+  expectedHash: Hex,
+): UserOperationReceipt {
+  if (!isRecord(value)) {
+    throw new InvalidUserOperationReceiptError(
+      "Bundler returned an invalid UserOperation receipt.",
+    );
+  }
+  if (
+    !isHash(value.userOpHash) ||
+    value.userOpHash.toLowerCase() !== expectedHash.toLowerCase()
+  ) {
+    throw new InvalidUserOperationReceiptError(
+      "Bundler receipt does not match the requested UserOperation hash.",
+    );
+  }
+  if (!isAddress(value.entryPoint) || !isAddress(value.sender)) {
+    throw new InvalidUserOperationReceiptError(
+      "Bundler receipt contains an invalid account address.",
+    );
+  }
+  if (
+    value.paymaster !== undefined &&
+    value.paymaster !== null &&
+    !isAddress(value.paymaster)
+  ) {
+    throw new InvalidUserOperationReceiptError(
+      "Bundler receipt contains an invalid paymaster address.",
+    );
+  }
+  if (typeof value.success !== "boolean" || !isHash(value.transactionHash)) {
+    throw new InvalidUserOperationReceiptError(
+      "Bundler receipt contains an invalid execution result.",
+    );
+  }
+  if (!Array.isArray(value.logs)) {
+    throw new InvalidUserOperationReceiptError(
+      "Bundler receipt contains invalid logs.",
+    );
+  }
+
+  const logs = value.logs.map((candidate) => {
+    if (
+      !isRecord(candidate) ||
+      !isAddress(candidate.address) ||
+      !Array.isArray(candidate.topics) ||
+      !candidate.topics.every(isHash) ||
+      !isHexData(candidate.data)
+    ) {
+      throw new InvalidUserOperationReceiptError(
+        "Bundler receipt contains an invalid log entry.",
+      );
+    }
+    return {
+      address: candidate.address,
+      topics: candidate.topics,
+      data: candidate.data,
+    };
+  });
+
+  return {
+    userOpHash: value.userOpHash,
+    entryPoint: value.entryPoint,
+    sender: value.sender,
+    nonce: parseQuantity(value.nonce, "nonce"),
+    ...(value.paymaster === undefined || value.paymaster === null
+      ? {}
+      : { paymaster: value.paymaster }),
+    actualGasUsed: parseQuantity(value.actualGasUsed, "actualGasUsed"),
+    actualGasCost: parseQuantity(value.actualGasCost, "actualGasCost"),
+    success: value.success,
+    transactionHash: value.transactionHash,
+    logs,
+  };
+}
+
 /**
  * Hook for tracking the lifecycle of an ERC-4337 UserOperation.
  *
@@ -87,6 +201,9 @@ export function useUserOpStatus(
   const [elapsedMs, setElapsedMs] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestGenerationRef = useRef(0);
+  const attemptsRef = useRef(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Clear all timers
   const clearTimers = useCallback(() => {
@@ -101,8 +218,34 @@ export function useUserOpStatus(
   }, []);
 
   // Poll the bundler for receipt
-  const poll = useCallback(async (hash: Hex) => {
-    if (!bundlerUrl) return;
+  const poll = useCallback(async (hash: Hex, generation: number) => {
+    if (!bundlerUrl || generation !== requestGenerationRef.current) return;
+
+    const currentAttempt = attemptsRef.current + 1;
+    attemptsRef.current = currentAttempt;
+    setAttempts(currentAttempt);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const finishUnavailable = (nextError: Error): void => {
+      if (generation !== requestGenerationRef.current) return;
+      setStatus("not_found");
+      setIsPolling(false);
+      clearTimers();
+      setError(nextError);
+    };
+
+    const retryOrFinish = (nextError: Error): void => {
+      if (generation !== requestGenerationRef.current) return;
+      if (currentAttempt <= maxRetries) {
+        pollTimerRef.current = setTimeout(
+          () => void poll(hash, generation),
+          pollInterval,
+        );
+        return;
+      }
+      finishUnavailable(nextError);
+    };
 
     try {
       const response = await fetch(bundlerUrl, {
@@ -114,95 +257,94 @@ export function useUserOpStatus(
           method: "eth_getUserOperationReceipt",
           params: [hash],
         }),
+        signal: controller.signal,
       });
 
-      if (!response.ok) return;
+      if (generation !== requestGenerationRef.current) return;
+      if (!response.ok) {
+        throw new Error(
+          `Bundler returned HTTP ${response.status} while reading UserOperation status.`,
+        );
+      }
 
-      const json = await response.json() as {
-        result?: {
-          userOpHash: Hex;
-          entryPoint: Address;
-          sender: Address;
-          nonce: string;
-          paymaster?: Address;
-          actualGasUsed: string;
-          actualGasCost: string;
-          success: boolean;
-          transactionHash: Hex;
-          logs: Array<{ address: Address; topics: Hex[]; data: Hex }>;
-        };
+      const json = (await response.json()) as {
+        result?: unknown;
+        error?: { code?: unknown; message?: unknown };
       };
+      if (generation !== requestGenerationRef.current) return;
+      if (json.error) {
+        throw new Error(
+          typeof json.error.message === "string"
+            ? json.error.message
+            : "Bundler returned a JSON-RPC error.",
+        );
+      }
 
-      if (json.result) {
-        const receiptData: UserOperationReceipt = {
-          userOpHash: json.result.userOpHash,
-          entryPoint: json.result.entryPoint,
-          sender: json.result.sender,
-          nonce: BigInt(json.result.nonce),
-          paymaster: json.result.paymaster,
-          actualGasUsed: BigInt(json.result.actualGasUsed),
-          actualGasCost: BigInt(json.result.actualGasCost),
-          success: json.result.success,
-          transactionHash: json.result.transactionHash,
-          logs: json.result.logs,
-        };
+      if (json.result !== undefined && json.result !== null) {
+        const receiptData = parseReceipt(json.result, hash);
 
         setReceipt(receiptData);
-        setStatus(json.result.success ? "confirmed" : "failed");
+        setStatus(receiptData.success ? "confirmed" : "failed");
         setIsPolling(false);
         clearTimers();
-
         return;
       }
 
-      // No receipt yet; schedule next poll
-      setAttempts(prev => prev + 1);
       setStatus("pending");
-
-      if (attempts < maxRetries) {
-        pollTimerRef.current = setTimeout(() => poll(hash), pollInterval);
-      } else {
-        setStatus("not_found");
-        setIsPolling(false);
-        clearTimers();
-        setError(new Error("UserOperation not included after maximum retries"));
-      }
+      retryOrFinish(
+        new Error("UserOperation not included after maximum retries"),
+      );
     } catch (networkError) {
-      // Network error; retry until the same budget the no-receipt path uses.
-      setAttempts(prev => prev + 1);
-      if (attempts < maxRetries) {
-        pollTimerRef.current = setTimeout(() => poll(hash), pollInterval);
+      if (
+        generation !== requestGenerationRef.current ||
+        controller.signal.aborted
+      ) {
         return;
       }
-      // Giving up has to reach a terminal state. Without this the hook simply
-      // stopped scheduling: isPolling stayed true, status stayed "pending",
-      // no error was set and the elapsed-time interval kept counting, so a
-      // caller watched a spinner for a result that was never coming.
-      setStatus("not_found");
-      setIsPolling(false);
-      clearTimers();
-      setError(
+      const nextError =
         networkError instanceof Error
-          ? new Error(
-              `UserOperation status unavailable after ${maxRetries} attempts: ${networkError.message}`,
-            )
-          : new Error(
-              `UserOperation status unavailable after ${maxRetries} attempts`,
-            ),
+          ? networkError
+          : new Error("Unknown bundler response failure");
+      if (nextError instanceof InvalidUserOperationReceiptError) {
+        finishUnavailable(nextError);
+        return;
+      }
+      retryOrFinish(
+        new Error(
+          `UserOperation status unavailable after ${currentAttempt} attempt${currentAttempt === 1 ? "" : "s"}: ${nextError.message}`,
+        ),
       );
+    } finally {
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
-  }, [bundlerUrl, pollInterval, maxRetries, attempts, clearTimers]);
+  }, [bundlerUrl, pollInterval, maxRetries, clearTimers]);
 
   // Start tracking
   const start = useCallback((hash: Hex) => {
+    requestGenerationRef.current += 1;
+    const generation = requestGenerationRef.current;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     clearTimers();
     setUserOpHash(hash);
-    setStatus("pending");
     setReceipt(null);
     setError(null);
+    attemptsRef.current = 0;
     setAttempts(0);
-    setIsPolling(true);
+    setElapsedMs(0);
     startTimeRef.current = Date.now();
+
+    if (!bundlerUrl) {
+      setStatus("not_found");
+      setIsPolling(false);
+      setError(new Error("Bundler URL not configured"));
+      return;
+    }
+
+    setStatus("pending");
+    setIsPolling(true);
 
     // Start elapsed timer
     intervalRef.current = setInterval(() => {
@@ -210,23 +352,30 @@ export function useUserOpStatus(
     }, 1000);
 
     // Start polling
-    poll(hash);
-  }, [clearTimers, poll]);
+    void poll(hash, generation);
+  }, [bundlerUrl, clearTimers, poll]);
 
   // Stop tracking
   const stop = useCallback(() => {
+    requestGenerationRef.current += 1;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     clearTimers();
     setIsPolling(false);
   }, [clearTimers]);
 
   // Reset state
   const reset = useCallback(() => {
+    requestGenerationRef.current += 1;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     clearTimers();
     setUserOpHash(null);
     setStatus("idle");
     setReceipt(null);
     setError(null);
     setIsPolling(false);
+    attemptsRef.current = 0;
     setAttempts(0);
     setElapsedMs(0);
   }, [clearTimers]);
@@ -243,6 +392,9 @@ export function useUserOpStatus(
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      requestGenerationRef.current += 1;
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
       clearTimers();
     };
   }, [clearTimers]);
