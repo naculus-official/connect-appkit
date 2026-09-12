@@ -1,8 +1,8 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { renderHook } from "@testing-library/react";
 
 const mockUseWeb3 = vi.fn();
 vi.mock("../provider/Web3ConnectProvider", () => ({
@@ -12,6 +12,7 @@ vi.mock("../provider/Web3ConnectProvider", () => ({
 
 import {
   __resetSessionKeyManagerForTests,
+  useCreateSessionKey,
   useSessionKeys,
 } from "./useSessionKeys";
 
@@ -25,6 +26,7 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
   __resetSessionKeyManagerForTests();
   mockUseWeb3.mockReturnValue({ session: null });
 });
@@ -58,9 +60,14 @@ describe("useSessionKeys configuration", () => {
   });
 
   it.each([
-    ["a larger spend cap", { defaultMaxTotalValue: BigInt("1000000000000000000") }],
+    [
+      "a larger spend cap",
+      { defaultMaxTotalValue: BigInt("1000000000000000000") },
+    ],
     ["a different transaction count", { defaultMaxTxCount: 500 }],
     ["a weaker KDF", { pbkdf2Iterations: 10, unsafeAllowWeakKdf: true }],
+    ["a different encryption key", { encryptionKey: "different-key" }],
+    ["a different encryption salt", { encryptionSalt: "different-salt" }],
   ])("refuses %s supplied after the manager exists", (_label, over) => {
     renderHook(() => useSessionKeys(config() as never));
     expect(() =>
@@ -83,6 +90,49 @@ describe("useSessionKeys configuration", () => {
   });
 });
 
+describe("useSessionKeys browser persistence", () => {
+  it("restores a created key through a fresh manager", async () => {
+    const persistentConfig = config({
+      storagePrefix: "naculus-hook-persistence-test",
+      encryptionKey: "browser-persistence-test-key",
+      pbkdf2Iterations: 10,
+      unsafeAllowWeakKdf: true,
+      requireAllowedContracts: true,
+    });
+    mockUseWeb3.mockReturnValue({ session: { id: "embedded-test" } });
+
+    const first = renderHook(() =>
+      useCreateSessionKey(persistentConfig as never),
+    );
+    let createdId = "";
+    await act(async () => {
+      const created = await first.result.current.createSessionKey(
+        {
+          mode: "offchain",
+          allowedContracts: ["0x1234567890123456789012345678901234567890"],
+          allowedChainIds: [11155111],
+        },
+        "0x1234567890123456789012345678901234567890",
+      );
+      createdId = created.id;
+    });
+    expect(
+      window.localStorage.getItem("naculus-hook-persistence-test:session_keys"),
+    ).not.toBeNull();
+    first.unmount();
+
+    __resetSessionKeyManagerForTests();
+    const restored = renderHook(() =>
+      useSessionKeys(persistentConfig as never),
+    );
+    await waitFor(() =>
+      expect(restored.result.current.sessions.map((item) => item.id)).toContain(
+        createdId,
+      ),
+    );
+  });
+});
+
 describe("useSessionKeys applies the caller's limits", () => {
   /**
    * Before this, every hook called getSessionKeyManager() with no argument,
@@ -98,7 +148,9 @@ describe("useSessionKeys applies the caller's limits", () => {
     // A second call with the same config must not be rejected, which is only
     // possible if the first one was actually recorded.
     expect(() =>
-      renderHook(() => useSessionKeys(config({ defaultMaxTxCount: 7 }) as never)),
+      renderHook(() =>
+        useSessionKeys(config({ defaultMaxTxCount: 7 }) as never),
+      ),
     ).not.toThrow();
   });
 

@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
-import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { WalletError } from "@naculus/connect-core";
+import { useCallback, useState } from "react";
+import { useWeb3 } from "../provider/Web3ConnectProvider";
 import type { EvmTransaction } from "../types";
 import { resolveClient } from "./client-resolver";
+import { extractTransactionHash } from "./transaction-hash";
 
 /**
  * Where a send has got to.
@@ -36,13 +37,18 @@ export function useSendTransaction() {
         throw err;
       }
 
-      const evmAccount = session.namespaces.eip155?.accounts.find((account) =>
-        /^eip155:\d+:0x[0-9a-fA-F]{40}$/.test(account) || /^0x[0-9a-fA-F]{40}$/.test(account),
+      const evmAccount = session.namespaces.eip155?.accounts.find(
+        (account) =>
+          /^eip155:\d+:0x[0-9a-fA-F]{40}$/.test(account) ||
+          /^0x[0-9a-fA-F]{40}$/.test(account),
       );
 
       if (!evmAccount) {
         setStatus("failed");
-        const err = new WalletError("wallet_unavailable", "No EVM account found");
+        const err = new WalletError(
+          "wallet_unavailable",
+          "No EVM account found",
+        );
         setError(err);
         throw err;
       }
@@ -53,28 +59,30 @@ export function useSendTransaction() {
       try {
         const txWithFrom = {
           ...transaction,
-          from: transaction.from ?? evmAccount.split(":").pop()
+          from: transaction.from ?? evmAccount.split(":").pop(),
         };
 
         const activeClient = resolveClient(client);
         if (!activeClient) {
           throw new WalletError("wallet_unavailable", "Client not initialized");
         }
-        const result = (await activeClient.sendTransaction(session, {
+        const result = await activeClient.sendTransaction(session, {
           transaction: txWithFrom,
-          chainId: chainId ?? undefined
-        })) as string;
+          chainId: chainId ?? undefined,
+        });
+        const hash = extractTransactionHash(result);
 
         setStatus("submitted");
-        return result;
+        return hash;
       } catch (err) {
         setStatus("failed");
-        const errorMessage = err instanceof Error ? err.message : "Transaction failed";
+        const errorMessage =
+          err instanceof Error ? err.message : "Transaction failed";
         setError(err instanceof Error ? err : new Error(errorMessage));
         throw err;
       }
     },
-    [session, chainId, client]
+    [session, chainId, client],
   );
 
   const reset = useCallback(() => {
@@ -87,6 +95,6 @@ export function useSendTransaction() {
     status,
     error,
     reset,
-    isSending: status === "awaiting_approval"
+    isSending: status === "awaiting_approval",
   };
 }

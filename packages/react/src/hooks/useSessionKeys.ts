@@ -1,14 +1,20 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { WalletError, SessionKeyManager, MemoryStorageAdapter } from "@naculus/connect-core";
 import type {
-  SessionKeyScope,
   SessionKeyInfo,
   SessionKeyManagerConfig,
+  SessionKeyScope,
   SessionKeyTransaction,
 } from "@naculus/connect-core";
+import {
+  DEFAULT_SESSION_KEY_CONFIG,
+  LocalStorageAdapter,
+  MemoryStorageAdapter,
+  SessionKeyManager,
+  WalletError,
+} from "@naculus/connect-core";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useWeb3 } from "../provider/Web3ConnectProvider";
 
 // ─── Internal singleton for session key management ─────────────────────
 // In a full production setup, this would be injected via context or client config.
@@ -35,16 +41,23 @@ function spendingFingerprint(config?: SessionKeyManagerConfig): string {
     pbkdf2Iterations: config.pbkdf2Iterations,
     unsafeAllowWeakKdf: config.unsafeAllowWeakKdf,
     storagePrefix: config.storagePrefix,
+    encryptionKey: config.encryptionKey,
+    encryptionSalt: config.encryptionSalt,
   });
 }
 
-function getSessionKeyManager(config?: SessionKeyManagerConfig): SessionKeyManager {
+export function getSessionKeyManagerForHooks(
+  config?: SessionKeyManagerConfig,
+): SessionKeyManager {
   const fingerprint = spendingFingerprint(config);
   if (!globalSessionKeyManager) {
+    const storagePrefix =
+      config?.storagePrefix ?? DEFAULT_SESSION_KEY_CONFIG.storagePrefix;
     globalSessionKeyManager = new SessionKeyManager(
       config,
-      // Use MemoryStorageAdapter for SSR safety; browser integration will use LocalStorageAdapter
-      typeof window !== "undefined" ? undefined : new MemoryStorageAdapter(),
+      typeof window !== "undefined"
+        ? new LocalStorageAdapter(`${storagePrefix}:`)
+        : new MemoryStorageAdapter(),
     );
     globalSessionKeyConfigFingerprint = fingerprint;
     return globalSessionKeyManager;
@@ -108,7 +121,7 @@ export function useSessionKeys(
 
   const clearError = useCallback(() => setError(null), []);
 
-  const manager = getSessionKeyManager(config);
+  const manager = getSessionKeyManagerForHooks(config);
   const storageAvailable = manager.isStorageAvailable();
 
   const refresh = useCallback(async () => {
@@ -126,7 +139,9 @@ export function useSessionKeys(
       }
     } catch (err) {
       if (mountedRef.current) {
-        setError(err instanceof Error ? err : new Error("Failed to load session keys"));
+        setError(
+          err instanceof Error ? err : new Error("Failed to load session keys"),
+        );
       }
     } finally {
       if (mountedRef.current) {
@@ -200,7 +215,7 @@ export function useCreateSessionKey(
 
   const clearError = useCallback(() => setError(null), []);
 
-  const manager = getSessionKeyManager(config);
+  const manager = getSessionKeyManagerForHooks(config);
 
   const createSessionKey = useCallback(
     async (
@@ -219,7 +234,10 @@ export function useCreateSessionKey(
         setLastCreated(info);
         return info;
       } catch (err) {
-        const errorObj = err instanceof Error ? err : new Error("Failed to create session key");
+        const errorObj =
+          err instanceof Error
+            ? err
+            : new Error("Failed to create session key");
         setError(errorObj);
         throw errorObj;
       } finally {
@@ -268,7 +286,7 @@ export function useRevokeSession(
 
   const clearError = useCallback(() => setError(null), []);
 
-  const manager = getSessionKeyManager(config);
+  const manager = getSessionKeyManagerForHooks(config);
 
   const revokeSession = useCallback(
     async (sessionId: string): Promise<void> => {
@@ -277,7 +295,10 @@ export function useRevokeSession(
       try {
         await manager.revokeSession(sessionId);
       } catch (err) {
-        const errorObj = err instanceof Error ? err : new Error("Failed to revoke session key");
+        const errorObj =
+          err instanceof Error
+            ? err
+            : new Error("Failed to revoke session key");
         setError(errorObj);
         throw errorObj;
       } finally {
@@ -350,7 +371,7 @@ export function useSendWithSession(
 
   const clearError = useCallback(() => setError(null), []);
 
-  const manager = getSessionKeyManager(config);
+  const manager = getSessionKeyManagerForHooks(config);
 
   const signWithSession = useCallback(
     async (
@@ -363,7 +384,10 @@ export function useSendWithSession(
       try {
         return await manager.signWithSessionKey(sessionId, messageHash, tx);
       } catch (err) {
-        const errorObj = err instanceof Error ? err : new Error("Failed to sign with session key");
+        const errorObj =
+          err instanceof Error
+            ? err
+            : new Error("Failed to sign with session key");
         setError(errorObj);
         throw errorObj;
       } finally {
@@ -389,7 +413,10 @@ export function useSendWithSession(
       try {
         return await manager.checkSessionScope(sessionId, tx);
       } catch (err) {
-        const errorObj = err instanceof Error ? err : new Error("Failed to check session scope");
+        const errorObj =
+          err instanceof Error
+            ? err
+            : new Error("Failed to check session scope");
         setError(errorObj);
         throw errorObj;
       } finally {
@@ -413,4 +440,5 @@ export function useSendWithSession(
  */
 export function resetSessionKeyManager(): void {
   globalSessionKeyManager = null;
+  globalSessionKeyConfigFingerprint = null;
 }

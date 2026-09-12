@@ -28,18 +28,19 @@ function TestSeparator({ className, ...rest }: React.HTMLAttributes<HTMLDivEleme
   return <hr className={className} {...rest} />
 }
 
+vi.mock("../contexts/ComponentRegistry", () => ({
+  useComponentRegistry: () => ({
+    Button: TestButton,
+    Card: TestCard,
+    Input: TestInput,
+    Label: TestLabel,
+    Separator: TestSeparator,
+  }),
+}))
+
 describe("SmartWalletSettings", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mock("../contexts/ComponentRegistry", () => ({
-      useComponentRegistry: () => ({
-        Button: TestButton,
-        Card: TestCard,
-        Input: TestInput,
-        Label: TestLabel,
-        Separator: TestSeparator,
-      }),
-    }))
   })
 
   afterEach(() => {

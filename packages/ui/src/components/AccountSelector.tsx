@@ -1,16 +1,20 @@
-"use client"
+"use client";
 
-import React, { useCallback, useState } from "react"
-import { Check, Copy, Loader2, Plus } from "lucide-react"
-import { useEmbeddedWallet } from "@naculus/connect-appkit-react"
-import type { WalletAccount, WalletNamespace } from "@naculus/connect-appkit-react"
-import { cn } from "../lib/cn"
+import type {
+  EmbeddedWalletAccountView,
+  WalletNamespace,
+} from "@naculus/connect-appkit-react";
+import { useEmbeddedWallet } from "@naculus/connect-appkit-react";
+import { Check, Copy, Loader2, Plus } from "lucide-react";
+import type React from "react";
+import { useCallback, useState } from "react";
+import { cn } from "../lib/cn";
 
 export interface AccountSelectorProps {
-  className?: string
+  className?: string;
   /** Hide the "derive missing accounts" affordance. */
-  hideBackfill?: boolean
-  onSelect?: (namespace: WalletNamespace) => void
+  hideBackfill?: boolean;
+  onSelect?: (namespace: WalletNamespace) => void;
 }
 
 /**
@@ -22,23 +26,27 @@ export interface AccountSelectorProps {
  * user's account on Polygon, Arbitrum and every other EVM chain, and calling
  * it Ethereum would tell someone their Polygon funds live somewhere else.
  */
-const NAMESPACE_LABEL: Record<WalletNamespace, { name: string; detail: string }> = {
+const NAMESPACE_LABEL: Record<
+  WalletNamespace,
+  { name: string; detail: string }
+> = {
   eip155: {
     name: "Ethereum & EVM",
-    detail: "One address across Ethereum, Polygon, Arbitrum and every EVM chain",
+    detail:
+      "One address across Ethereum, Polygon, Arbitrum and every EVM chain",
   },
   solana: {
     name: "Solana",
     detail: "A separate key on a different curve",
   },
-}
+};
 
 function shortAddress(address: string): string {
   // Both ends, never one. A user checking an address compares the first and
   // last characters, and a prefix alone is what an address-poisoning attack
   // needs to pass.
-  if (address.length <= 12) return address
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
+  if (address.length <= 12) return address;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 function AccountRow({
@@ -46,42 +54,53 @@ function AccountRow({
   isActive,
   onSelect,
 }: {
-  account: WalletAccount
-  isActive: boolean
-  onSelect: () => void
+  account: EmbeddedWalletAccountView;
+  isActive: boolean;
+  onSelect: () => void;
 }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
   const label = NAMESPACE_LABEL[account.namespace] ?? {
     name: account.namespace,
     detail: "",
-  }
+  };
 
   const copy = useCallback(
     (e: React.MouseEvent) => {
       // Copying an address is not choosing which account signs.
-      e.stopPropagation()
-      const write = navigator?.clipboard?.writeText
-      if (!write) return
+      e.stopPropagation();
+      const write = navigator?.clipboard?.writeText;
+      if (!write) return;
       write.call(navigator.clipboard, account.address).then(
         () => {
-          setCopied(true)
-          setTimeout(() => setCopied(false), 1500)
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
         },
         () => {
           // Denied clipboard permission is not worth an error state; the
           // address is on screen and selectable.
         },
-      )
+      );
     },
     [account.address],
-  )
+  );
 
   return (
-    <button
-      type="button"
+    // The selectable row also contains a real copy button. A native radio
+    // cannot contain that separate action, so the row uses the ARIA radio
+    // interaction while avoiding invalid nested buttons.
+    // biome-ignore lint/a11y/useSemanticElements: composite row has an independent copy action
+    <div
       role="radio"
+      tabIndex={0}
       aria-checked={isActive}
       onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
       className={cn(
         "flex w-full items-center gap-3 rounded-md border px-3 py-2.5 text-left text-sm transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
@@ -103,24 +122,17 @@ function AccountRow({
           {shortAddress(account.address)}
         </span>
       </span>
-      <span
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         aria-label={`Copy ${label.name} address`}
         onClick={copy}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            copy(e as unknown as React.MouseEvent)
-          }
-        }}
         className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
       >
         {copied ? <Check size={14} /> : <Copy size={14} />}
-      </span>
+      </button>
       {isActive && <Check size={16} className="shrink-0 text-primary" />}
-    </button>
-  )
+    </div>
+  );
 }
 
 /**
@@ -131,12 +143,12 @@ function AccountRow({
  * panel: a consumer can mount this unconditionally.
  */
 export interface AccountSelectorViewProps extends AccountSelectorProps {
-  accounts: WalletAccount[]
-  activeNamespace: WalletNamespace | null
+  accounts: EmbeddedWalletAccountView[];
+  activeNamespace: WalletNamespace | null;
   /** Whether a stored phrase could derive an account not listed above. */
-  canDerive: boolean
-  setActiveNamespace: (namespace: WalletNamespace) => void
-  backfillAccounts: () => Promise<unknown>
+  canDerive: boolean;
+  setActiveNamespace: (namespace: WalletNamespace) => void;
+  backfillAccounts: () => Promise<unknown>;
 }
 
 /**
@@ -157,38 +169,38 @@ export function AccountSelectorView({
   setActiveNamespace,
   backfillAccounts,
 }: AccountSelectorViewProps) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSelect = useCallback(
     (namespace: WalletNamespace) => {
-      if (namespace === activeNamespace) return
+      if (namespace === activeNamespace) return;
       try {
-        setActiveNamespace(namespace)
-        setError(null)
-        onSelect?.(namespace)
+        setActiveNamespace(namespace);
+        setError(null);
+        onSelect?.(namespace);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not switch account")
+        setError(e instanceof Error ? e.message : "Could not switch account");
       }
     },
     [activeNamespace, setActiveNamespace, onSelect],
-  )
+  );
 
   const handleBackfill = useCallback(async () => {
-    setBusy(true)
-    setError(null)
+    setBusy(true);
+    setError(null);
     try {
-      await backfillAccounts()
+      await backfillAccounts();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not derive accounts")
+      setError(e instanceof Error ? e.message : "Could not derive accounts");
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }, [backfillAccounts])
+  }, [backfillAccounts]);
 
-  if (accounts.length === 0) return null
+  if (accounts.length === 0) return null;
 
-  const canBackfill = !hideBackfill && canDerive
+  const canBackfill = !hideBackfill && canDerive;
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
@@ -201,7 +213,11 @@ export function AccountSelectorView({
         </span>
       </div>
 
-      <div role="radiogroup" aria-label="Wallet accounts" className="flex flex-col gap-1.5">
+      <div
+        role="radiogroup"
+        aria-label="Wallet accounts"
+        className="flex flex-col gap-1.5"
+      >
         {accounts.map((account) => (
           <AccountRow
             key={account.namespace}
@@ -222,7 +238,11 @@ export function AccountSelectorView({
             "hover:bg-accent/50 disabled:opacity-60",
           )}
         >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+          {busy ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Plus size={14} />
+          )}
           {busy ? "Deriving…" : "Show accounts this phrase already owns"}
         </button>
       )}
@@ -233,7 +253,7 @@ export function AccountSelectorView({
         </p>
       )}
     </div>
-  )
+  );
 }
 
 /**
@@ -249,8 +269,8 @@ export function AccountSelector(props: AccountSelectorProps) {
     activeNamespace,
     setActiveNamespace,
     backfillAccounts,
-  } = useEmbeddedWallet()
-  if (!wallet) return null
+  } = useEmbeddedWallet();
+  if (!wallet) return null;
   return (
     <AccountSelectorView
       {...props}
@@ -259,9 +279,9 @@ export function AccountSelector(props: AccountSelectorProps) {
       // Only true when deriving can actually do something. A wallet imported
       // from a raw private key has no phrase, so there is no second account
       // to derive — the affordance would promise a key that cannot exist.
-      canDerive={Boolean(wallet.mnemonic) && accounts.length < 2}
+      canDerive={wallet.recoveryAvailable && accounts.length < 2}
       setActiveNamespace={setActiveNamespace}
       backfillAccounts={backfillAccounts}
     />
-  )
+  );
 }

@@ -11,6 +11,7 @@ import {
 import { useCallback, useState } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { resolveClient } from "./client-resolver";
+import { extractTransactionHash } from "./transaction-hash";
 
 /**
  * Where a batch has got to.
@@ -40,7 +41,14 @@ export function useSendCalls() {
   const sendCalls = useCallback(
     async (
       calls: BatchCall[],
-      options?: { chainId?: string },
+      options?: {
+        chainId?: string;
+        strategy?: ExecutionStrategy;
+        paymasterService?: {
+          url: string;
+          context?: Record<string, unknown>;
+        };
+      },
     ): Promise<string> => {
       if (!session) {
         setStatus("failed");
@@ -74,12 +82,12 @@ export function useSendCalls() {
         // A wallet with no answer, or one that says no, gets the sequential
         // path instead of an outright failure — the caller asked to send
         // these calls, not specifically to use EIP-5792.
-        const capabilities = await getAccountCapabilities(
-          activeClient,
-          session,
-          targetChain,
-        );
-        const strategy = chooseExecutionStrategy(capabilities, calls.length);
+        const strategy =
+          options?.strategy ??
+          chooseExecutionStrategy(
+            await getAccountCapabilities(activeClient, session, targetChain),
+            calls.length,
+          );
         setExecution(strategy);
 
         if (strategy === "atomic-batch") {
@@ -93,6 +101,9 @@ export function useSendCalls() {
             targetChain,
             {
               atomicRequired: true,
+              ...(options?.paymasterService
+                ? { paymasterService: options.paymasterService }
+                : {}),
             },
           );
           setStatus("submitted");
@@ -108,14 +119,16 @@ export function useSendCalls() {
         for (let i = 0; i < calls.length; i++) {
           const call = calls[i];
           try {
-            lastHash = (await activeClient.sendTransaction(session, {
-              transaction: {
-                to: call.to,
-                data: call.data,
-                value: call.value,
-              },
-              chainId: targetChain,
-            })) as string;
+            lastHash = extractTransactionHash(
+              await activeClient.sendTransaction(session, {
+                transaction: {
+                  to: call.to,
+                  data: call.data,
+                  value: call.value,
+                },
+                chainId: targetChain,
+              }),
+            );
           } catch (err) {
             // The dangerous case for this path: an approve landed and the swap
             // it was for did not. Say how far it got, because the caller now

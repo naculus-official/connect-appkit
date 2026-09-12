@@ -14,12 +14,13 @@ function TestButton({ children, className, onClick, disabled, ...rest }: React.B
 
 const TEST_ADDRESS = "eip155:1:0x1234567890123456789012345678901234567890"
 
+vi.mock("../contexts/ComponentRegistry", () => ({
+  useComponentRegistry: () => ({ Button: TestButton }),
+}))
+
 describe("AccountButton", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mock("../contexts/ComponentRegistry", () => ({
-      useComponentRegistry: () => ({ Button: TestButton }),
-    }))
   })
 
   afterEach(() => {

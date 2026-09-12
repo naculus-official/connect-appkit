@@ -130,4 +130,30 @@ describe("useEmbeddedWallet — security report", () => {
     });
     expect(result.current.securityReport).toBeNull();
   });
+
+  it("keeps the confirmed storage tier after the connector session disconnects", async () => {
+    let connectorHasWallet = true;
+    const walletData = {
+      address: "0x1234567890abcdef1234567890abcdef12345678",
+      mnemonic: "test wallet phrase",
+      accounts: [],
+      activeNamespace: "eip155",
+    };
+    connectorReporting(() => null, {
+      generateWallet: vi.fn(async () => walletData),
+      getWallet: () => (connectorHasWallet ? walletData : null),
+      getStorageSecurityLevel: () => (connectorHasWallet ? 2 : 4),
+    });
+    const { result, rerender } = renderHook(() => useEmbeddedWallet());
+
+    await act(async () => {
+      await result.current.generateWallet();
+    });
+    expect(result.current.storageSecurityLevel).toBe(2);
+
+    connectorHasWallet = false;
+    rerender();
+    expect(result.current.hasWallet).toBe(true);
+    expect(result.current.storageSecurityLevel).toBe(2);
+  });
 });

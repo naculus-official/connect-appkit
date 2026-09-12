@@ -1,13 +1,14 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockUseWeb3 = vi.fn();
 vi.mock("../provider/Web3ConnectProvider", () => ({
   useWeb3: () => mockUseWeb3(),
-  Web3ConnectProvider: ({ children }: { children: React.ReactNode }) => children,
+  Web3ConnectProvider: ({ children }: { children: React.ReactNode }) =>
+    children,
 }));
 
 const mockGetClient = vi.fn();
@@ -16,6 +17,8 @@ vi.mock("../client", () => ({
 }));
 
 import { useSendTransaction } from "./useSendTransaction";
+
+const TX_HASH = `0x${"ab".repeat(32)}`;
 
 function createEvmSession() {
   return {
@@ -63,7 +66,10 @@ describe("useSendTransaction", () => {
   });
 
   it("should throw when client not initialized", async () => {
-    mockUseWeb3.mockReturnValue({ session: createEvmSession(), chainId: "eip155:1" });
+    mockUseWeb3.mockReturnValue({
+      session: createEvmSession(),
+      chainId: "eip155:1",
+    });
     mockGetClient.mockReturnValue(null);
 
     const { result } = renderHook(() => useSendTransaction());
@@ -76,8 +82,11 @@ describe("useSendTransaction", () => {
   });
 
   it("should send transaction successfully", async () => {
-    const mockSendTransaction = vi.fn().mockResolvedValue("0xtxhash123");
-    mockUseWeb3.mockReturnValue({ session: createEvmSession(), chainId: "eip155:1" });
+    const mockSendTransaction = vi.fn().mockResolvedValue(TX_HASH);
+    mockUseWeb3.mockReturnValue({
+      session: createEvmSession(),
+      chainId: "eip155:1",
+    });
     mockGetClient.mockReturnValue({
       sendTransaction: mockSendTransaction,
     });
@@ -92,7 +101,7 @@ describe("useSendTransaction", () => {
       });
     });
 
-    expect(txHash!).toBe("0xtxhash123");
+    expect(txHash!).toBe(TX_HASH);
     expect(mockSendTransaction).toHaveBeenCalledTimes(1);
     expect(mockSendTransaction).toHaveBeenCalledWith(createEvmSession(), {
       transaction: {
@@ -103,6 +112,58 @@ describe("useSendTransaction", () => {
       chainId: "eip155:1",
     });
     expect(result.current.isSending).toBe(false);
+  });
+
+  it("extracts the hash from an embedded transaction result", async () => {
+    const mockSendTransaction = vi.fn().mockResolvedValue({
+      hash: TX_HASH,
+      from: "0x1234567890123456789012345678901234567890",
+      to: "0x1234567890123456789012345678901234567890",
+      chainId: "eip155:1",
+    });
+    mockUseWeb3.mockReturnValue({
+      session: createEvmSession(),
+      chainId: "eip155:1",
+    });
+    mockGetClient.mockReturnValue({ sendTransaction: mockSendTransaction });
+
+    const { result } = renderHook(() => useSendTransaction());
+
+    let txHash: string;
+    await act(async () => {
+      txHash = await result.current.sendTransaction({
+        to: "0x1234567890123456789012345678901234567890",
+        value: "0x1",
+      });
+    });
+
+    expect(txHash!).toBe(TX_HASH);
+    expect(result.current.status).toBe("submitted");
+  });
+
+  it("fails closed when a connector returns no valid transaction hash", async () => {
+    mockUseWeb3.mockReturnValue({
+      session: createEvmSession(),
+      chainId: "eip155:1",
+    });
+    mockGetClient.mockReturnValue({
+      sendTransaction: vi.fn().mockResolvedValue({ hash: "not-a-hash" }),
+    });
+
+    const { result } = renderHook(() => useSendTransaction());
+
+    await act(async () => {
+      await expect(
+        result.current.sendTransaction({
+          to: "0x1234567890123456789012345678901234567890",
+        }),
+      ).rejects.toThrow("valid 32-byte transaction hash");
+    });
+
+    expect(result.current.status).toBe("failed");
+    expect(result.current.error?.message).toContain(
+      "valid 32-byte transaction hash",
+    );
   });
 
   it("should throw when no EVM account found", async () => {
@@ -130,7 +191,10 @@ describe("useSendTransaction", () => {
       resolvePromise = resolve;
     });
     const mockSendTransaction = vi.fn().mockReturnValue(sendPromise);
-    mockUseWeb3.mockReturnValue({ session: createEvmSession(), chainId: "eip155:1" });
+    mockUseWeb3.mockReturnValue({
+      session: createEvmSession(),
+      chainId: "eip155:1",
+    });
     mockGetClient.mockReturnValue({
       sendTransaction: mockSendTransaction,
     });
@@ -145,7 +209,7 @@ describe("useSendTransaction", () => {
     expect(result.current.isSending).toBe(true);
 
     await act(async () => {
-      resolvePromise!("0xtx");
+      resolvePromise!(TX_HASH);
       await callPromise!;
     });
 
@@ -153,8 +217,13 @@ describe("useSendTransaction", () => {
   });
 
   it("should capture error on failed send", async () => {
-    const mockSendTransaction = vi.fn().mockRejectedValue(new Error("Transaction rejected"));
-    mockUseWeb3.mockReturnValue({ session: createEvmSession(), chainId: "eip155:1" });
+    const mockSendTransaction = vi
+      .fn()
+      .mockRejectedValue(new Error("Transaction rejected"));
+    mockUseWeb3.mockReturnValue({
+      session: createEvmSession(),
+      chainId: "eip155:1",
+    });
     mockGetClient.mockReturnValue({
       sendTransaction: mockSendTransaction,
     });

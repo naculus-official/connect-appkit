@@ -40,13 +40,14 @@ const call = {
   to: `0x${"11".repeat(20)}` as `0x${string}`,
   data: "0x" as `0x${string}`,
 };
+const TX_HASH = `0x${"12".repeat(32)}`;
 
 /** A client that advertises atomic batching unless told otherwise. */
 function batchingClient(
   capabilities: Record<string, unknown> = { atomicBatch: { supported: true } },
 ) {
   const sendCalls = vi.fn(async () => "0xbatch");
-  const sendTransaction = vi.fn(async () => "0xtx");
+  const sendTransaction = vi.fn(async () => TX_HASH);
   const getCallsStatus = vi.fn(async () => ({ status: 200, receipts: [] }));
   const client: Record<string, unknown> = {
     sendCalls,
@@ -178,6 +179,37 @@ describe("useSendCalls — execution strategy", () => {
     expect(result.current.status).toBe("submitted");
   });
 
+  it("normalizes an embedded-wallet transaction result on the sequential path", async () => {
+    const { client } = batchingClient({ atomicBatch: { supported: false } });
+    client.sendTransaction = vi.fn(async () => ({ hash: TX_HASH }));
+    mockUseWeb3.mockReturnValue({ session, chainId: "eip155:1", client: {} });
+    mockResolveClient.mockReturnValue(client);
+    const { result } = renderHook(() => useSendCalls());
+
+    let returned = "";
+    await act(async () => {
+      returned = await result.current.sendCalls([call]);
+    });
+
+    expect(returned).toBe(TX_HASH);
+    expect(result.current.batchHash).toBe(TX_HASH);
+  });
+
+  it("fails closed when a sequential connector returns no transaction hash", async () => {
+    const { client } = batchingClient({ atomicBatch: { supported: false } });
+    client.sendTransaction = vi.fn(async () => ({ status: "submitted" }));
+    mockUseWeb3.mockReturnValue({ session, chainId: "eip155:1", client: {} });
+    mockResolveClient.mockReturnValue(client);
+    const { result } = renderHook(() => useSendCalls());
+
+    await act(async () => {
+      await expect(result.current.sendCalls([call])).rejects.toThrow(
+        /valid 32-byte transaction hash/,
+      );
+    });
+    expect(result.current.status).toBe("failed");
+  });
+
   it("falls back when the wallet cannot be asked at all", async () => {
     // An older wallet with no getCapabilities is the common case, not an edge.
     const { client, sendCalls, sendTransaction } = batchingClient();
@@ -191,6 +223,24 @@ describe("useSendCalls — execution strategy", () => {
     expect(sendCalls).not.toHaveBeenCalled();
     expect(sendTransaction).toHaveBeenCalledTimes(2);
     expect(result.current.execution).toBe("sequential");
+  });
+
+  it("honours a preflight decision to try an atomic batch when discovery was unavailable", async () => {
+    const { client, sendCalls, sendTransaction } = batchingClient();
+    client.getCapabilities = undefined;
+    mockUseWeb3.mockReturnValue({ session, chainId: "eip155:1", client: {} });
+    mockResolveClient.mockReturnValue(client);
+    const { result } = renderHook(() => useSendCalls());
+    await act(async () => {
+      await result.current.sendCalls([call, call], {
+        strategy: "atomic-batch",
+      });
+    });
+    expect(sendCalls).toHaveBeenCalledWith(session, [call, call], "eip155:1", {
+      atomicRequired: true,
+    });
+    expect(sendTransaction).not.toHaveBeenCalled();
+    expect(result.current.execution).toBe("atomic-batch");
   });
 
   it("does not let a failed capability query take the send down", async () => {
@@ -243,7 +293,7 @@ describe("useSendCalls — execution strategy", () => {
     client.sendTransaction = vi.fn(async () => {
       n += 1;
       if (n === 2) throw new Error("out of gas");
-      return `0xtx${n}`;
+      return TX_HASH;
     });
     mockUseWeb3.mockReturnValue({ session, chainId: "eip155:1", client: {} });
     mockResolveClient.mockReturnValue(client);
@@ -318,6 +368,24 @@ describe("useSendCalls — execution strategy", () => {
     });
     expect(sendCalls).toHaveBeenCalledWith(session, [call, call], "eip155:1", {
       atomicRequired: true,
+    });
+  });
+
+  it("forwards an ERC-7677 paymaster service on the batch request", async () => {
+    const { client, sendCalls } = batchingClient();
+    mockUseWeb3.mockReturnValue({ session, chainId: "eip155:1", client: {} });
+    mockResolveClient.mockReturnValue(client);
+    const paymasterService = {
+      url: "https://paymaster.example",
+      context: { policy: "daily-limit" },
+    };
+    const { result } = renderHook(() => useSendCalls());
+    await act(async () => {
+      await result.current.sendCalls([call, call], { paymasterService });
+    });
+    expect(sendCalls).toHaveBeenCalledWith(session, [call, call], "eip155:1", {
+      atomicRequired: true,
+      paymasterService,
     });
   });
 

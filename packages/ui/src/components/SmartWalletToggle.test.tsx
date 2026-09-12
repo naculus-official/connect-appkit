@@ -24,17 +24,18 @@ function TestSkeleton({ className, ...rest }: React.HTMLAttributes<HTMLDivElemen
   return <div className={className} {...rest} />
 }
 
+vi.mock("../contexts/ComponentRegistry", () => ({
+  useComponentRegistry: () => ({
+    Button: TestButton,
+    Card: TestCard,
+    Badge: TestBadge,
+    Skeleton: TestSkeleton,
+  }),
+}))
+
 describe("SmartWalletToggle", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mock("../contexts/ComponentRegistry", () => ({
-      useComponentRegistry: () => ({
-        Button: TestButton,
-        Card: TestCard,
-        Badge: TestBadge,
-        Skeleton: TestSkeleton,
-      }),
-    }))
   })
 
   afterEach(() => {
