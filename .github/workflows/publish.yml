@@ -1,8 +1,13 @@
 name: Publish
 
+# Publishing is manual, on purpose — the same reasoning as connect-lib's
+# workflow. A `release: published` trigger tags first and publishes second, so
+# the tag would mean "someone clicked publish" rather than "these packages are
+# on the registry". It also arrives with no `dry_run` input, which made the
+# publish step's condition false and go straight to a real publish. And now that
+# a preflight guards this workflow that path could not succeed anyway: the
+# release has already created the tag, so `tag coherence` refuses.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -24,6 +29,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The preflight's `tag coherence` check asks git whether v<version>
+          # already exists. The default shallow checkout fetches no tags, so on
+          # a runner that check would answer "free" for every version ever
+          # released — green, and meaningless. It has to see the tags to be a
+          # check at all.
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v6
         with:
@@ -44,6 +56,11 @@ jobs:
       - name: Run tests
         run: pnpm test:run
 
+      # Deliberately not skipped on a dry run. connect-lib splits its preflight
+      # because its offline `--pre-bump` mode is cheap and its full mode is not;
+      # this one only has the full mode, and a dry run whose preflight was
+      # skipped would report green for a release the real run refuses — which is
+      # the whole failure this step exists to prevent.
       - name: Release preflight
         run: |
           VERSION=$(node -p "require('./packages/react/package.json').version")
@@ -51,7 +68,7 @@ jobs:
 
       - name: Publish packages
         run: |
-          if [ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}" = "true" ]; then
+          if [ "${{ inputs.dry_run == 'true' }}" = "true" ]; then
             echo "🧪 Dry run — would publish:"
             pnpm -r publish --dry-run --access public --no-git-checks
           else
