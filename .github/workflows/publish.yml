@@ -44,6 +44,11 @@ jobs:
       - name: Run tests
         run: pnpm test:run
 
+      - name: Release preflight
+        run: |
+          VERSION=$(node -p "require('./packages/react/package.json').version")
+          node scripts/release-preflight.mjs --expect "$VERSION"
+
       - name: Publish packages
         run: |
           if [ "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}" = "true" ]; then
