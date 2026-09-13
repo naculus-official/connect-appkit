@@ -51,6 +51,14 @@ jobs:
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
 
+      # Before install, because everything it checks is answerable from the
+      # checkout alone and one of those things is whether this workspace is
+      # wired to a sibling directory that does not exist on a runner. Left until
+      # after the build, that condition surfaces as `TS2307: Cannot find module
+      # '@naculus/connect-core'` five minutes in, which names the wrong problem.
+      - name: Release preflight (configuration)
+        run: node scripts/release-preflight.mjs --pre-bump
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 

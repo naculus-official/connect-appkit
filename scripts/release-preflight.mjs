@@ -2,7 +2,8 @@
 /**
  * Release preflight — refuse to publish appkit from an incoherent state.
  *
- *   node scripts/release-preflight.mjs --expect <version>
+ *   node scripts/release-preflight.mjs --pre-bump          # cheap, offline
+ *   node scripts/release-preflight.mjs --expect <version>  # packs, hits npm
  *
  * connect-lib has had one of these for a while. appkit did not, and its
  * publish workflow is `pnpm -r publish` against whatever versions happen to be
@@ -38,8 +39,10 @@ const INTERNAL = /^@naculus\/connect-appkit-/;
 const DEP_FIELDS = ["dependencies", "peerDependencies", "optionalDependencies"];
 
 let failures = [];
+let checksRun = 0;
 
 function report(label, ok, okDetail, problems = []) {
+  checksRun += 1;
   console.log(`  ${ok ? "ok  " : "FAIL"}  ${label.padEnd(24)} ${ok ? okDetail : problems[0] ?? ""}`);
   if (!ok) {
     failures.push(label);
@@ -134,6 +137,72 @@ function checkChangesetLockstep(manifests) {
           `${missing.length} publishable package(s) outside the fixed group`,
           ...missing,
           "changeset version would bump these independently, so a sibling pins a stale copy.",
+        ]
+      : [],
+  );
+}
+
+/** A spec that resolves to somewhere on this disk rather than to a registry. */
+function localSpec(spec) {
+  return /^(link|file|portal):/.test(spec) || /^[./]/.test(spec);
+}
+
+/**
+ * Nothing in this workspace may resolve to a path on the developer's machine.
+ *
+ * `pnpm-workspace.yaml` currently carries an `overrides` block pointing every
+ * `@naculus/*` package at `link:../connect-lib/packages/*`, because appkit
+ * depends on connect-lib by semver range and that version is not published yet.
+ * On this machine the sibling checkout exists and everything works. On a runner
+ * it does not, and pnpm links to the missing path without complaining — install
+ * goes green and the build then fails with `TS2307: Cannot find module
+ * '@naculus/connect-core'`, which says nothing about the actual cause.
+ *
+ * That is the state this repository was in when its first CI publish dry run
+ * was attempted. The block is scaffolding with a defined end: it comes out once
+ * connect-lib is on the registry at the range appkit asks for. Until then a
+ * release cannot be built from a clean clone, so it cannot be released.
+ */
+function checkWorkspaceWiring(manifests) {
+  const problems = [];
+
+  const wsPath = join(ROOT, "pnpm-workspace.yaml");
+  if (existsSync(wsPath)) {
+    const lines = readFileSync(wsPath, "utf8").split("\n");
+    let inOverrides = false;
+    for (const line of lines) {
+      if (/^overrides:\s*$/.test(line)) {
+        inOverrides = true;
+        continue;
+      }
+      // The block ends at the next line that starts in column zero.
+      if (inOverrides && line.trim() !== "" && !/^\s/.test(line)) inOverrides = false;
+      if (!inOverrides) continue;
+      const m = line.match(/^\s+['"]?([^'":]+)['"]?\s*:\s*['"]?([^'"]+)['"]?\s*$/);
+      if (m && localSpec(m[2].trim())) {
+        problems.push(`pnpm-workspace.yaml overrides.${m[1]} -> ${m[2].trim()}`);
+      }
+    }
+  }
+
+  for (const { manifest } of manifests) {
+    for (const field of DEP_FIELDS) {
+      for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
+        if (localSpec(spec)) problems.push(`${manifest.name} ${field}.${name} -> ${spec}`);
+      }
+    }
+  }
+
+  report(
+    "workspace wiring",
+    problems.length === 0,
+    "nothing resolves to a path outside this repository",
+    problems.length
+      ? [
+          `${problems.length} specifier(s) resolve to a local path`,
+          ...problems,
+          "A clean clone has no such path. pnpm links to it anyway, so install stays green and",
+          "the build fails later with an error that names the module rather than the wiring.",
         ]
       : [],
   );
@@ -265,31 +334,48 @@ function checkTag(expected) {
 }
 
 async function main(argv) {
+  const preBump = argv.includes("--pre-bump");
   const i = argv.indexOf("--expect");
   const expected = i === -1 ? null : argv[i + 1];
-  if (!expected) {
-    console.error("usage: release-preflight.mjs --expect <version>");
+  if (!preBump && !expected) {
+    console.error("usage: release-preflight.mjs (--pre-bump | --expect <version>)");
     process.exit(2);
   }
 
-  console.log(`\nappkit release-preflight --expect ${expected}\n`);
   const manifests = readManifests();
 
-  const consistent = checkVersions(manifests, expected);
-  checkInternalSpecs(manifests);
-  checkChangesetLockstep(manifests);
-  // Packing a mixed set only reports noise derived from the first failure.
-  if (consistent) checkPacked(manifests, expected);
-  await checkRegistry(manifests, expected);
-  checkTag(expected);
+  // Cheap, offline, no side effects. Everything here is answerable from files
+  // already in the checkout, which is why it is worth running before the build
+  // rather than after it: a release blocked by any of these is blocked whatever
+  // the build does, and finding out first turns a confusing compile error into
+  // a sentence about the release.
+  if (preBump) {
+    console.log("\nappkit release-preflight --pre-bump\n");
+    const single = new Set(manifests.map((m) => m.manifest.version));
+    checkVersions(manifests, single.size === 1 ? [...single][0] : "(mixed)");
+    checkInternalSpecs(manifests);
+    checkChangesetLockstep(manifests);
+    checkWorkspaceWiring(manifests);
+  } else {
+    console.log(`\nappkit release-preflight --expect ${expected}\n`);
+    const consistent = checkVersions(manifests, expected);
+    checkInternalSpecs(manifests);
+    checkChangesetLockstep(manifests);
+    checkWorkspaceWiring(manifests);
+    // Packing a mixed set only reports noise derived from the first failure.
+    if (consistent) checkPacked(manifests, expected);
+    await checkRegistry(manifests, expected);
+    checkTag(expected);
+  }
 
-  const total = consistent ? 6 : 5;
   console.log();
   if (failures.length) {
-    console.log(`  BLOCKED — ${failures.length}/${total} check(s) failed: ${failures.join(", ")}\n`);
+    console.log(
+      `  BLOCKED — ${failures.length}/${checksRun} check(s) failed: ${failures.join(", ")}\n`,
+    );
     process.exit(1);
   }
-  console.log(`  ${total}/${total} checks passed\n`);
+  console.log(`  ${checksRun}/${checksRun} checks passed\n`);
 }
 
 await main(process.argv.slice(2));
