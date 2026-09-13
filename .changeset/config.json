@@ -2,7 +2,15 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@naculus/connect-appkit-core",
+      "@naculus/connect-appkit-react",
+      "@naculus/connect-appkit-ui",
+      "@naculus/connect-appkit-vue",
+      "@naculus/connect-appkit-wc"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "master",
