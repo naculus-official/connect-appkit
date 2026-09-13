@@ -24,7 +24,11 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # write, because the tag and release step below pushes a tag. It is the
+      # narrowest thing that lets this workflow record what it published; the
+      # alternative was a tag nobody creates, which is what left `tag coherence`
+      # unable to fire in this repo at all.
+      contents: write
       id-token: write
 
     steps:
@@ -66,6 +70,15 @@ jobs:
           VERSION=$(node -p "require('./packages/react/package.json').version")
           node scripts/release-preflight.mjs --expect "$VERSION"
 
+      # ci.yml has audited every push and PR for a while; this workflow, the one
+      # that actually ships code, had no security gate at all.
+      #
+      # No `if`: a dry run that skipped this would report green for a release the
+      # real run refuses. Deliberately not softened with continue-on-error or a
+      # trailing `|| echo` — a gate that only warns is not a gate.
+      - name: Audit production dependencies
+        run: pnpm audit --audit-level=critical
+
       - name: Publish packages
         run: |
           if [ "${{ inputs.dry_run == 'true' }}" = "true" ]; then
@@ -74,3 +87,28 @@ jobs:
           else
             pnpm -r publish --access public --no-git-checks --provenance
           fi
+
+      # This repo has never tagged a release. Five versions went to npm with
+      # nothing in git marking which commit produced them, and the preflight's
+      # `tag coherence` check had no tags to find, so it could not have failed.
+      #
+      # Runs only after the publish step succeeded, so a tag means "this is on
+      # the registry" rather than "someone tried". Nothing here is allowed to
+      # fail quietly: a `|| true` would turn "the tag points somewhere else"
+      # into a green checkmark, which is the state that makes a tag worthless.
+      - name: Tag and release
+        if: ${{ inputs.dry_run == 'false' }}
+        run: |
+          set -euo pipefail
+          # Annotated tags need an identity; runners do not provide one.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Same manifest the preflight read, which proved every publishable
+          # package agrees on it and that v$VERSION did not already exist.
+          VERSION=$(node -p "require('./packages/react/package.json').version")
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+          gh release create "v$VERSION" --generate-notes --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
