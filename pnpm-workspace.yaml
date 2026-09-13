@@ -15,3 +15,32 @@ allowBuilds:
   unrs-resolver: true
   utf-8-validate: true
   workerd: true
+
+# Local development wiring. appkit references connect-lib by semver range
+# (^0.2.0) and that version is not published, so a plain `pnpm install` fails
+# at resolution and no appkit script can run.
+#
+# Uses the same BEGIN/END markers as release-gate/wire-local-sdk.mjs so the
+# two cannot collide: the gate strips this block, substitutes packed tarballs,
+# then restores it from its snapshot. Keep the markers.
+#
+# `link:` resolves through each package's own `exports` into its built dist/,
+# so it does not alias @naculus/* to a sibling src/. Build connect-lib first.
+
+# BEGIN naculus private CI local SDK overrides
+overrides:
+  '@naculus/connect': 'link:../connect-lib/packages/connect-lib'
+  '@naculus/connect-core': 'link:../connect-lib/packages/core'
+  '@naculus/connector-coinbase': 'link:../connect-lib/packages/connector-coinbase'
+  '@naculus/connector-embedded': 'link:../connect-lib/packages/connector-embedded'
+  '@naculus/connector-evm-injected': 'link:../connect-lib/packages/connector-evm-injected'
+  '@naculus/connector-passkeys': 'link:../connect-lib/packages/connector-passkeys'
+  '@naculus/connector-reown': 'link:../connect-lib/packages/connector-reown'
+  '@naculus/connector-safe': 'link:../connect-lib/packages/connector-safe'
+  '@naculus/connector-solana': 'link:../connect-lib/packages/connector-solana'
+  '@naculus/connector-wagmi': 'link:../connect-lib/packages/connector-wagmi'
+  '@naculus/connector-walletconnect': 'link:../connect-lib/packages/connector-walletconnect'
+  '@naculus/connector-xrpl': 'link:../connect-lib/packages/connector-xrpl'
+  '@naculus/siwx': 'link:../connect-lib/packages/siwx'
+  '@naculus/wallet-engine': 'link:../connect-lib/packages/wallet-engine'
+# END naculus private CI local SDK overrides
