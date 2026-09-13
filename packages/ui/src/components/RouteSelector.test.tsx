@@ -5,7 +5,8 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { RouteSelector } from "./RouteSelector";
-import type { Route, Token } from "@naculus/connect-core";
+import type { Token } from "@naculus/connect-core";
+import type { Route } from "./RouteSelector";
 
 // ── Mock Component Registry ───────────────────────────────────────────
 

@@ -32,10 +32,9 @@ export interface ViemChainShape {
  * not the one connected.
  *
  * The native symbol comes from the chain's own `token`, then from the shared
- * chain registry, and only then from "ETH" — which is reached solely for an
- * EVM chain nobody has a record of. viem requires a string here and does not
- * render it; the symbol a user reads comes from `useBalance().symbol`, which
- * stays null when it is unknown.
+ * chain registry. For an unlisted chain it stays empty rather than claiming
+ * the asset is ETH. viem requires a string here; the user-facing symbol comes
+ * from `useBalance().symbol`, which stays null when it is unknown.
  */
 export function toViemChain(
   chain: WalletChain,
@@ -44,7 +43,7 @@ export function toViemChain(
   if (chainNumber === null || !chain.rpcUrl) return null;
 
   const symbol =
-    chain.token ?? CHAINS[chainNumber]?.nativeCurrency?.symbol ?? "ETH";
+    chain.token ?? CHAINS[chainNumber]?.nativeCurrency?.symbol ?? "";
 
   return {
     id: chainNumber,

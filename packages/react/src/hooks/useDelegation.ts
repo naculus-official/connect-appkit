@@ -38,11 +38,13 @@ export function useDelegation(): UseDelegationReturn {
     : evmAccount;
 
   const refetch = useCallback(async () => {
+    const generation = ++generationRef.current;
     if (!publicClient || !address) {
       setStatus(UNKNOWN_DELEGATION);
+      setIsFetching(false);
+      setError(null);
       return;
     }
-    const generation = ++generationRef.current;
     setIsFetching(true);
     setError(null);
     try {

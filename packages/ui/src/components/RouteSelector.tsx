@@ -22,7 +22,34 @@ import {
 import { cn } from "../lib/cn";
 import { getChainLogo } from "../assets/chains";
 import { useComponentRegistry } from "../contexts/ComponentRegistry";
-import type { Route, Token } from "@naculus/connect-core";
+import type { Token } from "@naculus/connect-core";
+
+/**
+ * Shape this component renders, declared locally on purpose.
+ *
+ * The sibling hooks already define their own domain types ("hook domain
+ * types, not core exports") — this component was the one place reaching into
+ * core's routing internals, which coupled the UI to whichever routing engine
+ * core happened to export. Declaring it here keeps the component usable
+ * against any aggregator, which is the point of shipping one appkit for every
+ * frontend target.
+ */
+export interface Route {
+  id?: string;
+  provider?: string;
+  fromChain: string;
+  toChain: string;
+  fromToken?: string;
+  toToken?: string;
+  fromAmount?: string;
+  toAmount?: string;
+  toAmountMin?: string;
+  steps: Array<{ type?: string; [key: string]: unknown }>;
+  gasCosts: { totalUsd: string; [key: string]: unknown };
+  estimatedTime: number;
+  /** Aggregators attach their own fields; the component only reads the above. */
+  [key: string]: unknown;
+}
 
 // ── Types ──────────────────────────────────────────────────────────────
 

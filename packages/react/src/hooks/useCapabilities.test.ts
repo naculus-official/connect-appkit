@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockUseWeb3 = vi.fn();
@@ -29,7 +29,9 @@ beforeEach(() => vi.clearAllMocks());
 
 describe("useCapabilities", () => {
   it("reports atomic support the wallet declares (2.0.0 shape)", async () => {
-    setup(vi.fn(async () => ({ "eip155:1": { atomic: { status: "supported" } } })));
+    setup(
+      vi.fn(async () => ({ "eip155:1": { atomic: { status: "supported" } } })),
+    );
     const { result } = renderHook(() => useCapabilities());
     await waitFor(() => expect(result.current.capabilities).not.toBeNull());
     expect(result.current.atomic).toBe("supported");
@@ -53,7 +55,11 @@ describe("useCapabilities", () => {
   });
 
   it("reads a declared no as unsupported", async () => {
-    setup(vi.fn(async () => ({ "eip155:1": { atomic: { status: "unsupported" } } })));
+    setup(
+      vi.fn(async () => ({
+        "eip155:1": { atomic: { status: "unsupported" } },
+      })),
+    );
     const { result } = renderHook(() => useCapabilities());
     await waitFor(() => expect(result.current.capabilities).not.toBeNull());
     expect(result.current.atomic).toBe("unsupported");
@@ -77,9 +83,11 @@ describe("useCapabilities", () => {
   });
 
   it("is unknown, not unsupported, when the query fails", async () => {
-    setup(vi.fn(async () => {
-      throw new Error("wallet refused");
-    }));
+    setup(
+      vi.fn(async () => {
+        throw new Error("wallet refused");
+      }),
+    );
     const { result } = renderHook(() => useCapabilities());
     await waitFor(() => expect(result.current.error).not.toBeNull());
     expect(result.current.atomic).toBe("unknown");
@@ -95,9 +103,12 @@ describe("useCapabilities", () => {
 
   // A wallet reached through a custom connector may answer in raw hex.
   it("finds the current chain whether the key is CAIP-2 or hex", async () => {
-    setup(vi.fn(async () => ({ "0x89": { atomic: { status: "supported" } } })), {
-      chainId: "eip155:137",
-    });
+    setup(
+      vi.fn(async () => ({ "0x89": { atomic: { status: "supported" } } })),
+      {
+        chainId: "eip155:137",
+      },
+    );
     const { result } = renderHook(() => useCapabilities());
     await waitFor(() => expect(result.current.atomic).toBe("supported"));
   });
@@ -115,5 +126,26 @@ describe("useCapabilities", () => {
     expect(result.current.capabilities?.["eip155:137"].atomic).toBe(
       "unsupported",
     );
+  });
+
+  it("does not let a slow response repopulate capabilities after disconnect", async () => {
+    let resolveQuery!: (value: Record<string, unknown>) => void;
+    const query = new Promise<Record<string, unknown>>((resolve) => {
+      resolveQuery = resolve;
+    });
+    setup(vi.fn(() => query));
+    const { result, rerender } = renderHook(() => useCapabilities());
+    await waitFor(() => expect(result.current.isFetching).toBe(true));
+
+    setup(null, { session: null as never });
+    rerender();
+    await waitFor(() => expect(result.current.isFetching).toBe(false));
+
+    await act(async () => {
+      resolveQuery({ "eip155:1": { atomic: { status: "supported" } } });
+      await query;
+    });
+    expect(result.current.capabilities).toBeNull();
+    expect(result.current.atomic).toBe("unknown");
   });
 });

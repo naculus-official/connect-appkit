@@ -67,12 +67,14 @@ export function useCapabilities(): UseCapabilitiesReturn {
   const generationRef = useRef(0);
 
   const refetch = useCallback(async () => {
+    const generation = ++generationRef.current;
     const activeClient = resolveClient(client);
     if (!activeClient?.getCapabilities || !session) {
       setCapabilities(null);
+      setIsFetching(false);
+      setError(null);
       return;
     }
-    const generation = ++generationRef.current;
     setIsFetching(true);
     setError(null);
     try {
