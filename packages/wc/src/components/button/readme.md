@@ -22,6 +22,7 @@
 
 | Slot        | Description                        |
 | ----------- | ---------------------------------- |
+|             | The default slot                   |
 | `"default"` | Button content (text, icons, etc.) |
 
 

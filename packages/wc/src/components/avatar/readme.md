@@ -15,6 +15,13 @@
 | `src`      | `src`      | Image URL                                              | `string`                    | `""`        |
 
 
+## Slots
+
+| Slot         | Description |
+| ------------ | ----------- |
+| `"fallback"` |             |
+
+
 ----------------------------------------------
 
 *Built with [StencilJS](https://stenciljs.com/)*

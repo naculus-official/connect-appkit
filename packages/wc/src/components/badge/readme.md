@@ -12,6 +12,13 @@
 | `variant` | `variant` |             | `"default" \| "destructive" \| "ghost" \| "link" \| "outline" \| "secondary"` | `"default"` |
 
 
+## Slots
+
+| Slot | Description      |
+| ---- | ---------------- |
+|      | The default slot |
+
+
 ----------------------------------------------
 
 *Built with [StencilJS](https://stenciljs.com/)*

@@ -42,16 +42,16 @@
     "generate": "stencil generate"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.6.0",
+    "@floating-ui/dom": "^1.8.0",
     "qrcode": "^1.5.4"
   },
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
-    "@stencil/core": "^4.43.5",
-    "@stencil/react-output-target": "^1.6.1",
-    "@stencil/vue-output-target": "^0.14.1",
+    "@stencil/core": "^4.45.0",
+    "@stencil/react-output-target": "^1.6.2",
+    "@stencil/vue-output-target": "^0.14.3",
     "typescript": "^5.9.3"
   },
   "sideEffects": false,
@@ -60,7 +60,7 @@
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
   "license": "MIT",
-  "description": "Stencil Web Components for Naculus Connect \u2014 framework-agnostic UI kit with 24 components",
+  "description": "Stencil Web Components for Naculus Connect — framework-agnostic UI kit with 24 components",
   "homepage": "https://github.com/naculus-official/connect-appkit#readme",
   "bugs": "https://github.com/naculus-official/connect-appkit/issues",
   "keywords": [

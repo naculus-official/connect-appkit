@@ -17,6 +17,15 @@
 | `showBalance`   | `show-balance`   |             | `boolean`        | `false` |
 
 
+## Slots
+
+| Slot       | Description      |
+| ---------- | ---------------- |
+|            | The default slot |
+| `"avatar"` |                  |
+| `"icon"`   |                  |
+
+
 ----------------------------------------------
 
 *Built with [StencilJS](https://stenciljs.com/)*

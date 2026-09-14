@@ -19,6 +19,13 @@
 | `appkitSelect` |             | `CustomEvent<string>` |
 
 
+## Slots
+
+| Slot        | Description |
+| ----------- | ----------- |
+| `"trigger"` |             |
+
+
 ----------------------------------------------
 
 *Built with [StencilJS](https://stenciljs.com/)*

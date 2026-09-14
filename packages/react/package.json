@@ -26,18 +26,18 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@naculus/connect-appkit-core": "workspace:*",
     "@naculus/connect-appkit-wc": "workspace:*",
-    "@stencil/react-output-target": "^1.6.1",
-    "viem": "^2.54.6",
-    "@naculus/connect-core": "^0.2.0",
-    "@naculus/connector-walletconnect": "^0.2.0",
-    "@naculus/connector-evm-injected": "^0.2.0",
-    "@naculus/connector-embedded": "^0.2.0",
-    "@naculus/connector-passkeys": "^0.2.0",
-    "@naculus/connector-solana": "^0.2.0",
-    "@naculus/siwx": "^0.2.0",
-    "@naculus/wallet-engine": "^0.2.0",
-    "@naculus/connect-appkit-core": "workspace:*"
+    "@naculus/connect-core": "^0.2.1",
+    "@naculus/connector-embedded": "^0.2.1",
+    "@naculus/connector-evm-injected": "^0.2.1",
+    "@naculus/connector-passkeys": "^0.2.1",
+    "@naculus/connector-solana": "^0.2.1",
+    "@naculus/connector-walletconnect": "^0.2.1",
+    "@naculus/siwx": "^0.2.1",
+    "@naculus/wallet-engine": "^0.2.1",
+    "@stencil/react-output-target": "^1.6.2",
+    "viem": "^2.56.5"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
@@ -46,12 +46,12 @@
     "access": "public"
   },
   "devDependencies": {
-    "@testing-library/react": "^16.3.0",
-    "@types/react": "^19.0.0",
-    "jsdom": "^25.0.0 || ^26.0.0 || ^28.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tsup": "^8.3.6",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^19.3.0",
+    "jsdom": "^28.1.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
   "repository": {
@@ -59,7 +59,7 @@
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
   "license": "MIT",
-  "description": "React hooks and components for Naculus Connect \u2014 auto-generated wrappers for Stencil Web Components",
+  "description": "React hooks and components for Naculus Connect — auto-generated wrappers for Stencil Web Components",
   "homepage": "https://github.com/naculus-official/connect-appkit#readme",
   "bugs": "https://github.com/naculus-official/connect-appkit/issues",
   "keywords": [

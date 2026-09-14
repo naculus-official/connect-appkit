@@ -25,8 +25,8 @@
     "@naculus/connect-core": "^0.2.0"
   },
   "devDependencies": {
-    "@naculus/connect-core": "^0.2.0",
-    "tsup": "^8.3.6",
+    "@naculus/connect-core": "^0.2.1",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
   "publishConfig": {
@@ -39,7 +39,7 @@
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
   "license": "MIT",
-  "description": "Naculus Connect AppKit \u2014 framework-neutral state, chain and token logic shared by the React and Vue bindings",
+  "description": "Naculus Connect AppKit — framework-neutral state, chain and token logic shared by the React and Vue bindings",
   "homepage": "https://github.com/naculus-official/connect-appkit#readme",
   "bugs": "https://github.com/naculus-official/connect-appkit/issues",
   "keywords": [

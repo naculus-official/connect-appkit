@@ -2,6 +2,10 @@ import { Readable } from 'stream';
 
 const modeResolutionChain = [];
 
+// captured here, at true module scope, before hydrateFactory shadows the
+// AbortController identifier for component code below.
+var $stencilNativeAbortController = AbortController;
+
 function hydrateFactory($stencilWindow, $stencilHydrateOpts, $stencilHydrateResults, $stencilAfterHydrate, $stencilHydrateResolve) {
   var globalThis = $stencilWindow;
   var self = $stencilWindow;
@@ -93,8 +97,46 @@ function hydrateFactory($stencilWindow, $stencilHydrateOpts, $stencilHydrateResu
 
   var fetch, FetchError, Headers, Request, Response;
 
+  // Aborted when the render times out or errors, so in-flight fetch() calls
+  // made by component code stop holding the render's window/results alive
+  // instead of running to completion against a torn-down window. See #6864.
+  var $stencilAbortController = new $stencilNativeAbortController();
+
+  // Any AbortController a component creates itself is transparently wired to
+  // cascade-abort when the render times out too, so component code using the
+  // standard AbortController convention for its own cancellable work (axios,
+  // aws-sdk v3, the mongodb driver, etc.) gets cancelled automatically. 
+  var AbortController = function () {
+    var controller = new $stencilNativeAbortController();
+    $stencilAbortController.signal.addEventListener(
+      'abort',
+      function () {
+        controller.abort();
+      },
+      { once: true },
+    );
+    return controller;
+  };
+
+  function $stencilFetchSignal(callerSignal) {
+    if (!callerSignal) {
+      return $stencilAbortController.signal;
+    }
+    if (callerSignal.aborted || $stencilAbortController.signal.aborted) {
+      return callerSignal.aborted ? callerSignal : $stencilAbortController.signal;
+    }
+    var merged = new $stencilNativeAbortController();
+    var onAbort = function () { merged.abort(); };
+    callerSignal.addEventListener('abort', onAbort, { once: true });
+    $stencilAbortController.signal.addEventListener('abort', onAbort, { once: true });
+    return merged.signal;
+  }
+
   if (typeof $stencilWindow.fetch === 'function') {
-    fetch = $stencilWindow.fetch;
+    var $stencilRawFetch = $stencilWindow.fetch;
+    fetch = $stencilWindow.fetch = function(input, init) {
+      return $stencilRawFetch(input, Object.assign({}, init, { signal: $stencilFetchSignal(init && init.signal) }));
+    };
   } else {
     fetch = $stencilWindow.fetch = function() { throw new Error('fetch() is not implemented'); };
   }
@@ -155,7 +197,7 @@ const NAMESPACE = 'connect-appkit';
 const BUILD = /* connect-appkit */ { hotModuleReplacement: false, hydratedSelectorName: "hydrated", slotRelocation: true, state: true, updatable: true};
 
 /*
- Stencil Hydrate Platform v4.43.5 | MIT Licensed | https://stenciljs.com
+ Stencil Hydrate Platform v4.45.0 | MIT Licensed | https://stenciljs.com
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -489,6 +531,8 @@ var DEFAULT_DOC_DATA = {
   staticComponents: /* @__PURE__ */ new Set()
 };
 var SLOT_FB_CSS = "slot-fb{display:contents}slot-fb[hidden]{display:none}";
+var MAX_LAZY_LOAD_RETRIES = 3;
+var LAZY_LOAD_RETRY_INTERVAL_MS = 1e3;
 
 // src/utils/style.ts
 function createStyleSheetIfNeededAndSupported(styles2) {
@@ -549,7 +593,7 @@ function getHostSlotNodes(childNodes, hostName, slotName) {
       slottedNodes.push(childNode);
       if (typeof slotName !== "undefined") return slottedNodes;
     }
-    slottedNodes = [...slottedNodes, ...getHostSlotNodes(childNode.childNodes, hostName, slotName)];
+    slottedNodes = [...slottedNodes, ...getHostSlotNodes(internalCall(childNode, "childNodes"), hostName, slotName)];
   }
   return slottedNodes;
 }
@@ -791,6 +835,11 @@ var h = (nodeName, vnodeData, ...children) => {
       } else if (child != null && typeof child !== "boolean") {
         if (simple = typeof nodeName !== "function" && !isComplexType(child)) {
           child = String(child);
+        } else if (typeof nodeName !== "function" && child.$flags$ === void 0) {
+          {
+            consoleError("Invalid vNode child");
+          }
+          continue;
         }
         if (simple && lastSimple) {
           vNodeChildren[vNodeChildren.length - 1].$text$ += child;
@@ -1544,13 +1593,14 @@ var scopeSelector = (selector, scopeSelectorText, hostSelector, slotSelector) =>
     }
   }).join(", ");
 };
+var isScopableAtRule = (selector) => selector.startsWith("@media") || selector.startsWith("@supports") || selector.startsWith("@page") || selector.startsWith("@document") || selector.startsWith("@layer");
 var scopeSelectors = (cssText, scopeSelectorText, hostSelector, slotSelector, commentOriginalSelector) => {
   return processRules(cssText, (rule) => {
     let selector = rule.selector;
     let content = rule.content;
     if (rule.selector[0] !== "@") {
       selector = scopeSelector(rule.selector, scopeSelectorText, hostSelector, slotSelector);
-    } else if (rule.selector.startsWith("@media") || rule.selector.startsWith("@supports") || rule.selector.startsWith("@page") || rule.selector.startsWith("@document")) {
+    } else if (isScopableAtRule(rule.selector)) {
       content = scopeSelectors(rule.content, scopeSelectorText, hostSelector, slotSelector);
     }
     const cssRule = {
@@ -1629,15 +1679,16 @@ var scopeCss = (cssText, scopeId2, commentOriginalSelector) => {
       rule.selector = placeholder + rule.selector;
       return rule;
     };
-    cssText = processRules(cssText, (rule) => {
+    const commentSelectors = (input) => processRules(input, (rule) => {
       if (rule.selector[0] !== "@") {
         return processCommentedSelector(rule);
-      } else if (rule.selector.startsWith("@media") || rule.selector.startsWith("@supports") || rule.selector.startsWith("@page") || rule.selector.startsWith("@document")) {
-        rule.content = processRules(rule.content, processCommentedSelector);
-        return rule;
+      }
+      if (isScopableAtRule(rule.selector)) {
+        rule.content = commentSelectors(rule.content);
       }
       return rule;
     });
+    cssText = commentSelectors(cssText);
   }
   const scoped = scopeCssText(cssText, scopeId2, hostScopeId, slotScopeId);
   cssText = [scoped.cssText, ...commentsWithHash].join("\n");
@@ -1949,7 +2000,7 @@ var setAccessor = (elm, memberName, oldValue, newValue, isSvg, flags, initialRen
       }
     }
     if (newValue == null || newValue === false) {
-      if (newValue !== false || elm.getAttribute(memberName) === "") {
+      if (newValue !== false || elm.getAttribute(memberName) === "" || flags & 4 /* isHost */ && !isEnumeratedAttribute(memberName)) {
         {
           elm.removeAttribute(memberName);
         }
@@ -1962,6 +2013,8 @@ var setAccessor = (elm, memberName, oldValue, newValue, isSvg, flags, initialRen
     }
   }
 };
+var ENUMERATED_ATTRIBUTES = /* @__PURE__ */ new Set(["draggable", "contenteditable", "spellcheck"]);
+var isEnumeratedAttribute = (attrName) => ENUMERATED_ATTRIBUTES.has(attrName) || attrName.startsWith("aria-");
 var parseClassListRegex = /\s/;
 var parseClassList = (value) => {
   if (typeof value === "object" && value && "baseVal" in value) {
@@ -2257,7 +2310,7 @@ var updateChildren = (parentElm, oldCh, newVNode2, newCh, isInitialRender = fals
       if (idxInOld >= 0) {
         elmToMove = oldCh[idxInOld];
         if (elmToMove.$tag$ !== newStartVnode.$tag$) {
-          node = createElm(oldCh && oldCh[newStartIdx], newVNode2, idxInOld);
+          node = createElm(oldCh && oldCh[newStartIdx], newVNode2, newStartIdx);
         } else {
           patch(elmToMove, newStartVnode, isInitialRender);
           oldCh[idxInOld] = void 0;
@@ -2364,7 +2417,10 @@ var markSlotContentForRelocation = (elm) => {
       const slotName = childNode["s-sn"];
       for (j = hostContentNodes.length - 1; j >= 0; j--) {
         node = hostContentNodes[j];
-        if (!node["s-cn"] && !node["s-nr"] && node["s-hn"] !== childNode["s-hn"] && (!node["s-sh"] || node["s-sh"] !== childNode["s-hn"])) {
+        if (!node["s-cn"] && !node["s-nr"] && node["s-hn"] !== childNode["s-hn"] && // let an exact named-slot match override a stale default-slot claim. Skip this for
+        // `slotName === ''` itself - a matched default node's cached `s-sn` is `''` too, which
+        // would trivially "match" on every re-render and force pointless re-insertion.
+        (!node["s-sh"] || node["s-sh"] !== childNode["s-hn"] || slotName !== "" && getSlotName(node) === slotName)) {
           if (isNodeLocatedInSlot(node, slotName)) {
             let relocateNodeData = relocateNodes.find((r) => r.$nodeToRelocate$ === node);
             checkSlotFallbackVisibility = true;
@@ -2432,7 +2488,7 @@ var insertBefore = (parent, newNode, reference, isInitialLoad) => {
       return newNode;
     }
   }
-  if (parent.__insertBefore) {
+  if ((parent == null ? void 0 : parent.__insertBefore)) {
     return parent.__insertBefore(newNode, reference);
   } else {
     return parent == null ? void 0 : parent.insertBefore(newNode, reference);
@@ -2855,8 +2911,6 @@ var setValue = (ref, propName, newVal, cmpMeta) => {
     }
   }
 };
-
-// src/runtime/proxy-component.ts
 var proxyComponent = (Cstr, cmpMeta, flags) => {
   var _a2;
   const prototype = Cstr.prototype;
@@ -2931,10 +2985,12 @@ var proxyComponent = (Cstr, cmpMeta, flags) => {
 
 // src/runtime/initialize-component.ts
 var initializeComponent = async (elm, hostRef, cmpMeta, hmrVersionId) => {
+  var _a2;
   let Cstr;
   try {
     if ((hostRef.$flags$ & 32 /* hasInitializedComponent */) === 0) {
       hostRef.$flags$ |= 32 /* hasInitializedComponent */;
+      hostRef.$flags$ &= -1025 /* hasFailedLoad */;
       const bundleId = cmpMeta.$lazyBundleId$;
       if (bundleId) {
         const CstrImport = loadModule(cmpMeta);
@@ -2946,6 +3002,11 @@ var initializeComponent = async (elm, hostRef, cmpMeta, hmrVersionId) => {
           Cstr = CstrImport;
         }
         if (!Cstr) {
+          hostRef.$flags$ &= -33 /* hasInitializedComponent */;
+          hostRef.$loadRetryCount$ = ((_a2 = hostRef.$loadRetryCount$) != null ? _a2 : 0) + 1;
+          if (hostRef.$loadRetryCount$ < MAX_LAZY_LOAD_RETRIES) {
+            hostRef.$flags$ |= 1024 /* hasFailedLoad */;
+          }
           throw new Error(`Constructor for "${cmpMeta.$tagName$}#${hostRef.$modeName$}" was not found`);
         }
         if (!Cstr.isProxied) {
@@ -3017,7 +3078,7 @@ var initializeComponent = async (elm, hostRef, cmpMeta, hmrVersionId) => {
       hostRef.$onRenderResolve$();
       hostRef.$onRenderResolve$ = void 0;
     }
-    if (hostRef.$onReadyResolve$) {
+    if (hostRef.$onReadyResolve$ && !(hostRef.$flags$ & 1024 /* hasFailedLoad */)) {
       hostRef.$onReadyResolve$(elm);
     }
   }
@@ -3073,6 +3134,8 @@ var connectedCallback = (elm) => {
       addHostEventListeners(elm, hostRef, cmpMeta.$listeners$);
       if (hostRef == null ? void 0 : hostRef.$lazyInstance$) {
         fireConnectedCallback(hostRef.$lazyInstance$, elm);
+      } else if (hostRef.$flags$ & 1024 /* hasFailedLoad */) {
+        setTimeout(() => initializeComponent(elm, hostRef, cmpMeta), LAZY_LOAD_RETRY_INTERVAL_MS);
       } else if (hostRef == null ? void 0 : hostRef.$onReadyPromise$) {
         hostRef.$onReadyPromise$.then(() => fireConnectedCallback(hostRef.$lazyInstance$, elm));
       }
@@ -4994,7 +5057,7 @@ function forceUpdate2() {
 }
 
 // src/hydrate/platform/hydrate-app.ts
-function hydrateApp(win2, opts, results, afterHydrate, resolve) {
+function hydrateApp(win2, opts, results, afterHydrate, resolve, abortController) {
   const connectedElements = /* @__PURE__ */ new Set();
   const createdElements = /* @__PURE__ */ new Set();
   const waitingElements = /* @__PURE__ */ new Set();
@@ -5004,6 +5067,13 @@ function hydrateApp(win2, opts, results, afterHydrate, resolve) {
   setScopedSSR(opts);
   let tmrId;
   let ranCompleted = false;
+  const abortedPromise = new Promise((res) => {
+    if (abortController.signal.aborted) {
+      res();
+    } else {
+      abortController.signal.addEventListener("abort", () => res(), { once: true });
+    }
+  });
   function hydratedComplete() {
     globalThis.clearTimeout(tmrId);
     createdElements.clear();
@@ -5025,6 +5095,7 @@ function hydrateApp(win2, opts, results, afterHydrate, resolve) {
   }
   function hydratedError(err2) {
     renderCatchError(opts, results, err2);
+    abortController.abort();
     hydratedComplete();
   }
   function timeoutExceeded() {
@@ -5070,7 +5141,7 @@ function hydrateApp(win2, opts, results, afterHydrate, resolve) {
       if (isValidComponent(elm, opts) && results.hydratedCount < opts.maxHydrateCount) {
         if (!connectedElements.has(elm) && shouldHydrate(elm)) {
           connectedElements.add(elm);
-          return hydrateComponent.call(elm, win2, results, elm.nodeName, elm, waitingElements);
+          return hydrateComponent.call(elm, win2, results, elm.nodeName, elm, waitingElements, abortedPromise);
         }
       }
       return resolved2;
@@ -5099,7 +5170,7 @@ function hydrateApp(win2, opts, results, afterHydrate, resolve) {
     hydratedError(e);
   }
 }
-async function hydrateComponent(win2, results, tagName, elm, waitingElements) {
+async function hydrateComponent(win2, results, tagName, elm, waitingElements, aborted) {
   tagName = tagName.toLowerCase();
   const Cstr = loadModule(
     {
@@ -5115,17 +5186,19 @@ async function hydrateComponent(win2, results, tagName, elm, waitingElements) {
       addHostEventListeners(this, hostRef, cmpMeta.$listeners$);
       try {
         connectedCallback(elm);
-        await elm.componentOnReady();
-        results.hydratedCount++;
-        const ref = getHostRef(elm);
-        const modeName = !(ref == null ? void 0 : ref.$modeName$) ? "$" : ref == null ? void 0 : ref.$modeName$;
-        if (!results.components.some((c) => c.tag === tagName && c.mode === modeName)) {
-          results.components.push({
-            tag: tagName,
-            mode: modeName,
-            count: 0,
-            depth: -1
-          });
+        const wasAborted = await Promise.race([elm.componentOnReady().then(() => false), aborted.then(() => true)]);
+        if (!wasAborted) {
+          results.hydratedCount++;
+          const ref = getHostRef(elm);
+          const modeName = !(ref == null ? void 0 : ref.$modeName$) ? "$" : ref == null ? void 0 : ref.$modeName$;
+          if (!results.components.some((c) => c.tag === tagName && c.mode === modeName)) {
+            results.components.push({
+              tag: tagName,
+              mode: modeName,
+              count: 0,
+              depth: -1
+            });
+          }
         }
       } catch (e) {
         win2.console.error(e);
@@ -14606,7 +14679,7 @@ exports.hydrateApp = hydrateApp;
 
 
     /*hydrateAppClosure end*/
-    hydrateApp(window, $stencilHydrateOpts, $stencilHydrateResults, $stencilAfterHydrate, $stencilHydrateResolve);
+    hydrateApp(window, $stencilHydrateOpts, $stencilHydrateResults, $stencilAfterHydrate, $stencilHydrateResolve, $stencilAbortController);
   }
 
   hydrateAppClosure($stencilWindow);
@@ -14701,7 +14774,7 @@ var NAMESPACE = (
 );
 
 /*
- Stencil Hydrate Runner v4.43.5 | MIT Licensed | https://stenciljs.com
+ Stencil Hydrate Runner v4.45.0 | MIT Licensed | https://stenciljs.com
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -28848,11 +28921,14 @@ function resetWindow(win2) {
       } catch (e) {
       }
     }
-    win2.fetch = null;
-    win2.Headers = null;
-    win2.Request = null;
-    win2.Response = null;
-    win2.FetchError = null;
+    const windowDestroyed = () => {
+      throw new Error("MockWindow was already destroyed");
+    };
+    win2.fetch = windowDestroyed;
+    win2.Headers = windowDestroyed;
+    win2.Request = windowDestroyed;
+    win2.Response = windowDestroyed;
+    win2.FetchError = windowDestroyed;
   }
 }
 function resetWindowDimensions(win2) {

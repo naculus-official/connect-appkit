@@ -20,6 +20,14 @@
 | `appkitOpenChange` |             | `CustomEvent<boolean>` |
 
 
+## Slots
+
+| Slot        | Description      |
+| ----------- | ---------------- |
+|             | The default slot |
+| `"trigger"` |                  |
+
+
 ----------------------------------------------
 
 *Built with [StencilJS](https://stenciljs.com/)*

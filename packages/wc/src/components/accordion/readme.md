@@ -21,6 +21,13 @@
 | `appkitToggle` |             | `CustomEvent<boolean>` |
 
 
+## Slots
+
+| Slot | Description      |
+| ---- | ---------------- |
+|      | The default slot |
+
+
 ----------------------------------------------
 
 *Built with [StencilJS](https://stenciljs.com/)*

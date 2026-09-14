@@ -22,28 +22,28 @@
   },
   "dependencies": {
     "@naculus/connect-appkit-wc": "workspace:*",
-    "@stencil/vue-output-target": "^0.14.1"
+    "@stencil/vue-output-target": "^0.14.3"
   },
   "peerDependencies": {
-    "vue": "^3.5.0",
+    "@naculus/connect-appkit-core": "^0.2.0",
     "@naculus/connect-core": "^0.2.0",
-    "@naculus/connect-appkit-core": "^0.2.0"
+    "vue": "^3.5.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
-    "vue": "^3.5.40",
-    "@naculus/connect-core": "^0.2.0",
-    "vitest": "^4.0.0",
-    "@naculus/connect-appkit-core": "workspace:*"
+    "@naculus/connect-appkit-core": "workspace:*",
+    "@naculus/connect-core": "^0.2.1",
+    "vitest": "^4.1.11",
+    "vue": "^3.5.42"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
   "license": "MIT",
-  "description": "Vue component wrappers for Naculus Connect Web Components \u2014 auto-generated proxies",
+  "description": "Vue component wrappers for Naculus Connect Web Components — auto-generated proxies",
   "homepage": "https://github.com/naculus-official/connect-appkit#readme",
   "bugs": "https://github.com/naculus-official/connect-appkit/issues",
   "keywords": [
