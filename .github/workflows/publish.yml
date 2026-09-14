@@ -65,6 +65,17 @@ jobs:
       - name: Build all packages
         run: pnpm -r build
 
+      # The same gap connect-lib's publish workflow had: tests do not typecheck
+      # and tsup only compiles the src entry graph, so nothing in the release
+      # path would notice a broken type until a consumer hit it.
+      #
+      # On a runner there is no ../connect-lib, so the sibling `paths` in
+      # tsconfig.json fall through to node_modules and this checks appkit
+      # against the published @naculus/* packages — which is the thing a
+      # release needs to be true.
+      - name: TypeScript check
+        run: pnpm typecheck
+
       - name: Run tests
         run: pnpm test:run
 
