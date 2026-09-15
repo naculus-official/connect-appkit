@@ -1,7 +1,7 @@
 # @naculus/connect-appkit-react
 
 **React bindings for Naculus Connect** — 54 hooks plus auto-generated React
-wrappers for all 24 Stencil components.
+wrappers for all 28 Stencil components.
 
 The components are the smaller half. Two files in this package contain JSX; the
 rest is connection state, capability negotiation, session keys, simulation and

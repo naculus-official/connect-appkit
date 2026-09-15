@@ -1,8 +1,8 @@
 # @naculus/connect-appkit-vue
 
-**Vue component wrappers for Naculus Connect Web Components** — auto-generated Vue proxies for all 24 Stencil components. Use `<connect-button>`, `<wallet-modal>`, etc. directly in Vue templates.
+**Vue component wrappers for Naculus Connect Web Components** — auto-generated Vue proxies for all 28 Stencil components. Use `<connect-button>`, `<wallet-modal>`, etc. directly in Vue templates.
 
-> **Components have parity with React. Composables do not.** All 24 components
+> **Components have parity with React. Composables do not.** All 28 components
 > are generated from the same Stencil source, so anything visual works the same
 > in both. The logic layer does not: this package exports five composables —
 > `useAccounts`, `useCapabilities`, `useChain`, `usePassphraseGate`,

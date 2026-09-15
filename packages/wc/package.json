@@ -60,7 +60,7 @@
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
   "license": "MIT",
-  "description": "Stencil Web Components for Naculus Connect — framework-agnostic UI kit with 24 components",
+  "description": "Stencil Web Components for Naculus Connect — framework-agnostic UI kit with 28 components",
   "homepage": "https://github.com/naculus-official/connect-appkit#readme",
   "bugs": "https://github.com/naculus-official/connect-appkit/issues",
   "keywords": [
