@@ -14,6 +14,15 @@
 
 export * from "./types";
 
+// ── EIP-5792 capabilities ─────────────────────────────────────────
+export {
+  atomicSupportFor,
+  normalizeCapabilities,
+  selectChainCapabilities,
+  type AtomicSupport,
+  type ChainCapabilities,
+} from "./capabilities";
+
 // ── Chains ────────────────────────────────────────────────────────
 export {
   chainNamespace,

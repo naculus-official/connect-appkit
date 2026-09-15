@@ -1,32 +1,18 @@
 import {
-  caip2ToHexChain,
-  readAtomicSupport,
-  type WalletCapabilities,
-} from "@naculus/connect-core";
+  atomicSupportFor,
+  type AtomicSupport,
+  type ChainCapabilities,
+  normalizeCapabilities,
+  selectChainCapabilities,
+} from "@naculus/connect-appkit-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { resolveClient } from "./client-resolver";
 
-/**
- * Whether a wallet can execute a batch atomically.
- *
- * Three values, not two. A wallet that does not implement
- * `wallet_getCapabilities` has not said no — it has said nothing, and EIP-5792
- * is explicit that absence is not a denial. Collapsing that into `false` sends
- * every such wallet down the sequential path, which is the one where an
- * approve can land and the swap it was for can fail.
- */
-export type AtomicSupport = "supported" | "unsupported" | "unknown";
-
-export interface ChainCapabilities {
-  /** CAIP-2 chain this describes. */
-  chainId: string;
-  atomic: AtomicSupport;
-  /** Largest batch the wallet will accept, when it says. */
-  maxBatchSize?: number;
-  /** The raw entry, for capabilities this SDK does not model. */
-  raw: WalletCapabilities;
-}
+// `AtomicSupport` and `ChainCapabilities` are re-exported rather than declared
+// here: Vue needs the same two, and a second declaration of "three values, not
+// two" is the one that quietly becomes two.
+export type { AtomicSupport, ChainCapabilities };
 
 export interface UseCapabilitiesReturn {
   /** Per-chain, keyed by CAIP-2. Null until a query has actually returned. */
@@ -80,20 +66,7 @@ export function useCapabilities(): UseCapabilitiesReturn {
     try {
       const raw = await activeClient.getCapabilities(session);
       if (generation !== generationRef.current) return;
-      const next: Record<string, ChainCapabilities> = {};
-      for (const [key, entry] of Object.entries(raw ?? {})) {
-        if (!entry || typeof entry !== "object") continue;
-        const { supported, maxBatchSize } = readAtomicSupport(
-          entry as Record<string, unknown>,
-        );
-        next[key] = {
-          chainId: key,
-          atomic: supported ? "supported" : "unsupported",
-          ...(maxBatchSize === undefined ? {} : { maxBatchSize }),
-          raw: entry as WalletCapabilities,
-        };
-      }
-      setCapabilities(next);
+      setCapabilities(normalizeCapabilities(raw as Record<string, unknown>));
     } catch (err) {
       if (generation !== generationRef.current) return;
       // Cleared rather than left stale. A capability map from a previous
@@ -111,19 +84,10 @@ export function useCapabilities(): UseCapabilitiesReturn {
     void refetch();
   }, [refetch]);
 
-  // The connector normalizes keys to CAIP-2, but a wallet answering in raw hex
-  // through a custom connector should still be found rather than reported as
-  // "unknown" next to an entry that is right there.
-  const hexKey = chainId ? caip2ToHexChain(chainId) : undefined;
-  const current =
-    (chainId ? capabilities?.[chainId] : undefined) ??
-    (hexKey ? capabilities?.[hexKey] : undefined) ??
-    null;
-
   return {
     capabilities,
-    current,
-    atomic: current?.atomic ?? "unknown",
+    current: selectChainCapabilities(capabilities, chainId),
+    atomic: atomicSupportFor(capabilities, chainId),
     isFetching,
     error,
     refetch,
