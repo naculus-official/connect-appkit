@@ -39,3 +39,14 @@ export { useSolanaBalance } from "./useSolanaBalance";
 export type { UseSolanaBalanceReturn as UseSolanaBalanceVueReturn } from "./useSolanaBalance";
 export type { UsePassphraseGateReturn } from "./usePassphraseGate";
 export { useCapabilities, type AtomicSupport, type CapabilityClient, type ChainCapabilities, type UseCapabilitiesReturn } from "./useCapabilities";
+export {
+  useSolanaRoles,
+  type SolanaIdentity,
+  type SolanaPayer,
+  type SolanaRoles,
+  type SolanaRolesAbsence,
+  type SolanaRolesSource,
+  type SolanaSigner,
+  type SolanaWalletFeatures,
+  type UseSolanaRolesReturn,
+} from "./useSolanaRoles";

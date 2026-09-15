@@ -23,6 +23,19 @@ export {
   type ChainCapabilities,
 } from "./capabilities";
 
+// ── Solana signer roles ───────────────────────────────────────────
+export {
+  readSolanaRoles,
+  type SolanaIdentity,
+  type SolanaPayer,
+  type SolanaRoles,
+  type SolanaRolesAbsence,
+  type SolanaRolesSource,
+  type SolanaRolesState,
+  type SolanaSigner,
+  type SolanaWalletFeatures,
+} from "./solana-roles";
+
 // ── Chains ────────────────────────────────────────────────────────
 export {
   chainNamespace,

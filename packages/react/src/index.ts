@@ -192,6 +192,16 @@ export type {
   UseSolanaBalanceReturn,
 } from "./hooks/useSolanaBalance";
 export { useSolanaBalance } from "./hooks/useSolanaBalance";
+export type {
+  SolanaIdentity,
+  SolanaPayer,
+  SolanaRoles,
+  SolanaRolesAbsence,
+  SolanaSigner,
+  SolanaWalletFeatures,
+  UseSolanaRolesReturn,
+} from "./hooks/useSolanaRoles";
+export { useSolanaRoles } from "./hooks/useSolanaRoles";
 export type { UseSolanaTransactionReturn } from "./hooks/useSolanaTransaction";
 export { useSolanaTransaction } from "./hooks/useSolanaTransaction";
 export type { UseSwitchChainReturn } from "./hooks/useSwitchChain";
