@@ -1,5 +1,14 @@
 # @naculus/connect-appkit-ui
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [f012e61]
+- Updated dependencies [9cd817d]
+  - @naculus/connect-appkit-core@0.2.4
+  - @naculus/connect-appkit-react@0.2.4
+
 ## 0.2.2
 
 > These entries were written as changesets during 0.2.0 and 0.2.1 but never

@@ -1,5 +1,29 @@
 # @naculus/connect-appkit-react
 
+## 0.2.4
+
+### Patch Changes
+
+- f012e61: Expose Solana signer roles. `useSolanaRoles` (React hook and Vue composable)
+  wraps `@naculus/connector-solana`'s `getRoles`, splitting the connected
+  account into `identity`, `signer` and `payer`, each `null` when the wallet
+  declared it cannot fill that role — so a co-signing or relayer-submitted flow
+  finds out before it opens a dialog that cannot succeed.
+  
+  The reasoning lives once, in `@naculus/connect-appkit-core` as
+  `readSolanaRoles`, and adds the part a UI has to decide before it can show
+  anything: `absence` is `no_session`, `not_solana` or `unreported`, so a
+  connector that predates the roles API (`@naculus/connector-solana` < 0.2.4)
+  reads as "has not said" rather than "cannot sign".
+- 9cd817d: Correct the published component count from 24 to 28. `packages/wc/src` defines
+  28 `@Component` tags and both the React and Vue wrappers generate 28 proxies,
+  so the number in the READMEs and in the `wc` package description — which npm
+  and market analyses read — was three releases stale.
+- Updated dependencies [f012e61]
+- Updated dependencies [9cd817d]
+  - @naculus/connect-appkit-core@0.2.4
+  - @naculus/connect-appkit-wc@0.2.4
+
 ## 0.2.2
 
 > These entries were written as changesets during 0.2.0 and 0.2.1 but never
