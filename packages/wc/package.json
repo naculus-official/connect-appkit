@@ -52,7 +52,7 @@
     "@stencil/core": "^4.45.0",
     "@stencil/react-output-target": "^1.6.2",
     "@stencil/vue-output-target": "^0.14.3",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   },
   "sideEffects": false,
   "repository": {

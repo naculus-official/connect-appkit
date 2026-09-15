@@ -27,7 +27,7 @@
   "devDependencies": {
     "@naculus/connect-core": "^0.2.1",
     "tsup": "^8.5.1",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   },
   "publishConfig": {
     "access": "public",
