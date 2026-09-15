@@ -4,14 +4,16 @@
 
 > **Components have parity with React. Composables do not.** All 28 components
 > are generated from the same Stencil source, so anything visual works the same
-> in both. The logic layer does not: this package exports five composables —
+> in both. The logic layer does not: this package exports six composables —
 > `useAccounts`, `useCapabilities`, `useChain`, `usePassphraseGate`,
-> `useSolanaBalance` — against React's 54, so session keys, simulation and the
-> transaction lifecycle are React-only today.
+> `useSolanaBalance`, `useSolanaRoles` — against React's 55, so session keys,
+> simulation and the transaction lifecycle are React-only today.
 >
-> `useCapabilities` is the EIP-5792 query, and it is not a reimplementation:
-> both bindings call the same functions in `@naculus/connect-appkit-core`, so
-> "absence is not a denial" cannot mean one thing in React and another here.
+> `useCapabilities` (the EIP-5792 query) and `useSolanaRoles` (which of
+> `identity` / `signer` / `payer` the connected Solana wallet can fill) are not
+> reimplementations: both bindings call the same functions in
+> `@naculus/connect-appkit-core`, so "absence is not a denial" cannot mean one
+> thing in React and another here.
 >
 > This is said here rather than discovered later. The table below lists both
 > packages at the same version, which is true of the release and not of the

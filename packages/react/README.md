@@ -69,7 +69,8 @@ function App() {
 
 **Routing** — `useRouteQuote`, `useExecuteRoute`, `useCompareCosts`
 
-**Solana** — `useSolanaAccount`, `useSolanaBalance`, `useSolanaTransaction`
+**Solana** — `useSolanaAccount`, `useSolanaBalance`, `useSolanaTransaction`,
+`useSolanaRoles`
 
 **Embedded wallet** — `useEmbeddedWallet`, `usePassphraseGate`
 
@@ -91,6 +92,23 @@ if (atomic === "supported") {
 implement `wallet_getCapabilities` has not said no — EIP-5792 is explicit that
 absence is not a denial, and `"unknown"` also covers a query that failed or is
 still in flight.
+
+### Ask a Solana wallet which role it can fill
+
+```tsx
+const { signer, payer, absence } = useSolanaRoles();
+
+if (absence === null && signer === null) {
+  // The wallet said so: it signs and sends, but will not hand back a signed
+  // transaction. Offer another wallet before the co-signing flow starts.
+}
+```
+
+`signer` and `payer` are `null` when the wallet declared it cannot fill that
+role. `absence` says why there is no answer at all — `"no_session"`,
+`"not_solana"`, or `"unreported"` for a `@naculus/connector-solana` older
+than the roles API — so a wallet that has not been asked is never shown as one
+that cannot sign. Reading roles never prompts.
 
 ## License
 
