@@ -47,6 +47,12 @@ export type {
   UseBalanceOptions,
   UseBalanceReturn,
 } from "./useBalance";
+export { useRouteQuote } from "./useRouteQuote";
+export type { UseRouteQuoteOptions, UseRouteQuoteReturn } from "./useRouteQuote";
+export { useCompareCosts } from "./useCompareCosts";
+export type { UseCompareCostsReturn } from "./useCompareCosts";
+export { useExecuteRoute } from "./useExecuteRoute";
+export type { UseExecuteRouteReturn } from "./useExecuteRoute";
 export { useTokenList } from "./useTokenList";
 export type { UseTokenListOptions, UseTokenListReturn } from "./useTokenList";
 export { useTokenSearch } from "./useTokenSearch";
