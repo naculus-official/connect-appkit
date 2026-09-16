@@ -35,6 +35,8 @@ export { useAccount } from "./useAccount";
 export type { UseAccountReturn } from "./useAccount";
 export { useSession } from "./useSession";
 export type { UseSessionReturn } from "./useSession";
+export { useDelegation } from "./useDelegation";
+export type { DelegationCodeReader, UseDelegationReturn } from "./useDelegation";
 export { useResolveName } from "./useResolveName";
 export type { UseResolveNameReturn } from "./useResolveName";
 export { useLookupAddress } from "./useLookupAddress";
