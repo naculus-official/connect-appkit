@@ -33,6 +33,8 @@ export {
 export { useAccounts } from "./useAccounts";
 export { useAccount } from "./useAccount";
 export type { UseAccountReturn } from "./useAccount";
+export { useSession } from "./useSession";
+export type { UseSessionReturn } from "./useSession";
 export { useSolanaAccount } from "./useSolanaAccount";
 export type { UseSolanaAccountReturn } from "./useSolanaAccount";
 export { useChain } from "./useChain";
