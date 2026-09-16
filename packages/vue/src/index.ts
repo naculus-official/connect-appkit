@@ -39,6 +39,8 @@ export { useConnect } from "./useConnect";
 export type { UseConnectReturn } from "./useConnect";
 export { useDisconnect } from "./useDisconnect";
 export type { UseDisconnectReturn } from "./useDisconnect";
+export { useSwitchChain } from "./useSwitchChain";
+export type { UseSwitchChainReturn } from "./useSwitchChain";
 export { useDelegation } from "./useDelegation";
 export type { DelegationCodeReader, UseDelegationReturn } from "./useDelegation";
 export { useResolveName } from "./useResolveName";
