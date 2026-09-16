@@ -47,6 +47,8 @@ export type {
   UseBalanceOptions,
   UseBalanceReturn,
 } from "./useBalance";
+export { useValidateDestination } from "./useValidateDestination";
+export type { UseValidateDestinationReturn } from "./useValidateDestination";
 export { useTokenBalance } from "./useTokenBalance";
 export type {
   TokenBalanceReader,
