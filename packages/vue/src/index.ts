@@ -31,6 +31,10 @@ export {
 
 // ── Composables ───────────────────────────────────────────────────
 export { useAccounts } from "./useAccounts";
+export { useAccount } from "./useAccount";
+export type { UseAccountReturn } from "./useAccount";
+export { useSolanaAccount } from "./useSolanaAccount";
+export type { UseSolanaAccountReturn } from "./useSolanaAccount";
 export { useChain } from "./useChain";
 export type { UseChainReturn } from "./useChain";
 export type { AccountEntry, UseAccountsReturn } from "./useAccounts";
