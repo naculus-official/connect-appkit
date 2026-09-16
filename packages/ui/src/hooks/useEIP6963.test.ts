@@ -3,6 +3,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
+import { StrictMode } from "react";
 import { useEIP6963 } from "./useEIP6963";
 
 /**
@@ -29,9 +30,41 @@ const metamask = {
   rdns: "io.metamask",
 };
 
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  Reflect.deleteProperty(window, "ethereum");
+  Reflect.deleteProperty(window, "phantom");
+  Reflect.deleteProperty(window, "solana");
+});
 
 describe("useEIP6963", () => {
+  it("finds an injected MetaMask that never announces", () => {
+    const provider = { isMetaMask: true };
+    Object.defineProperty(window, "ethereum", { configurable: true, value: provider });
+    const { result } = renderHook(() => useEIP6963());
+    expect(result.current.wallets).toMatchObject([
+      { id: "io.metamask", name: "MetaMask", provider },
+    ]);
+  });
+
+  it("does not duplicate an injected wallet when effects run twice", () => {
+    Object.defineProperty(window, "ethereum", {
+      configurable: true,
+      value: { isMetaMask: true },
+    });
+    const { result } = renderHook(() => useEIP6963(), { wrapper: StrictMode });
+    expect(result.current.wallets).toHaveLength(1);
+  });
+
+  it("finds injected Phantom and deduplicates a later announcement", () => {
+    const provider = { request: vi.fn() };
+    Object.defineProperty(window, "phantom", { configurable: true, value: provider });
+    const { result } = renderHook(() => useEIP6963());
+    act(() => announce({ ...metamask, rdns: "app.phantom", name: "Phantom" }, provider));
+    expect(result.current.wallets).toHaveLength(1);
+    expect(result.current.wallets[0].provider).toBe(provider);
+  });
+
   it("starts in the detecting state with no wallets", () => {
     const { result } = renderHook(() => useEIP6963());
     expect(result.current.isDetecting).toBe(true);

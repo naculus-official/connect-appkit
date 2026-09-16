@@ -50,6 +50,28 @@ export function useEIP6963(): UseEIP6963Result {
     }
 
     window.addEventListener("eip6963:announceProvider", handleAnnounce)
+
+    // Extensions may inject before the effect subscribes, or never announce.
+    const injected = window as typeof window & {
+      ethereum?: { isMetaMask?: boolean }
+      phantom?: unknown
+      solana?: { isPhantom?: boolean }
+    }
+    const addInjected = (id: string, name: string, provider: unknown) => {
+      if (seenRef.current.has(id)) return
+      seenRef.current.add(id)
+      setWallets(prev => prev.some(wallet => wallet.id === id)
+        ? prev
+        : [...prev, { id, name, icon: "", rdns: id, provider }])
+    }
+    if (injected.ethereum?.isMetaMask) {
+      addInjected("io.metamask", "MetaMask", injected.ethereum)
+    }
+    if (injected.phantom) {
+      addInjected("app.phantom", "Phantom", injected.phantom)
+    } else if (injected.solana?.isPhantom) {
+      addInjected("app.phantom", "Phantom", injected.solana)
+    }
     window.dispatchEvent(new Event("eip6963:requestProvider"))
 
     // Give wallets time to announce, then mark done
