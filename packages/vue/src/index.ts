@@ -36,6 +36,17 @@ export type { UseChainReturn } from "./useChain";
 export type { AccountEntry, UseAccountsReturn } from "./useAccounts";
 export { usePassphraseGate } from "./usePassphraseGate";
 export { useSolanaBalance } from "./useSolanaBalance";
+export { useLastTx } from "./useLastTx";
+export type { UseLastTxReturn } from "./useLastTx";
+export { useTxHistory } from "./useTxHistory";
+export type { UseTxHistoryReturn } from "./useTxHistory";
+export { useTxMonitor } from "./useTxMonitor";
+export type {
+  TxMonitorLike,
+  TxStatus,
+  TxStatusEntry,
+  UseTxMonitorReturn,
+} from "./useTxMonitor";
 export type { UseSolanaBalanceReturn as UseSolanaBalanceVueReturn } from "./useSolanaBalance";
 export type { UsePassphraseGateReturn } from "./usePassphraseGate";
 export { useCapabilities, type AtomicSupport, type CapabilityClient, type ChainCapabilities, type UseCapabilitiesReturn } from "./useCapabilities";
