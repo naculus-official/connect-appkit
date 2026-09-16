@@ -65,5 +65,8 @@ export * from "./name-resolver";
 // ── Addresses ─────────────────────────────────────────────────────
 export * from "./destination";
 
+// ── Routing (chain abstraction) ───────────────────────────────────
+export * from "./routing";
+
 // ── Connection state machine ──────────────────────────────────────
 export * from "./web3-store";
