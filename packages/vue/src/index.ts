@@ -47,6 +47,13 @@ export type {
   UseBalanceOptions,
   UseBalanceReturn,
 } from "./useBalance";
+export { useTokenList } from "./useTokenList";
+export type { UseTokenListOptions, UseTokenListReturn } from "./useTokenList";
+export { useTokenSearch } from "./useTokenSearch";
+export type {
+  UseTokenSearchOptions,
+  UseTokenSearchReturn,
+} from "./useTokenSearch";
 export { useValidateDestination } from "./useValidateDestination";
 export type { UseValidateDestinationReturn } from "./useValidateDestination";
 export { useTokenBalance } from "./useTokenBalance";
