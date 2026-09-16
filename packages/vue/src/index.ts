@@ -41,6 +41,20 @@ export { useDisconnect } from "./useDisconnect";
 export type { UseDisconnectReturn } from "./useDisconnect";
 export { useSwitchChain } from "./useSwitchChain";
 export type { UseSwitchChainReturn } from "./useSwitchChain";
+export { useBalance } from "./useBalance";
+export type {
+  NativeBalanceReader,
+  UseBalanceOptions,
+  UseBalanceReturn,
+} from "./useBalance";
+export { useTokenBalance } from "./useTokenBalance";
+export type {
+  TokenBalanceReader,
+  TokenBalanceResult,
+  TokenInfo,
+  UseTokenBalanceOptions,
+  UseTokenBalanceReturn,
+} from "./useTokenBalance";
 export { useDelegation } from "./useDelegation";
 export type { DelegationCodeReader, UseDelegationReturn } from "./useDelegation";
 export { useResolveName } from "./useResolveName";
