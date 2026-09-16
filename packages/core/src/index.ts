@@ -62,5 +62,8 @@ export * from "./revert-reason";
 // ── Names ─────────────────────────────────────────────────────────
 export * from "./name-resolver";
 
+// ── Addresses ─────────────────────────────────────────────────────
+export * from "./destination";
+
 // ── Connection state machine ──────────────────────────────────────
 export * from "./web3-store";

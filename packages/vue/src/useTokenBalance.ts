@@ -1,3 +1,4 @@
+import { bareEvmAddress } from "@naculus/connect-appkit-core";
 import { ERC20_MIN_ABI, formatUnits } from "@naculus/connect-core";
 import type { MaybeRefOrGetter, ShallowRef } from "vue";
 import { onScopeDispose, shallowRef, toValue, watch } from "vue";
@@ -42,13 +43,6 @@ export interface UseTokenBalanceReturn {
   ) => TokenBalanceResult | undefined;
 }
 
-function evmAddress(account: string | null | undefined): `0x${string}` | null {
-  const value = account?.includes(":") ? account.split(":").pop() : account;
-  return value && /^0x[0-9a-fA-F]{40}$/.test(value)
-    ? (value as `0x${string}`)
-    : null;
-}
-
 function tokensKey(tokens: readonly TokenInfo[]): string {
   return tokens
     .map((t) => `${t.address.toLowerCase()}|${t.decimals}|${t.symbol}`)
@@ -77,7 +71,7 @@ export function useTokenBalance(
 
   const refetch = async (): Promise<void> => {
     const reader = toValue(client);
-    const address = evmAddress(toValue(account));
+    const address = bareEvmAddress(toValue(account));
     const list = toValue(tokens) ?? [];
     const own = ++generation;
     if (!reader || !address || list.length === 0) {

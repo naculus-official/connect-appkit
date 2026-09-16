@@ -1,50 +1,22 @@
 /**
  * useValidateDestination — address blackhole prevention hook.
  *
- * Validates that a destination address is not a known burn/zero address
- * before sending a transaction. Returns { isValid, warning, level }.
+ * The checks live in `@naculus/connect-appkit-core` (`validateDestination`),
+ * shared with the Vue composable. This file only adds React and the
+ * user-facing string for the machine-readable issue.
  *
- * Level: "ok" | "warning" | "blocked"
+ * Level: "ok" | "warning" | "blocked". "ok" means nothing wrong was found —
+ * not that the destination is safe; see the core module for why.
  */
 
+import {
+  type AddressValidationLevel,
+  validateDestination as validateDestinationCore,
+} from "@naculus/connect-appkit-core";
 import { useMemo } from "react";
 import { t } from "../utils/i18n";
 
-// ── Known burn / zero addresses ─────────────────────────────────
-
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const DEAD_ADDRESSES = new Set([
-  ZERO_ADDRESS,
-  "0x0000000000000000000000000000000000000001",
-  "0x000000000000000000000000000000000000dead",
-  "0x000000000000000000000000000000000000dEaD",
-]);
-
-function isBurnAddress(addr: string): boolean {
-  const lower = addr.toLowerCase();
-  if (DEAD_ADDRESSES.has(lower)) return true;
-  return lower.includes("dead") && lower.length >= 40;
-}
-
-function isZeroAddress(addr: string): boolean {
-  return addr === ZERO_ADDRESS;
-}
-
-function isValidFormat(addr: string): boolean {
-  return /^0x[0-9a-fA-F]{40}$/.test(addr);
-}
-
-/**
- * What the four syntactic checks below found.
- *
- * `"ok"` was `"safe"`, which this function is in no position to say. It checks
- * that an address is non-empty, well-formed, and not the zero or a burn
- * address — nothing about whether the recipient is who the user thinks. It
- * cannot see an address-poisoning lookalike, a contract that will not release
- * the funds, or a known-malicious destination. Labelling that "safe" put a
- * green tick beside a scammer's address.
- */
-export type AddressValidationLevel = "ok" | "warning" | "blocked";
+export type { AddressValidationLevel };
 
 export interface AddressValidationResult {
   isValid: boolean;
@@ -53,20 +25,8 @@ export interface AddressValidationResult {
 }
 
 export function validateDestination(address: string): AddressValidationResult {
-  if (!address) {
-    return { isValid: false, level: "blocked", warning: t("address.empty") };
-  }
-  if (!isValidFormat(address)) {
-    return { isValid: false, level: "blocked", warning: t("address.invalid_format") };
-  }
-  if (isZeroAddress(address)) {
-    return { isValid: false, level: "blocked", warning: t("address.zero_address") };
-  }
-  if (isBurnAddress(address)) {
-    return { isValid: false, level: "blocked", warning: t("address.burn_address") };
-  }
-  // Nothing wrong was found. That is not the same as safe.
-  return { isValid: true, level: "ok", warning: null };
+  const { isValid, level, issue } = validateDestinationCore(address);
+  return { isValid, level, warning: issue ? t(`address.${issue}`) : null };
 }
 
 export interface UseValidateDestinationOptions {
@@ -77,7 +37,9 @@ export interface UseValidateDestinationReturn {
   validation: AddressValidationResult;
 }
 
-export function useValidateDestination({ address }: UseValidateDestinationOptions): UseValidateDestinationReturn {
+export function useValidateDestination({
+  address,
+}: UseValidateDestinationOptions): UseValidateDestinationReturn {
   const validation = useMemo(() => validateDestination(address), [address]);
   return { validation };
 }

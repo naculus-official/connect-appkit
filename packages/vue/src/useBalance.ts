@@ -1,3 +1,4 @@
+import { bareEvmAddress } from "@naculus/connect-appkit-core";
 import { formatUnits } from "@naculus/connect-core";
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from "vue";
 import { computed, onScopeDispose, shallowRef, toValue, watch } from "vue";
@@ -30,13 +31,6 @@ export interface UseBalanceReturn {
   refetch: () => Promise<void>;
 }
 
-function evmAddress(account: string | null | undefined): `0x${string}` | null {
-  const value = account?.includes(":") ? account.split(":").pop() : account;
-  return value && /^0x[0-9a-fA-F]{40}$/.test(value)
-    ? (value as `0x${string}`)
-    : null;
-}
-
 /**
  * Native balance of an EVM account through a caller-owned reader.
  *
@@ -58,7 +52,7 @@ export function useBalance(
 
   const refetch = async (): Promise<void> => {
     const reader = toValue(client);
-    const address = evmAddress(toValue(account));
+    const address = bareEvmAddress(toValue(account));
     const own = ++generation;
     if (!reader || !address) {
       balance.value = null;

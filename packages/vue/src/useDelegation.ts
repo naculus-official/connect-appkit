@@ -1,3 +1,4 @@
+import { bareEvmAddress } from "@naculus/connect-appkit-core";
 import {
   type DelegationStatus,
   readDelegation,
@@ -19,13 +20,6 @@ export interface UseDelegationReturn {
   refetch: () => Promise<void>;
 }
 
-function evmAddress(account: string | null | undefined): `0x${string}` | null {
-  const value = account?.includes(":") ? account.split(":").pop() : account;
-  return value && /^0x[0-9a-fA-F]{40}$/.test(value)
-    ? (value as `0x${string}`)
-    : null;
-}
-
 /** Read current EIP-7702 delegation without treating an unread account as undelegated. */
 export function useDelegation(
   account: MaybeRefOrGetter<string | null | undefined>,
@@ -41,7 +35,7 @@ export function useDelegation(
   const refetch = async (): Promise<void> => {
     const mine = ++generation;
     const reader = toValue(client);
-    const address = evmAddress(toValue(account));
+    const address = bareEvmAddress(toValue(account));
     status.value = UNKNOWN_DELEGATION;
     error.value = null;
     if (!reader || !address) {
