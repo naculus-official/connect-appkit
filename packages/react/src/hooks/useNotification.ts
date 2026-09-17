@@ -29,26 +29,22 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
+  addInAppNotification,
+  channelsUpdate,
+  clearOneInAppNotification,
+  createNotificationSettingsStorage,
+  DEFAULT_NOTIFICATION_SETTINGS,
+  loadNotificationSettings,
+  mutedChainSettings,
+  saveNotificationSettings,
+  updateNotificationSettings,
+  type NotificationSettingsStorage,
+} from "@naculus/connect-appkit-core";
+import {
   InAppChannel,
   type NotificationItem,
   type NotificationSettings,
-  type NotificationFrequency,
-  type TxStatus,
 } from "@naculus/connect-core";
-import { createStorageAdapter } from "@naculus/connect-core";
-
-// ─── Default settings ─────────────────────────────────────────────────
-
-const DEFAULT_SETTINGS: NotificationSettings = {
-  telegram: false,
-  webpush: false,
-  inapp: true,
-  frequency: "final-only" as NotificationFrequency,
-  mutedChains: [],
-  mutedTypes: [],
-};
-
-const STORAGE_KEY_SETTINGS = "naculus_notif_react_settings";
 
 // ─── Hook ──────────────────────────────────────────────────────────────
 
@@ -62,11 +58,7 @@ export function useNotification(options?: {
   /** External InAppChannel instance (for sharing between hooks). If omitted, creates one. */
   channel?: InAppChannel;
   /** Custom storage for settings (defaults to localStorage) */
-  storage?: {
-    getItem: <T>(key: string) => Promise<T | null>;
-    setItem: <T>(key: string, value: T) => Promise<void>;
-    removeItem: (key: string) => Promise<void>;
-  };
+  storage?: NotificationSettingsStorage;
 }) {
   // ── Channel ──────────────────────────────────────────────────────
 
@@ -86,14 +78,14 @@ export function useNotification(options?: {
 
   const [settings, setSettingsState] = useState<NotificationSettings>(() => {
     // Try to load from storage, fall back to default
-    return DEFAULT_SETTINGS;
+    return DEFAULT_NOTIFICATION_SETTINGS;
   });
 
   // ── Load persisted settings on mount ──────────────────────────────
 
   useEffect(() => {
-    const storage = options?.storage ?? createReactStorage();
-    storage.getItem<NotificationSettings>(STORAGE_KEY_SETTINGS).then((saved) => {
+    const storage = options?.storage ?? createNotificationSettingsStorage();
+    loadNotificationSettings(storage).then((saved) => {
       if (saved) {
         setSettingsState(saved);
       }
@@ -134,32 +126,15 @@ export function useNotification(options?: {
     setNotifications([]);
   }, [channel]);
 
-  const clearOne = useCallback((id: string) => {
-    const updated = channel.getHistory().filter((n) => n.id !== id);
-    // Mutate channel history in place (we recreate from the in-memory history)
-    channel.clear();
-    // Re-add the ones we want to keep
-    Promise.all(
-      updated.map((item) =>
-        channel.send({
-          id: item.id,
-          userId: "",
-          txHash: item.txHash,
-          chainId: "",
-          chainName: item.chainName,
-          status: item.status,
-          title: item.title,
-          body: item.body,
-          valueFormatted: item.valueFormatted,
-          explorerUrl: item.explorerUrl,
-          timestamp: item.timestamp,
-        }),
-      ),
-    ).then(() => {
-      // Force re-sync
-      setNotifications(channel.getHistory());
-    });
-  }, [channel]);
+  const clearOne = useCallback(
+    (id: string) => {
+      clearOneInAppNotification(channel, id).then(() => {
+        // Force re-sync
+        setNotifications(channel.getHistory());
+      });
+    },
+    [channel],
+  );
 
   const markAsRead = useCallback(
     (id: string) => {
@@ -180,24 +155,7 @@ export function useNotification(options?: {
 
   const addNotification = useCallback(
     (item: Omit<NotificationItem, "id" | "timestamp">) => {
-      const full: NotificationItem = {
-        ...item,
-        id: `notif_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        timestamp: Date.now(),
-      };
-      channel.send({
-        id: full.id,
-        userId: "",
-        txHash: full.txHash,
-        chainId: "",
-        chainName: full.chainName,
-        status: full.status,
-        title: full.title,
-        body: full.body,
-        valueFormatted: full.valueFormatted,
-        explorerUrl: full.explorerUrl,
-        timestamp: full.timestamp,
-      });
+      addInAppNotification(channel, item);
       // The onNotification callback will update state
     },
     [channel],
@@ -208,9 +166,9 @@ export function useNotification(options?: {
   const updateSettings = useCallback(
     (update: Partial<NotificationSettings>) => {
       setSettingsState((prev) => {
-        const next = { ...prev, ...update };
-        const storage = options?.storage ?? createReactStorage();
-        storage.setItem(STORAGE_KEY_SETTINGS, next).catch(() => {});
+        const next = updateNotificationSettings(prev, update);
+        const storage = options?.storage ?? createNotificationSettingsStorage();
+        saveNotificationSettings(storage, next);
         return next;
       });
     },
@@ -219,29 +177,21 @@ export function useNotification(options?: {
 
   const setChannels = useCallback(
     (channels: string[]) => {
-      const update: Partial<NotificationSettings> = {};
-      if (channels.includes("telegram")) update.telegram = true;
-      if (channels.includes("webpush")) update.webpush = true;
-      if (channels.includes("inapp")) update.inapp = true;
-      updateSettings(update);
+      updateSettings(channelsUpdate(channels));
     },
     [updateSettings],
   );
 
   const muteChain = useCallback(
     (chainId: string) => {
-      updateSettings({
-        mutedChains: [...new Set([...settings.mutedChains, chainId])],
-      });
+      updateSettings(mutedChainSettings(settings, chainId, true));
     },
     [settings.mutedChains, updateSettings],
   );
 
   const unmuteChain = useCallback(
     (chainId: string) => {
-      updateSettings({
-        mutedChains: settings.mutedChains.filter((c) => c !== chainId),
-      });
+      updateSettings(mutedChainSettings(settings, chainId, false));
     },
     [settings.mutedChains, updateSettings],
   );
@@ -273,36 +223,5 @@ export function useNotification(options?: {
     muteChain,
     /** Unmute a chain */
     unmuteChain,
-  };
-}
-
-// ─── Storage helper ───────────────────────────────────────────────────
-
-function createReactStorage() {
-  const storage = createStorageAdapter("local", "naculus_notif_");
-
-  return {
-    getItem: async <T>(key: string): Promise<T | null> => {
-      try {
-        return await storage.get<T>(key);
-      } catch (e) {
-        console.warn("useNotification: failed to read from storage:", e);
-        return null;
-      }
-    },
-    setItem: async <T>(key: string, value: T): Promise<void> => {
-      try {
-        await storage.set(key, value);
-      } catch (e) {
-        console.warn("useNotification: failed to write to storage:", e);
-      }
-    },
-    removeItem: async (key: string): Promise<void> => {
-      try {
-        await storage.remove(key);
-      } catch (e) {
-        console.warn("useNotification: failed to remove from storage:", e);
-      }
-    },
   };
 }

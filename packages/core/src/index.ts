@@ -62,6 +62,9 @@ export * from "./revert-reason";
 // ── Names ─────────────────────────────────────────────────────────
 export * from "./name-resolver";
 
+// ── Notifications ──────────────────────────────────────────────────
+export * from "./notification";
+
 // ── Addresses ─────────────────────────────────────────────────────
 export * from "./destination";
 
