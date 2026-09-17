@@ -31,6 +31,11 @@ export {
 
 // ── Composables ───────────────────────────────────────────────────
 export { useAccounts } from "./useAccounts";
+export { useNotification } from "./useNotification";
+export type {
+  UseNotificationOptions,
+  UseNotificationReturn,
+} from "./useNotification";
 export { useAccount } from "./useAccount";
 export type { UseAccountReturn } from "./useAccount";
 export { useSession } from "./useSession";
