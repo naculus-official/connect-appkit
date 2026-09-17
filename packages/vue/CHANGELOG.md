@@ -1,5 +1,41 @@
 # @naculus/connect-appkit-vue
 
+## 0.2.5
+
+### Patch Changes
+
+- 890f38d: Expose Vue account and Solana account composables with connected-state semantics matching the React hooks.
+- 8ce3204: Move destination-address validation and the CAIP-10 → bare address split into
+  `@naculus/connect-appkit-core` (`validateDestination`, `isBurnDestination`,
+  `bareEvmAddress`). The React `validateDestination` / `useValidateDestination`
+  keep their public shape and strings and now delegate to it; the Vue balance and
+  delegation composables use the shared split instead of local copies.
+- 2d93f50: Add Vue composables for transaction monitoring, transaction history, and the
+  most recent terminal transaction. They take a caller-owned monitor and mirror
+  the React lifecycle without introducing a Vue provider.
+- ca530e7: Add Vue `useBalance` and `useTokenBalance` composables that read native and
+  ERC-20 balances through a caller-owned client, with optional auto-refresh.
+- 327eb9e: Add Vue connection and disconnection lifecycle composables.
+- e90097c: Add a read-only Vue EIP-7702 delegation status composable.
+- b0874b0: Add reactive Vue name and reverse-address lookup composables with stale-result protection.
+- e4b85d9: Move notification settings persistence and in-app notification actions into
+  framework-neutral AppKit core while preserving the React hook behavior, and
+  expose the corresponding Vue `useNotification` composable.
+- b30a35a: Add Vue `useRouteQuote`, `useCompareCosts` and `useExecuteRoute` composables
+  over the shared routing core.
+- 830edc9: Add a reactive Vue useSession composable for active wallet and chain sessions.
+- 5a70723: Add a Vue chain-switch lifecycle composable with provider error classification.
+- 1fff014: Add Vue `useTokenList` and `useTokenSearch` composables over connect-core's
+  `TokenListManager`, with CAIP-2 chain filtering and debounced search.
+- 2790e75: Add Vue `useValidateDestination`, returning the shared core's verdict with a
+  machine-readable `issue` for the caller to localise.
+- Updated dependencies [8ce3204]
+- Updated dependencies [46e710d]
+- Updated dependencies [4b0024a]
+- Updated dependencies [e4b85d9]
+  - @naculus/connect-appkit-core@0.2.5
+  - @naculus/connect-appkit-wc@0.2.5
+
 ## 0.2.4
 
 ### Patch Changes

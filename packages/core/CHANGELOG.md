@@ -1,5 +1,24 @@
 # @naculus/connect-appkit-core
 
+## 0.2.5
+
+### Patch Changes
+
+- 8ce3204: Move destination-address validation and the CAIP-10 → bare address split into
+  `@naculus/connect-appkit-core` (`validateDestination`, `isBurnDestination`,
+  `bareEvmAddress`). The React `validateDestination` / `useValidateDestination`
+  keep their public shape and strings and now delegate to it; the Vue balance and
+  delegation composables use the shared split instead of local copies.
+- 4b0024a: Move the chain-abstraction (routing) domain types and decisions into
+  `@naculus/connect-appkit-core`: `RouteQuote`, `CostComparison`,
+  `ExecutableQuote` and friends, plus `isQuotableInput`, `compareCostsKey`,
+  `validateRouteRecipient` and `toExecuteRouteError`. The React `useRouteQuote`,
+  `useCompareCosts` and `useExecuteRoute` keep their exported names and behaviour
+  and delegate to them.
+- e4b85d9: Move notification settings persistence and in-app notification actions into
+  framework-neutral AppKit core while preserving the React hook behavior, and
+  expose the corresponding Vue `useNotification` composable.
+
 ## 0.2.4
 
 ### Patch Changes

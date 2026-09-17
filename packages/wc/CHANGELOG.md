@@ -1,5 +1,11 @@
 # @naculus/connect-appkit-wc
 
+## 0.2.5
+
+### Patch Changes
+
+- 46e710d: Detect MetaMask and Phantom providers that were injected before EIP-6963 discovery or do not announce. Apply theme tokens inside the Web Component shadow root.
+
 ## 0.2.4
 
 ### Patch Changes
