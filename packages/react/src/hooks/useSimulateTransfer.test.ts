@@ -81,9 +81,24 @@ describe("useSimulateTransfer", () => {
       useSimulateTransfer({ rpcUrl: "https://a", chainId: 1 }),
     );
     await act(async () => {
-      await result.current.simulate(TOKEN, FROM, TO, "1", { chainId: 8453 });
+      await result.current.simulate(TOKEN, FROM, TO, "1", {
+        chainId: 8453,
+        rpcUrl: "https://base",
+      });
     });
     expect(mocks.simulateERC20Transfer.mock.calls[0][4]).toBe(8453);
+  });
+
+  it("rejects a chain override without that chain's RPC", async () => {
+    const { result } = renderHook(() =>
+      useSimulateTransfer({ rpcUrl: "https://mainnet", chainId: 1 }),
+    );
+    await act(async () => {
+      await expect(
+        result.current.simulate(TOKEN, FROM, TO, "1", { chainId: 8453 }),
+      ).rejects.toThrow(/requires an RPC URL/);
+    });
+    expect(mocks.simulateERC20Transfer).not.toHaveBeenCalled();
   });
 
   it("forwards the hook-level RPC URL to the engine", async () => {

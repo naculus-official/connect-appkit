@@ -1,4 +1,4 @@
-import { WalletError } from "@naculus/connect-core";
+import { resolveSimulationEndpoint } from "@naculus/connect-appkit-core";
 
 /**
  * useSimulateTransfer — React hook for simulating ERC-20 token transfers.
@@ -91,7 +91,7 @@ export function useSimulateTransfer(
 
   const managerRef = useRef<SimulationManager | null>(null);
 
-  function getManager(): SimulationManager {
+  const getManager = useCallback((): SimulationManager => {
     if (!managerRef.current) {
       managerRef.current = new SimulationManager({
         enabled: true,
@@ -100,7 +100,7 @@ export function useSimulateTransfer(
       });
     }
     return managerRef.current;
-  }
+  }, [rpcUrl]);
 
   // ── State ──────────────────────────────────────────────────────
 
@@ -130,26 +130,23 @@ export function useSimulateTransfer(
         // No `?? 1`. Simulating an ERC-20 transfer on the wrong chain reads a
         // different contract at the same address, so the preview describes a
         // transfer that will not happen.
-        const actualChainId = simOptions?.chainId ?? chainId;
-        if (actualChainId === undefined) {
-          throw new WalletError(
-            "invalid_chain",
-            "No chain to simulate on. Connect a wallet or pass a chainId.",
-          );
-        }
+        const endpoint = resolveSimulationEndpoint(
+          simOptions?.chainId,
+          chainId,
+          simOptions?.rpcUrl,
+          rpcUrl,
+        );
         // Forwarded rather than computed and dropped. Without it a caller's
         // per-call endpoint did nothing, and the simulation ran against
         // whichever URL happened to be baked into the manager on first use.
-        const actualRpcUrl = simOptions?.rpcUrl ?? rpcUrl;
-
         const simResult = await manager.simulateERC20Transfer(
           tokenAddress,
           from,
           to,
           amount,
-          actualChainId,
+          endpoint.chainId,
           simOptions?.decimals,
-          actualRpcUrl,
+          endpoint.rpcUrl,
         );
 
         setResult(simResult);
@@ -162,7 +159,7 @@ export function useSimulateTransfer(
         setLoading(false);
       }
     },
-    [rpcUrl, chainId],
+    [rpcUrl, chainId, getManager],
   );
 
   // ── Reset ──────────────────────────────────────────────────────

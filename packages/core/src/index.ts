@@ -58,6 +58,8 @@ export * from "./token-decimals";
 // ── Errors ────────────────────────────────────────────────────────
 export * from "./provider-errors";
 export * from "./revert-reason";
+export * from "./simulation-endpoint";
+export * from "./transaction-simulation";
 
 // ── Names ─────────────────────────────────────────────────────────
 export * from "./name-resolver";
