@@ -22,7 +22,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@naculus/connect-core": "^0.2.0"
+    "@naculus/connect-core": "^0.2.5"
   },
   "devDependencies": {
     "@naculus/connect-core": "^0.2.5",

@@ -54,6 +54,7 @@ export * from "./aa-chain";
 // ── Tokens ────────────────────────────────────────────────────────
 export * from "./token-chain";
 export * from "./token-decimals";
+export * from "./erc20-calldata";
 
 // ── Errors ────────────────────────────────────────────────────────
 export * from "./provider-errors";
