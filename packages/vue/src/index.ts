@@ -32,6 +32,10 @@ export {
 // ── Composables ───────────────────────────────────────────────────
 export { useAccounts } from "./useAccounts";
 export { useNotification } from "./useNotification";
+export { useSimulateTransfer } from "./useSimulateTransfer";
+export type { UseSimulateTransferOptions, UseSimulateTransferReturn } from "./useSimulateTransfer";
+export { useTransactionSimulation } from "./useTransactionSimulation";
+export type { UseTransactionSimulationOptions, UseTransactionSimulationReturn } from "./useTransactionSimulation";
 export type {
   UseNotificationOptions,
   UseNotificationReturn,
