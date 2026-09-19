@@ -46,6 +46,39 @@ describe("SIWX policy", () => {
     ).toBe(false);
   });
 
+  it("fails closed for malformed temporal claims", () => {
+    const now = new Date("2026-01-02T00:00:00.000Z");
+    expect(
+      isSiwxExpired(
+        {
+          ...result,
+          message: { ...result.message, expirationTime: "garbage" },
+        },
+        now,
+      ),
+    ).toBe(true);
+    expect(
+      isSiwxNotBeforeValid(
+        { ...result, message: { ...result.message, notBefore: "garbage" } },
+        now,
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps absent temporal claims valid", () => {
+    const now = new Date("2026-01-02T00:00:00.000Z");
+    const withoutTimes = {
+      ...result,
+      message: {
+        ...result.message,
+        expirationTime: null,
+        notBefore: null,
+      },
+    };
+    expect(isSiwxExpired(withoutTimes, now)).toBe(false);
+    expect(isSiwxNotBeforeValid(withoutTimes, now)).toBe(true);
+  });
+
   it("maps a result without changing signed fields", () => {
     vi.spyOn(crypto, "getRandomValues").mockImplementation((array) => {
       (array as Uint8Array).fill(1);

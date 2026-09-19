@@ -27,7 +27,9 @@ export function defaultSiwxUri(location?: SiwxLocation): string {
 
 export function isSiwxExpired(result: SiwxResultLike, now: Date): boolean {
   const value = result.message.expirationTime;
-  return value ? new Date(value).getTime() <= now.getTime() : false;
+  if (!value) return false;
+  const timestamp = new Date(value).getTime();
+  return !Number.isFinite(timestamp) || timestamp <= now.getTime();
 }
 
 export function isSiwxNotBeforeValid(
@@ -35,7 +37,9 @@ export function isSiwxNotBeforeValid(
   now: Date,
 ): boolean {
   const value = result.message.notBefore;
-  return value ? new Date(value).getTime() <= now.getTime() : true;
+  if (!value) return true;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) && timestamp <= now.getTime();
 }
 
 function randomSuffix(): string {
