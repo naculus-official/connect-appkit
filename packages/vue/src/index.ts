@@ -101,6 +101,11 @@ export type {
 } from "./siwx";
 export { useSignInWithX } from "./useSignInWithX";
 export type { UseSignInWithXReturn } from "./useSignInWithX";
+export { useSignInWithEthereum } from "./useSignInWithEthereum";
+export type {
+  UseSignInWithEthereumOptions,
+  UseSignInWithEthereumReturn,
+} from "./useSignInWithEthereum";
 export { useSIWxLogin } from "./useSIWxLogin";
 export type { UseSIWxLoginReturn } from "./useSIWxLogin";
 export { useSIWxSession } from "./useSIWxSession";
