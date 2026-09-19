@@ -106,6 +106,28 @@ export type {
   UseSignInWithEthereumOptions,
   UseSignInWithEthereumReturn,
 } from "./useSignInWithEthereum";
+export type {
+  ExecuteCallsAction,
+  ExecutionPreview,
+  ExecutionRoute,
+  GetCallsStatusAction,
+  PaymasterService,
+  PreviewExecutionAction,
+  SendCallsAction,
+  SendCallsOptions,
+  ShowCallsStatusAction,
+} from "./eip5792";
+export { useExecuteCalls } from "./useExecuteCalls";
+export type {
+  UseExecuteCallsOptions,
+  UseExecuteCallsReturn,
+} from "./useExecuteCalls";
+export { useSendCalls } from "./useSendCalls";
+export type {
+  SendCallsStatus,
+  UseSendCallsOptions,
+  UseSendCallsReturn,
+} from "./useSendCalls";
 export { useSIWxLogin } from "./useSIWxLogin";
 export type { UseSIWxLoginReturn } from "./useSIWxLogin";
 export { useSIWxSession } from "./useSIWxSession";
