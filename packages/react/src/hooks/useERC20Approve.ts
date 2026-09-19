@@ -1,39 +1,31 @@
-import { chainNumber } from "@naculus/connect-appkit-core";
-import { useState, useCallback, useRef } from "react";
-import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { useAccount } from "./useAccount";
-import { useChain } from "./useChain";
-import { useViemClient } from "./useViemClient";
-import { useSendTransaction } from "./useSendTransaction";
 import {
-  WalletError,
-  ERC20_MIN_ABI,
-  parseUnits,
-  formatUnits,
-} from "@naculus/connect-core";
-import type { TokenConfig } from "@naculus/connect-core";
-import type { Address, Hex } from "viem";
-import { encodeFunctionData } from "viem";
-import { resolveClient } from "./client-resolver";
-import {
+  chainNumber,
   createDecimalsCache,
+  encodeErc20Approve,
   readDecimals,
   writeDecimals,
 } from "@naculus/connect-appkit-core";
+import type { TokenConfig } from "@naculus/connect-core";
+import {
+  ERC20_MIN_ABI,
+  formatUnits,
+  parseUnits,
+  WalletError,
+} from "@naculus/connect-core";
+import { useCallback, useRef, useState } from "react";
+import type { Address } from "viem";
+import { useWeb3 } from "../provider/Web3ConnectProvider";
+import { resolveClient } from "./client-resolver";
+import { useAccount } from "./useAccount";
+import { useChain } from "./useChain";
 import { useERC20Context } from "./useERC20Context";
+import { useSendTransaction } from "./useSendTransaction";
+import { useViemClient } from "./useViemClient";
 
 // ── Helpers ───────────────────────────────────────────────────────
 
 function toBareAddress(addr: string): Address {
   return (addr.includes(":") ? addr.split(":").pop()! : addr) as Address;
-}
-
-function encodeApproveCalldata(spender: Address, amount: bigint): Hex {
-  return encodeFunctionData({
-    abi: ERC20_MIN_ABI,
-    functionName: "approve",
-    args: [spender, amount],
-  });
 }
 
 // ── Constants ─────────────────────────────────────────────────────
@@ -89,7 +81,9 @@ export function useERC20Approve(
   const [localError, setLocalError] = useState<Error | null>(null);
   const { identity, isCurrent, assertCurrent } = useERC20Context({
     token: options.token,
-    chainId: currentChain ? (chainNumber(currentChain) ?? undefined) : undefined,
+    chainId: currentChain
+      ? (chainNumber(currentChain) ?? undefined)
+      : undefined,
     owner: evmAccount,
     spender: options.spender,
     connected: isConnected,
@@ -202,7 +196,7 @@ export function useERC20Approve(
       // was shown.
       try {
         assertCurrent();
-        const data = encodeApproveCalldata(options.spender, rawAmount);
+        const data = encodeErc20Approve(options.spender, rawAmount);
         const activeClient = resolveClient(client);
         if (session) {
           if (activeClient) {

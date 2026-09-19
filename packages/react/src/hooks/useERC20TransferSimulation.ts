@@ -1,4 +1,4 @@
-import { chainNumber } from "@naculus/connect-appkit-core";
+import { chainNumber, encodeErc20Transfer } from "@naculus/connect-appkit-core";
 /**
  * useERC20TransferSimulation — React hook for simulating ERC-20 token
  *                              transfers before signing/submitting.
@@ -9,7 +9,7 @@ import { chainNumber } from "@naculus/connect-appkit-core";
  * @see /docs/features/transaction-simulation.md
  */
 
-import type { TokenConfig } from "@naculus/connect-core";
+import { parseUnits, type TokenConfig } from "@naculus/connect-core";
 import { useMemo } from "react";
 import type { EvmTransaction } from "../types";
 import { useAccount } from "./useAccount";
@@ -19,59 +19,6 @@ import {
   type UseTransactionSimulationReturn,
   useTransactionSimulation,
 } from "./useTransactionSimulation";
-
-// ── Constants ─────────────────────────────────────────────────────
-
-/**
- * ERC-20 transfer function selector (first 4 bytes of keccak256("transfer(address,uint256)"))
- * We use this to build minimal calldata without importing viem for this hook.
- */
-const ERC20_TRANSFER_SELECTOR = "0xa9059cbb";
-
-// ── Helper: Pad address to 32 bytes (left-padded zeros) ──────────
-
-function padAddress(addr: string): string {
-  const clean = addr.startsWith("0x") ? addr.slice(2) : addr;
-  return clean.padStart(64, "0");
-}
-
-/**
- * Pad a hex value (bigint as hex) to 32 bytes (left-padded zeros).
- */
-function padHex(value: string, bytes: number = 32): string {
-  const clean = value.startsWith("0x") ? value.slice(2) : value;
-  return clean.padStart(bytes * 2, "0");
-}
-
-/**
- * Convert a decimal-amount string to raw amount in smallest unit.
- * E.g. "1.50" with 6 decimals → "1500000" as decimal string.
- */
-function parseUnits(amount: string, decimals: number): bigint {
-  // Split on decimal point
-  const [whole = "0", fraction = ""] = amount.split(".");
-  const padded = fraction.padEnd(decimals, "0").slice(0, decimals);
-  return BigInt(whole + padded || "0");
-}
-
-// ── Build ERC-20 transfer calldata ────────────────────────────────
-
-/**
- * Build minimal ERC-20 transfer calldata without viem dependency.
- *
- * selector: 0xa9059cbb
- * args:     (address to, uint256 amount)
- * encoding: abi-encoded as two 32-byte words
- *
- * @param to   - Recipient address
- * @param amount - Raw transfer amount (smallest unit)
- */
-function buildTransferCalldata(
-  to: `0x${string}`,
-  amount: bigint,
-): `0x${string}` {
-  return `${ERC20_TRANSFER_SELECTOR}${padAddress(to)}${padHex(amount.toString(16))}` as `0x${string}`;
-}
 
 // ── Types ─────────────────────────────────────────────────────────
 
@@ -122,7 +69,7 @@ export function useERC20TransferSimulation(
       const decimals = options.token.decimals;
       if (decimals === undefined) return undefined;
       const rawAmount = parseUnits(options.amount, decimals);
-      const data = buildTransferCalldata(options.to, rawAmount);
+      const data = encodeErc20Transfer(options.to, rawAmount);
 
       return {
         to: options.token.address,
@@ -130,7 +77,7 @@ export function useERC20TransferSimulation(
         value: "0",
       };
     } catch {
-      // If amount parsing fails, return undefined
+      // Fail closed: never preview calldata different from what sendTransfer accepts.
       return undefined;
     }
   }, [
@@ -147,9 +94,11 @@ export function useERC20TransferSimulation(
 
   // Alias simulate → reSimulate for semantic clarity
   return {
-    result: sim.result,
-    isSimulating: sim.isSimulating,
-    error: sim.error,
+    // The base hook may still hold (or later receive) the previous transaction's
+    // result. Never display it for inputs that cannot produce sendable calldata.
+    result: tx ? sim.result : undefined,
+    isSimulating: !!tx && sim.isSimulating,
+    error: tx ? sim.error : null,
     reSimulate: sim.simulate,
     reset: sim.reset,
   };

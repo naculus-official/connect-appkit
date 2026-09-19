@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
-import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { TokenConfig } from "@naculus/connect-core";
+import { ERC20_MIN_ABI, parseUnits } from "@naculus/connect-core";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { encodeFunctionData } from "viem";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   readContract: vi.fn(),
@@ -71,6 +74,26 @@ beforeEach(() => {
   mocks.readContract.mockResolvedValue(2_000_000n);
   mocks.sendTransaction.mockResolvedValue(hash);
   mocks.writeContract.mockResolvedValue(hash);
+});
+
+describe("ERC-20 send destinations", () => {
+  it("rejects malformed transfer and approval recipients before submission", async () => {
+    const invalid = "0x123" as `0x${string}`;
+    const { result: transfer } = renderHook(() => useERC20Transfer({ token }));
+    await act(async () => {
+      await expect(transfer.current.sendTransfer(invalid, "1")).rejects.toThrow(
+        /address/i,
+      );
+    });
+    const { result: approval } = renderHook(() =>
+      useERC20Approve({ token, spender: invalid }),
+    );
+    await act(async () => {
+      await expect(approval.current.approve("1")).rejects.toThrow(/address/i);
+    });
+    expect(mocks.sendTransaction).not.toHaveBeenCalled();
+    expect(mocks.writeContract).not.toHaveBeenCalled();
+  });
 });
 afterEach(cleanup);
 
@@ -282,6 +305,22 @@ describe.each(["approve", "transfer"] as const)("ERC-20 %s", (operation) => {
     });
     expect(mocks.writeContract).toHaveBeenCalledWith(simulatedRequest);
     expect(mocks.sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it("sends the exact ABI calldata for a six-decimal amount", async () => {
+    const { result } = renderHook(() => useOperation(token));
+    await act(async () => {
+      expect(await result.current.send("1.000001")).toBe(hash);
+    });
+    expect(mocks.sendTransaction).toHaveBeenCalledWith({
+      to: token.address,
+      value: "0",
+      data: encodeFunctionData({
+        abi: ERC20_MIN_ABI,
+        functionName: operation,
+        args: [spender, parseUnits("1.000001", 6)],
+      }),
+    });
   });
 
   it("does not request a signature after unmount", async () => {

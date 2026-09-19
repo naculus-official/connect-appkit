@@ -1,34 +1,26 @@
-import { chainNumber } from "@naculus/connect-appkit-core";
-import { useState, useCallback, useRef } from "react";
-import { useWeb3 } from "../provider/Web3ConnectProvider";
-import { useAccount } from "./useAccount";
-import { useChain } from "./useChain";
-import { useViemClient } from "./useViemClient";
-import { useSendTransaction } from "./useSendTransaction";
-import { WalletError, ERC20_MIN_ABI, parseUnits } from "@naculus/connect-core";
-import type { TokenConfig } from "@naculus/connect-core";
-import type { Address, Hex } from "viem";
-import { encodeFunctionData } from "viem";
-import { resolveClient } from "./client-resolver";
 import {
+  chainNumber,
   createDecimalsCache,
+  encodeErc20Transfer,
   readDecimals,
   writeDecimals,
 } from "@naculus/connect-appkit-core";
+import type { TokenConfig } from "@naculus/connect-core";
+import { ERC20_MIN_ABI, parseUnits, WalletError } from "@naculus/connect-core";
+import { useCallback, useRef, useState } from "react";
+import type { Address } from "viem";
+import { useWeb3 } from "../provider/Web3ConnectProvider";
+import { resolveClient } from "./client-resolver";
+import { useAccount } from "./useAccount";
+import { useChain } from "./useChain";
 import { useERC20Context } from "./useERC20Context";
+import { useSendTransaction } from "./useSendTransaction";
+import { useViemClient } from "./useViemClient";
 
 // ── Helpers ───────────────────────────────────────────────────────
 
 function toBareAddress(addr: string): Address {
   return (addr.includes(":") ? addr.split(":").pop()! : addr) as Address;
-}
-
-function encodeTransferCalldata(to: Address, amount: bigint): Hex {
-  return encodeFunctionData({
-    abi: ERC20_MIN_ABI,
-    functionName: "transfer",
-    args: [to, amount],
-  });
 }
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -62,7 +54,9 @@ export function useERC20Transfer(
   const [localError, setLocalError] = useState<Error | null>(null);
   const { isCurrent, assertCurrent } = useERC20Context({
     token: options.token,
-    chainId: currentChain ? (chainNumber(currentChain) ?? undefined) : undefined,
+    chainId: currentChain
+      ? (chainNumber(currentChain) ?? undefined)
+      : undefined,
     owner: evmAccount,
     connected: isConnected,
     publicClient,
@@ -126,7 +120,7 @@ export function useERC20Transfer(
         }
 
         const rawAmount = parseUnits(amount, decimals);
-        const data = encodeTransferCalldata(to, rawAmount);
+        const data = encodeErc20Transfer(to, rawAmount);
 
         const activeClient = resolveClient(client);
         // Strategy 1: session-based connector
