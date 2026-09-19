@@ -51,6 +51,39 @@ import "@naculus/connect-appkit-vue";
 </script>
 ```
 
+### Restoring SIWX sessions
+
+`useSIWxSession` and `useSiwxAuthSession` are reactive shells: they do not read
+storage or validate session dates. Before exposing a persisted session or SIWX
+result to either composable, the caller must apply the shared appkit-core
+policy. This rejects expired sessions, not-yet-valid sessions, and malformed
+date strings instead of restoring them.
+
+```ts
+import {
+  isSiwxExpired,
+  isSiwxNotBeforeValid,
+  type SiwxResultLike,
+} from "@naculus/connect-appkit-core";
+import { shallowRef } from "vue";
+
+const restoredResult = shallowRef<SiwxResultLike | null>(null);
+const candidate = await loadPersistedSiwxResult();
+const now = new Date();
+
+if (
+  candidate &&
+  !isSiwxExpired(candidate, now) &&
+  isSiwxNotBeforeValid(candidate, now)
+) {
+  restoredResult.value = candidate;
+}
+
+// Pass restoredResult to useSiwxAuthSession. For useSIWxSession, expose the
+// corresponding session only after the same check and provide isExpired from
+// your caller-owned session policy.
+```
+
 ## License
 
 MIT
