@@ -4,10 +4,9 @@
 
 > **Components have parity with React. Composables do not.** All 28 components
 > are generated from the same Stencil source, so anything visual works the same
-> in both. The logic layer does not: this package exports six composables —
-> `useAccounts`, `useCapabilities`, `useChain`, `usePassphraseGate`,
-> `useSolanaBalance`, `useSolanaRoles` — against React's 55, so session keys,
-> simulation and the transaction lifecycle are React-only today.
+> in both. The Vue logic layer currently covers 32 of 51 parity targets. ERC-20
+> transfer, approval, and transfer simulation are available, while session keys
+> and parts of the transaction lifecycle remain React-only today.
 >
 > `useCapabilities` (the EIP-5792 query) and `useSolanaRoles` (which of
 > `identity` / `signer` / `payer` the connected Solana wallet can fill) are not

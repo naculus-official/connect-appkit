@@ -33,9 +33,31 @@ export {
 export { useAccounts } from "./useAccounts";
 export { useNotification } from "./useNotification";
 export { useSimulateTransfer } from "./useSimulateTransfer";
-export type { UseSimulateTransferOptions, UseSimulateTransferReturn } from "./useSimulateTransfer";
+export type {
+  UseSimulateTransferOptions,
+  UseSimulateTransferReturn,
+} from "./useSimulateTransfer";
 export { useTransactionSimulation } from "./useTransactionSimulation";
-export type { UseTransactionSimulationOptions, UseTransactionSimulationReturn } from "./useTransactionSimulation";
+export type {
+  UseTransactionSimulationOptions,
+  UseTransactionSimulationReturn,
+} from "./useTransactionSimulation";
+export { useERC20Transfer } from "./useERC20Transfer";
+export type {
+  UseERC20TransferOptions,
+  UseERC20TransferReturn,
+} from "./useERC20Transfer";
+export { useERC20Approve } from "./useERC20Approve";
+export type {
+  UseERC20ApproveOptions,
+  UseERC20ApproveReturn,
+} from "./useERC20Approve";
+export { useERC20TransferSimulation } from "./useERC20TransferSimulation";
+export type {
+  UseERC20TransferSimulationOptions,
+  UseERC20TransferSimulationReturn,
+} from "./useERC20TransferSimulation";
+export type { ERC20Reader, ERC20Sender, ERC20Transaction } from "./erc20";
 export type {
   UseNotificationOptions,
   UseNotificationReturn,
