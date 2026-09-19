@@ -93,6 +93,26 @@ export type {
   UseSolanaTransactionOptions,
   UseSolanaTransactionReturn,
 } from "./useSolanaTransaction";
+export type {
+  SiwxResult,
+  SiwxSessionLike,
+  SiwxSignInAction,
+  SiwxSignInOptions,
+} from "./siwx";
+export { useSignInWithX } from "./useSignInWithX";
+export type { UseSignInWithXReturn } from "./useSignInWithX";
+export { useSIWxLogin } from "./useSIWxLogin";
+export type { UseSIWxLoginReturn } from "./useSIWxLogin";
+export { useSIWxSession } from "./useSIWxSession";
+export type {
+  UseSIWxSessionOptions,
+  UseSIWxSessionReturn,
+} from "./useSIWxSession";
+export { useSiwxAuthSession } from "./useSiwxAuthSession";
+export type {
+  UseSiwxAuthSessionOptions,
+  UseSiwxAuthSessionReturn,
+} from "./useSiwxAuthSession";
 export { useBalance } from "./useBalance";
 export type {
   NativeBalanceReader,

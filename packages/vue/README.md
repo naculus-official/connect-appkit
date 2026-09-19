@@ -4,9 +4,10 @@
 
 > **Components have parity with React. Composables do not.** All 28 components
 > are generated from the same Stencil source, so anything visual works the same
-> in both. The Vue logic layer currently covers 35 of 51 parity targets. Message
+> in both. The Vue logic layer currently covers 39 of 51 parity targets. Message
 > signing and EVM/Solana transaction actions are available through caller-owned
-> functions, while session keys and parts of the transaction lifecycle remain
+> functions, and SIWX auth/session state is available through caller-owned
+> actions. Session keys and parts of the transaction lifecycle remain
 > React-only today.
 >
 > `useCapabilities` (the EIP-5792 query) and `useSolanaRoles` (which of
