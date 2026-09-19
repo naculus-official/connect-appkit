@@ -1,8 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useSignInWithX } from "./useSignInWithX";
-import type { UseSignInWithXOptions } from "./useSignInWithX";
+import {
+  isSiwxExpired,
+  isSiwxNotBeforeValid,
+} from "@naculus/connect-appkit-core";
 import { LocalStorageAdapter, logger } from "@naculus/connect-core";
 import type { SiwxResult } from "@naculus/siwx";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { UseSignInWithXOptions } from "./useSignInWithX";
+import { useSignInWithX } from "./useSignInWithX";
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -42,20 +46,10 @@ function getStorage(prefix: string): LocalStorageAdapter {
   return new LocalStorageAdapter(prefix);
 }
 
-function isExpired(siwxResult: SiwxResult, now: Date): boolean {
-  if (!siwxResult.message.expirationTime) return false;
-  return new Date(siwxResult.message.expirationTime).getTime() <= now.getTime();
-}
-
-function isNotBeforeValid(siwxResult: SiwxResult, now: Date): boolean {
-  if (!siwxResult.message.notBefore) return true;
-  return new Date(siwxResult.message.notBefore).getTime() <= now.getTime();
-}
-
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useSiwxAuthSession(
-  options?: UseSiwxAuthSessionOptions
+  options?: UseSiwxAuthSessionOptions,
 ): UseSiwxAuthSessionReturn {
   const { storagePrefix = "naculus_", autoRestore = true } = options ?? {};
 
@@ -87,17 +81,31 @@ export function useSiwxAuthSession(
 
         if (cancelled) return;
 
-        if (saved && !isExpired(saved, new Date()) && isNotBeforeValid(saved, new Date())) {
-          logger.info("react/useSiwxAuthSession", "Restored persisted SIWx auth session");
+        if (
+          saved &&
+          !isSiwxExpired(saved, new Date()) &&
+          isSiwxNotBeforeValid(saved, new Date())
+        ) {
+          logger.info(
+            "react/useSiwxAuthSession",
+            "Restored persisted SIWx auth session",
+          );
           setSiwxResult(saved);
           setError(null);
         } else if (saved) {
           // Expired or not-yet-valid — clean up stale entry
-          logger.info("react/useSiwxAuthSession", "Persisted SIWx auth expired, clearing");
+          logger.info(
+            "react/useSiwxAuthSession",
+            "Persisted SIWx auth expired, clearing",
+          );
           await storage.remove(SIWX_AUTH_KEY);
         }
       } catch (err) {
-        logger.warn("react/useSiwxAuthSession", "Failed to restore SIWx auth:", err);
+        logger.warn(
+          "react/useSiwxAuthSession",
+          "Failed to restore SIWx auth:",
+          err,
+        );
       } finally {
         if (!cancelled) setIsRestoring(false);
       }
@@ -126,13 +134,14 @@ export function useSiwxAuthSession(
         setIsSigningIn(false);
         return result;
       } catch (err) {
-        const wrapped = err instanceof Error ? err : new Error("SIWx sign-in failed");
+        const wrapped =
+          err instanceof Error ? err : new Error("SIWx sign-in failed");
         setError(wrapped);
         setIsSigningIn(false);
         throw wrapped;
       }
     },
-    [signInWithX]
+    [signInWithX],
   );
 
   // ── Sign Out ───────────────────────────────────────────────────
@@ -142,7 +151,11 @@ export function useSiwxAuthSession(
       const storage = storageRef.current;
       await storage.remove(SIWX_AUTH_KEY);
     } catch (err) {
-      logger.warn("react/useSiwxAuthSession", "Failed to clear SIWx auth:", err);
+      logger.warn(
+        "react/useSiwxAuthSession",
+        "Failed to clear SIWx auth:",
+        err,
+      );
     }
     setSiwxResult(null);
     setError(null);

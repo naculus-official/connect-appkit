@@ -1,3 +1,7 @@
+import {
+  defaultSiwxDomain,
+  defaultSiwxUri,
+} from "@naculus/connect-appkit-core";
 import { WalletError } from "@naculus/connect-core";
 import {
   createSiwxMessage,
@@ -28,16 +32,6 @@ export interface UseSignInWithXReturn {
   result: SiwxResult | null;
   error: Error | null;
   clearError: () => void;
-}
-
-function getDefaultDomain(): string {
-  if (typeof window !== "undefined") return window.location.host;
-  return "localhost";
-}
-
-function getDefaultUri(): string {
-  if (typeof window !== "undefined") return window.location.origin;
-  return "http://localhost";
 }
 
 export function useSignInWithX(): UseSignInWithXReturn {
@@ -74,8 +68,10 @@ export function useSignInWithX(): UseSignInWithXReturn {
         throw new WalletError("wallet_unavailable", "Client not initialized");
       }
       const { address } = account;
-      const domain = options?.domain ?? getDefaultDomain();
-      const uri = options?.uri ?? getDefaultUri();
+      const location =
+        typeof window === "undefined" ? undefined : window.location;
+      const domain = options?.domain ?? defaultSiwxDomain(location);
+      const uri = options?.uri ?? defaultSiwxUri(location);
       setIsSigningIn(true);
       setError(null);
 

@@ -11,6 +11,7 @@
  *  - Loading/error state
  */
 
+import { siwxResultToSession } from "@naculus/connect-appkit-core";
 import { LocalStorageAdapter, logger } from "@naculus/connect-core";
 import type { SiwxMessage, SiwxResult, SiwxSession } from "@naculus/siwx";
 import {
@@ -77,26 +78,6 @@ export interface UseSIWxSessionReturn {
  * bypass — but an ID a consumer may key storage or a request on should not be
  * guessable, and the CSPRNG is already the convention everywhere else here.
  */
-function randomSuffix(): string {
-  const bytes = new Uint8Array(8);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function siwxResultToSession(result: SiwxResult): SiwxSession {
-  return {
-    id: `siwx_${Date.now().toString(36)}_${randomSuffix()}`,
-    chainId: result.message.chainId,
-    address: result.message.address,
-    domain: result.message.domain,
-    message: result.message,
-    signature: result.signature,
-    issuedAt: result.message.issuedAt ?? new Date().toISOString(),
-    expiresAt: result.message.expirationTime,
-    refreshedAt: null,
-  };
-}
-
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useSIWxSession(

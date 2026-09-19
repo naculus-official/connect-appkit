@@ -5,6 +5,10 @@
  * Returns a `signIn()` function and loading/error state.
  */
 
+import {
+  defaultSiwxDomain,
+  defaultSiwxUri,
+} from "@naculus/connect-appkit-core";
 import { WalletError } from "@naculus/connect-core";
 import {
   createSiwxMessage,
@@ -54,16 +58,6 @@ export interface UseSIWxLoginReturn {
 
 const DEFAULT_EXPIRY_SECONDS = 86_400; // 24h
 
-function getDefaultDomain(): string {
-  if (typeof window !== "undefined") return window.location.host;
-  return "localhost";
-}
-
-function getDefaultUri(): string {
-  if (typeof window !== "undefined") return window.location.origin;
-  return "http://localhost";
-}
-
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useSIWxLogin(): UseSIWxLoginReturn {
@@ -99,8 +93,10 @@ export function useSIWxLogin(): UseSIWxLoginReturn {
         throw new WalletError("wallet_unavailable", "Client not initialized");
       }
       const { address } = account;
-      const domain = options?.domain ?? getDefaultDomain();
-      const uri = options?.uri ?? getDefaultUri();
+      const location =
+        typeof window === "undefined" ? undefined : window.location;
+      const domain = options?.domain ?? defaultSiwxDomain(location);
+      const uri = options?.uri ?? defaultSiwxUri(location);
       setIsSigningIn(true);
       setError(null);
 

@@ -76,3 +76,6 @@ export * from "./routing";
 
 // ── Connection state machine ──────────────────────────────────────
 export * from "./web3-store";
+
+// ── SIWX policy ──────────────────────────────────────────────────
+export * from "./siwx-policy";
