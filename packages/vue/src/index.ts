@@ -72,6 +72,27 @@ export { useDisconnect } from "./useDisconnect";
 export type { UseDisconnectReturn } from "./useDisconnect";
 export { useSwitchChain } from "./useSwitchChain";
 export type { UseSwitchChainReturn } from "./useSwitchChain";
+export { useSignMessage } from "./useSignMessage";
+export type {
+  SignMessageAction,
+  UseSignMessageReturn,
+} from "./useSignMessage";
+export { useSendTransaction } from "./useSendTransaction";
+export type {
+  EvmTransaction,
+  SendTransactionAction,
+  SendTransactionStatus,
+  UseSendTransactionReturn,
+} from "./useSendTransaction";
+export { useSolanaTransaction } from "./useSolanaTransaction";
+export type {
+  GetSolanaTransactionStatusAction,
+  SendSolanaTransactionAction,
+  SignSolanaTransactionAction,
+  SolanaTransaction,
+  UseSolanaTransactionOptions,
+  UseSolanaTransactionReturn,
+} from "./useSolanaTransaction";
 export { useBalance } from "./useBalance";
 export type {
   NativeBalanceReader,
