@@ -122,6 +122,24 @@ export type {
   UseExecuteCallsOptions,
   UseExecuteCallsReturn,
 } from "./useExecuteCalls";
+export { useSmartAccount } from "./useSmartAccount";
+export type {
+  DeployTransactionSender,
+  UseSmartAccountOptions,
+  UseSmartAccountReturn,
+} from "./useSmartAccount";
+export { useSendUserOperation } from "./useSendUserOperation";
+export type {
+  UseSendUserOperationOptions,
+  UseSendUserOperationReturn,
+  UserOpSigner,
+} from "./useSendUserOperation";
+export { useUserOpStatus } from "./useUserOpStatus";
+export type {
+  UseUserOpStatusOptions,
+  UseUserOpStatusReturn,
+  UserOpStatus,
+} from "./useUserOpStatus";
 export {
   useCreateSessionKey,
   useRevokeSession,
