@@ -122,6 +122,19 @@ export type {
   UseExecuteCallsOptions,
   UseExecuteCallsReturn,
 } from "./useExecuteCalls";
+export {
+  useCreateSessionKey,
+  useRevokeSession,
+  useSendWithSession,
+  useSessionKeys,
+} from "./useSessionKeys";
+export type {
+  SessionKeyComposableOptions,
+  UseCreateSessionKeyReturn,
+  UseRevokeSessionReturn,
+  UseSendWithSessionReturn,
+  UseSessionKeysReturn,
+} from "./useSessionKeys";
 export { useSendCalls } from "./useSendCalls";
 export type {
   SendCallsStatus,
