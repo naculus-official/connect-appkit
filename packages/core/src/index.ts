@@ -77,6 +77,9 @@ export * from "./routing";
 // ── Session keys ──────────────────────────────────────────────────
 export * from "./session-key-manager";
 
+// ── Account abstraction ───────────────────────────────────────────
+export * from "./user-op-receipt";
+
 // ── Connection state machine ──────────────────────────────────────
 export * from "./web3-store";
 
