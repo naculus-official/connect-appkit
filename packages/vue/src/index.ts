@@ -122,6 +122,11 @@ export type {
   UseExecuteCallsOptions,
   UseExecuteCallsReturn,
 } from "./useExecuteCalls";
+export { useDelegationPolicy } from "./useDelegationPolicy";
+export type {
+  UseDelegationPolicyOptions,
+  UseDelegationPolicyReturn,
+} from "./useDelegationPolicy";
 export { useSmartAccount } from "./useSmartAccount";
 export type {
   DeployTransactionSender,
