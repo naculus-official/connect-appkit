@@ -13,29 +13,21 @@
  * ```
  */
 
+import {
+  bareEvmAddress,
+  buildSmartAccountConfig,
+  resolveEvmChainId,
+} from "@naculus/connect-appkit-core";
 import type {
   Address,
   SmartAccountConfig,
   SmartAccountInfo,
 } from "@naculus/connect-core";
-import {
-  AA_SUPPORTED_CHAINS,
-  DEFAULT_ENTRY_POINT,
-  WalletError,
-} from "@naculus/connect-core";
+import { WalletError } from "@naculus/connect-core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { resolveEvmChainId } from "@naculus/connect-appkit-core";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { resolveClient } from "./client-resolver";
 import { useAccount } from "./useAccount";
-
-function toEvmAddress(account: string | null): Address | null {
-  if (!account) return null;
-  const address = account.includes(":") ? account.split(":").pop() : account;
-  return address && /^0x[0-9a-fA-F]{40}$/.test(address)
-    ? (address as Address)
-    : null;
-}
 
 function accountError(message: string): WalletError {
   return new WalletError("wallet_unavailable", message);
@@ -164,23 +156,18 @@ export function useSmartAccount(
 
   // Get account config from options + connected EOA
   const getConfig = useCallback((): SmartAccountConfig | null => {
-    const owner = toEvmAddress(evmAccount);
+    const owner = bareEvmAddress(evmAccount);
     if (!owner || !managerRef.current) return null;
     // Returning null rather than assuming a chain. getConfig already has a
     // null contract, and every caller checks it.
     const chainId = resolveEvmChainId(options?.chainId, connectedChainId);
     if (!chainId) return null;
 
-    return {
-      owner,
-      accountType: options?.accountType ?? "simple",
-      entryPoint:
-        options?.entryPoint ??
-        AA_SUPPORTED_CHAINS[chainId]?.entryPoint ??
-        DEFAULT_ENTRY_POINT,
-      chainId,
+    return buildSmartAccountConfig(owner, chainId, {
+      accountType: options?.accountType,
+      entryPoint: options?.entryPoint,
       salt: options?.salt,
-    };
+    });
   }, [
     evmAccount,
     connectedChainId,

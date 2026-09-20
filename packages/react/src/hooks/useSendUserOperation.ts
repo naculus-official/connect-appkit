@@ -7,6 +7,12 @@
  * implementation path.
  */
 
+import {
+  assertHexSignature,
+  bareEvmAddress,
+  buildSmartAccountConfig,
+  resolveUserOpChain,
+} from "@naculus/connect-appkit-core";
 import type {
   Address,
   Call,
@@ -16,34 +22,11 @@ import type {
   UserOperationReceipt,
   UserOperationResponse,
 } from "@naculus/connect-core";
-import {
-  AA_SUPPORTED_CHAINS,
-  DEFAULT_ENTRY_POINT,
-  WalletError,
-} from "@naculus/connect-core";
+import { WalletError } from "@naculus/connect-core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { resolveEvmChainId } from "@naculus/connect-appkit-core";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 import { resolveClient } from "./client-resolver";
 import { useAccount } from "./useAccount";
-
-function toEvmAddress(account: string | null | undefined): Address | null {
-  if (!account) return null;
-  const address = account.includes(":") ? account.split(":").pop() : account;
-  return address && /^0x[0-9a-fA-F]{40}$/.test(address)
-    ? (address as Address)
-    : null;
-}
-
-function toHexSignature(value: unknown): Hex {
-  if (typeof value !== "string" || !/^0x(?:[0-9a-fA-F]{2})+$/.test(value)) {
-    throw new WalletError(
-      "signature_rejected",
-      "Wallet returned an invalid UserOperation signature.",
-    );
-  }
-  return value as Hex;
-}
 
 async function signHashWithSession(
   session: NonNullable<ReturnType<typeof useWeb3>["session"]>,
@@ -74,11 +57,11 @@ async function signHashWithSession(
           method: "personal_sign",
           params,
         });
-    return toHexSignature(result);
+    return assertHexSignature(result);
   }
 
   if (session.walletType === "walletconnect") {
-    return toHexSignature(
+    return assertHexSignature(
       await activeClient.connector.request({
         method: "personal_sign",
         params,
@@ -99,7 +82,7 @@ async function signHashWithSession(
         "This embedded wallet build cannot sign a raw digest. Upgrade @naculus/connector-embedded or pass an explicit signer.",
       );
     }
-    return toHexSignature(await embedded.signHash(session, hash));
+    return assertHexSignature(await embedded.signHash(session, hash));
   }
 
   if (session.walletType === "passkeys") {
@@ -240,7 +223,7 @@ export function useSendUserOperation(
         return fail(new Error("A UserOperation is already in progress"));
       }
 
-      const owner = toEvmAddress(options.owner ?? evmAccount);
+      const owner = bareEvmAddress(options.owner ?? evmAccount);
       if (!owner)
         return fail(
           new WalletError("wallet_unavailable", "No EVM account found"),
@@ -250,29 +233,12 @@ export function useSendUserOperation(
       // no connected chain, so defaulting there would build and sign a
       // UserOperation for chain 1 with nothing to contradict it — and the
       // chain ID is part of the hash the user approves.
-      const targetChainId = resolveEvmChainId(
-        options.chainId,
-        connectedChainId,
-      );
-      if (!targetChainId) {
-        return fail(
-          new WalletError(
-            "invalid_chain",
-            options.chainId || connectedChainId
-              ? `Invalid EVM chain ID: ${options.chainId ?? connectedChainId}`
-              : "No EVM chain to send on. Connect a wallet or pass options.chainId.",
-          ),
-        );
+      let targetChainId: string;
+      try {
+        targetChainId = resolveUserOpChain(options.chainId, connectedChainId);
+      } catch (chainError) {
+        return fail(chainError as Error);
       }
-      if (connectedChainId && connectedChainId !== targetChainId) {
-        return fail(
-          new WalletError(
-            "chain_mismatch",
-            `Connected chain ${connectedChainId} does not match UserOperation chain ${targetChainId}.`,
-          ),
-        );
-      }
-
       if (!options.signer && !session) {
         return fail(new WalletError("wallet_unavailable", "No active session"));
       }
@@ -300,16 +266,7 @@ export function useSendUserOperation(
           // caller-supplied signer retains the core's historical default.
           signerMode: options.signer ? (options.signerMode ?? "eip191") : "raw",
         });
-        const config = {
-          owner,
-          accountType: options.accountType ?? "simple",
-          entryPoint:
-            options.entryPoint ??
-            AA_SUPPORTED_CHAINS[targetChainId]?.entryPoint ??
-            DEFAULT_ENTRY_POINT,
-          chainId: targetChainId,
-          salt: options.salt,
-        } as const;
+        const config = buildSmartAccountConfig(owner, targetChainId, options);
 
         const response = await manager.sendUserOperation(config, calls, opts);
         if (requestId !== requestIdRef.current) return null;
