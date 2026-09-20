@@ -1,86 +1,30 @@
 "use client";
 
+import {
+  getSharedSessionKeyManager,
+  resetSharedSessionKeyManager,
+} from "@naculus/connect-appkit-core";
 import type {
   SessionKeyInfo,
   SessionKeyManagerConfig,
   SessionKeyScope,
   SessionKeyTransaction,
 } from "@naculus/connect-core";
-import {
-  DEFAULT_SESSION_KEY_CONFIG,
-  LocalStorageAdapter,
-  MemoryStorageAdapter,
-  SessionKeyManager,
-  WalletError,
-} from "@naculus/connect-core";
+import { type SessionKeyManager, WalletError } from "@naculus/connect-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
 
-// ─── Internal singleton for session key management ─────────────────────
-// In a full production setup, this would be injected via context or client config.
-
-let globalSessionKeyManager: SessionKeyManager | null = null;
-let globalSessionKeyConfigFingerprint: string | null = null;
-
-/**
- * Fields that decide how much authority a session key carries.
- *
- * The manager is a module singleton, so only the first caller's config was
- * ever applied and every later one was silently discarded. That is tolerable
- * for a storage prefix and not for a spending cap: a component asking for a
- * 0.1 ETH limit would quietly inherit whatever limit the first caller set.
- */
-function spendingFingerprint(config?: SessionKeyManagerConfig): string {
-  if (!config) return "";
-  return JSON.stringify({
-    defaultMaxTotalValue: config.defaultMaxTotalValue?.toString(),
-    defaultMaxTxCount: config.defaultMaxTxCount,
-    defaultExpiryMs: config.defaultExpiryMs,
-    requireAllowedContracts: config.requireAllowedContracts,
-    forbiddenMethods: config.forbiddenMethods,
-    pbkdf2Iterations: config.pbkdf2Iterations,
-    unsafeAllowWeakKdf: config.unsafeAllowWeakKdf,
-    storagePrefix: config.storagePrefix,
-    encryptionKey: config.encryptionKey,
-    encryptionSalt: config.encryptionSalt,
-  });
-}
-
+// The process-wide manager and its config guard live in appkit-core so the
+// React hooks and the Vue composables share one instance and one policy.
 export function getSessionKeyManagerForHooks(
   config?: SessionKeyManagerConfig,
 ): SessionKeyManager {
-  const fingerprint = spendingFingerprint(config);
-  if (!globalSessionKeyManager) {
-    const storagePrefix =
-      config?.storagePrefix ?? DEFAULT_SESSION_KEY_CONFIG.storagePrefix;
-    globalSessionKeyManager = new SessionKeyManager(
-      config,
-      typeof window !== "undefined"
-        ? new LocalStorageAdapter(`${storagePrefix}:`)
-        : new MemoryStorageAdapter(),
-    );
-    globalSessionKeyConfigFingerprint = fingerprint;
-    return globalSessionKeyManager;
-  }
-
-  // Refuse rather than hand back a manager governed by someone else's limits.
-  if (fingerprint !== "" && fingerprint !== globalSessionKeyConfigFingerprint) {
-    throw new WalletError(
-      "invalid_input",
-      "useSessionKeys is backed by a process-wide SessionKeyManager, and a " +
-        "different spending configuration was supplied after it was created. " +
-        "The second configuration would be ignored, so the caller would be " +
-        "operating under limits it did not set. Use one configuration per " +
-        "application, or construct a SessionKeyManager directly.",
-    );
-  }
-  return globalSessionKeyManager;
+  return getSharedSessionKeyManager(config);
 }
 
-/** Test seam: drop the process-wide manager. */
+/** @internal test helper */
 export function __resetSessionKeyManagerForTests(): void {
-  globalSessionKeyManager = null;
-  globalSessionKeyConfigFingerprint = null;
+  resetSharedSessionKeyManager();
 }
 
 // ─── useSessionKeys ────────────────────────────────────────────────────
@@ -439,6 +383,5 @@ export function useSendWithSession(
  * Reset the global session key manager (useful for testing / cleanup).
  */
 export function resetSessionKeyManager(): void {
-  globalSessionKeyManager = null;
-  globalSessionKeyConfigFingerprint = null;
+  resetSharedSessionKeyManager();
 }

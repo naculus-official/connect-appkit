@@ -74,6 +74,9 @@ export * from "./destination";
 // ── Routing (chain abstraction) ───────────────────────────────────
 export * from "./routing";
 
+// ── Session keys ──────────────────────────────────────────────────
+export * from "./session-key-manager";
+
 // ── Connection state machine ──────────────────────────────────────
 export * from "./web3-store";
 
