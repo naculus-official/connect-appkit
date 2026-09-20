@@ -1,18 +1,10 @@
 import type { RouteQuote } from "@naculus/connect-appkit-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { effectScope, nextTick, ref } from "vue";
+import { nextTick, ref } from "vue";
+import { inScope } from "../test-utils/scope";
 import { useCompareCosts } from "./useCompareCosts";
 import { useExecuteRoute } from "./useExecuteRoute";
 import { useRouteQuote } from "./useRouteQuote";
-
-function inScope<T>(fn: () => T) {
-  const scope = effectScope();
-  let api!: T;
-  scope.run(() => {
-    api = fn();
-  });
-  return { api, scope };
-}
 
 const quote: RouteQuote = {
   routeId: "r1",

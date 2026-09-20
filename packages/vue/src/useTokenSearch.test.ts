@@ -3,7 +3,8 @@ import type {
   TokenSearchResult,
 } from "@naculus/connect-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { effectScope, nextTick, ref } from "vue";
+import { nextTick, ref } from "vue";
+import { inScope } from "../test-utils/scope";
 import { useTokenSearch } from "./useTokenSearch";
 
 const hit = (symbol: string): TokenSearchResult => ({
@@ -16,15 +17,6 @@ function fakeManager() {
   return {
     search: vi.fn((q: string) => hit(q.toUpperCase())),
   } as unknown as TokenListManager & { search: ReturnType<typeof vi.fn> };
-}
-
-function inScope<T>(fn: () => T) {
-  const scope = effectScope();
-  let api!: T;
-  scope.run(() => {
-    api = fn();
-  });
-  return { api, scope };
 }
 
 beforeEach(() => vi.useFakeTimers());

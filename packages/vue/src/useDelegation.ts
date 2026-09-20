@@ -60,7 +60,7 @@ export function useDelegation(
   };
 
   watch(
-    () => [toValue(account), toValue(client), toValue(chainId)] as const,
+    [() => toValue(account), () => toValue(client), () => toValue(chainId)],
     () => {
       void refetch();
     },

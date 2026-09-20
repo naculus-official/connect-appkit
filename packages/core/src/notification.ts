@@ -33,7 +33,10 @@ export function createNotificationSettingsStorage(): NotificationSettingsStorage
       try {
         return await storage.get<T>(key);
       } catch (cause) {
-        console.warn("useNotification: failed to read from storage:", cause);
+        console.warn(
+          "notification settings: failed to read from storage:",
+          cause,
+        );
         return null;
       }
     },
@@ -41,14 +44,20 @@ export function createNotificationSettingsStorage(): NotificationSettingsStorage
       try {
         await storage.set(key, value);
       } catch (cause) {
-        console.warn("useNotification: failed to write to storage:", cause);
+        console.warn(
+          "notification settings: failed to write to storage:",
+          cause,
+        );
       }
     },
     removeItem: async (key: string): Promise<void> => {
       try {
         await storage.remove(key);
       } catch (cause) {
-        console.warn("useNotification: failed to remove from storage:", cause);
+        console.warn(
+          "notification settings: failed to remove from storage:",
+          cause,
+        );
       }
     },
   };

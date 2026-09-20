@@ -1,17 +1,7 @@
-import {
-  computed,
-  shallowRef,
-  toValue,
-  watch,
-} from "vue";
+import { computed, shallowRef, toValue, watch } from "vue";
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from "vue";
 
-export type TxStatus =
-  | "pending"
-  | "mined"
-  | "confirmed"
-  | "failed"
-  | "unknown";
+export type TxStatus = "pending" | "mined" | "confirmed" | "failed" | "unknown";
 
 export interface TxStatusEntry {
   hash: string;
@@ -113,7 +103,7 @@ export function useTxMonitor(
   };
 
   watch(
-    () => [toValue(monitor), toValue(hash), toValue(chainId)] as const,
+    [() => toValue(monitor), () => toValue(hash), () => toValue(chainId)],
     ([activeMonitor, activeHash, activeChainId], _previous, onCleanup) => {
       const mine = ++generation;
       if (!activeMonitor || !activeHash || !activeChainId) {
@@ -126,7 +116,11 @@ export function useTxMonitor(
 
       let cancelled = false;
       const onStatusChange = (updated: TxStatusEntry): void => {
-        if (!cancelled && updated.hash === activeHash && updated.chainId === activeChainId) {
+        if (
+          !cancelled &&
+          updated.hash === activeHash &&
+          updated.chainId === activeChainId
+        ) {
           entry.value = { ...updated };
         }
       };
@@ -152,7 +146,9 @@ export function useTxMonitor(
         .catch((err) => {
           if (cancelled || mine !== generation) return;
           error.value =
-            err instanceof Error ? err : new Error("Failed to watch transaction");
+            err instanceof Error
+              ? err
+              : new Error("Failed to watch transaction");
           isLoading.value = false;
         });
     },

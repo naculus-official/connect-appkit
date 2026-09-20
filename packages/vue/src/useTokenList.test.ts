@@ -1,6 +1,7 @@
 import type { TokenListEntry, TokenListManager } from "@naculus/connect-core";
 import { describe, expect, it, vi } from "vitest";
-import { effectScope, nextTick, ref } from "vue";
+import { nextTick, ref } from "vue";
+import { inScope } from "../test-utils/scope";
 import { useTokenList } from "./useTokenList";
 
 const usdc = {
@@ -27,15 +28,6 @@ function fakeManager() {
     refresh: ReturnType<typeof vi.fn>;
     getTokens: ReturnType<typeof vi.fn>;
   };
-}
-
-function inScope<T>(fn: () => T) {
-  const scope = effectScope();
-  let api!: T;
-  scope.run(() => {
-    api = fn();
-  });
-  return { api, scope };
 }
 
 describe("useTokenList (Vue)", () => {

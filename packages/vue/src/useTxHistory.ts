@@ -41,14 +41,16 @@ export function useTxHistory(
     } catch (err) {
       if (mine !== generation) return;
       error.value =
-        err instanceof Error ? err : new Error("Failed to load transaction history");
+        err instanceof Error
+          ? err
+          : new Error("Failed to load transaction history");
     } finally {
       if (mine === generation) isLoading.value = false;
     }
   };
 
   watch(
-    () => [toValue(monitor), toValue(address), toValue(chainId)] as const,
+    [() => toValue(monitor), () => toValue(address), () => toValue(chainId)],
     ([activeMonitor], _previous, onCleanup) => {
       if (!activeMonitor) {
         void refresh();
@@ -71,7 +73,8 @@ export function useTxHistory(
     refresh,
     summary: computed(() => ({
       pending: entries.value.filter((item) => item.status === "pending").length,
-      confirmed: entries.value.filter((item) => item.status === "confirmed").length,
+      confirmed: entries.value.filter((item) => item.status === "confirmed")
+        .length,
       failed: entries.value.filter((item) => item.status === "failed").length,
     })),
   };

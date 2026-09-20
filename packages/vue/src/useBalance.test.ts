@@ -1,18 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { effectScope, nextTick, ref } from "vue";
+import { nextTick, ref } from "vue";
+import { inScope } from "../test-utils/scope";
 import { useBalance } from "./useBalance";
 
 const ADDRESS = "0x1111111111111111111111111111111111111111" as const;
 const OTHER = "0x2222222222222222222222222222222222222222" as const;
-
-function inScope<T>(fn: () => T) {
-  const scope = effectScope();
-  let api!: T;
-  scope.run(() => {
-    api = fn();
-  });
-  return { api, scope };
-}
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

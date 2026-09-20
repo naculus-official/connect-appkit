@@ -1,6 +1,7 @@
 import { ERC20_MIN_ABI } from "@naculus/connect-core";
 import { describe, expect, it, vi } from "vitest";
-import { effectScope, nextTick, ref } from "vue";
+import { nextTick, ref } from "vue";
+import { inScope } from "../test-utils/scope";
 import { type TokenInfo, useTokenBalance } from "./useTokenBalance";
 
 const OWNER = "0x1111111111111111111111111111111111111111" as const;
@@ -14,15 +15,6 @@ const DAI: TokenInfo = {
   symbol: "DAI",
   decimals: 18,
 };
-
-function inScope<T>(fn: () => T) {
-  const scope = effectScope();
-  let api!: T;
-  scope.run(() => {
-    api = fn();
-  });
-  return { api, scope };
-}
 
 describe("useTokenBalance (Vue)", () => {
   it("reads each token through balanceOf and formats by its decimals", async () => {

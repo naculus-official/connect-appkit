@@ -1,4 +1,7 @@
-import { tokenChainMismatch } from "@naculus/connect-appkit-core";
+import {
+  bareEvmAddress,
+  tokenChainMismatch,
+} from "@naculus/connect-appkit-core";
 import type { TokenConfig } from "@naculus/connect-core";
 import { type ERC20_MIN_ABI, WalletError } from "@naculus/connect-core";
 
@@ -32,9 +35,9 @@ export function assertErc20Context(
   }
   const mismatch = tokenChainMismatch(token, chainId);
   if (mismatch) throw mismatch;
-  const bare = account.includes(":") ? account.split(":").pop() : account;
-  if (!bare || !/^0x[0-9a-fA-F]{40}$/.test(bare)) {
+  const bare = bareEvmAddress(account);
+  if (!bare) {
     throw new WalletError("wallet_unavailable", "No valid EVM account");
   }
-  return bare as `0x${string}`;
+  return bare;
 }

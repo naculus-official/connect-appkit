@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { effectScope, nextTick, ref } from "vue";
+import { nextTick, ref } from "vue";
+import { inScope } from "../test-utils/scope";
 import { useSolanaBalance } from "./useSolanaBalance";
 
 const ADDRESS = "HAgk14CToKGpm4rGCyVc5J8mQCGGvaJfYSxUJZ8AXfBW";
@@ -11,15 +12,6 @@ function rpc(...responses: unknown[]) {
   }));
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
-}
-
-function inScope<T>(fn: () => T) {
-  const scope = effectScope();
-  let api!: T;
-  scope.run(() => {
-    api = fn();
-  });
-  return { api, scope };
 }
 
 afterEach(() => vi.unstubAllGlobals());
@@ -70,7 +62,10 @@ describe("useSolanaBalance (Vue)", () => {
     );
     await vi.waitFor(() => expect(api.balance.value?.sol).toBe("5"));
 
-    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 500 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 500 })),
+    );
     await api.refetch();
     expect(api.error.value).not.toBeNull();
     expect(api.balance.value).toBeNull();
@@ -81,7 +76,12 @@ describe("useSolanaBalance (Vue)", () => {
     let release!: (v: unknown) => void;
     vi.stubGlobal(
       "fetch",
-      vi.fn(() => new Promise((r) => { release = r; })),
+      vi.fn(
+        () =>
+          new Promise((r) => {
+            release = r;
+          }),
+      ),
     );
     const { api, scope } = inScope(() =>
       useSolanaBalance(ADDRESS, "https://rpc.test"),
