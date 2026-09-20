@@ -82,8 +82,33 @@ describe("sameExecutionIntent", () => {
     expect(sameExecutionIntent(requested, { ...requested, chainId: 10 })).toBe(
       false,
     );
+  });
+
+  it("does not treat an omitted field as a wildcard", () => {
+    // Contract creation: the adapter may not supply a target.
+    expect(
+      sameExecutionIntent({ data: "0x60" }, { to: CONTRACT, data: "0x60" }),
+    ).toBe(false);
+    // Plain transfer: the adapter may not add calldata or a value.
+    expect(
+      sameExecutionIntent(
+        { to: CONTRACT },
+        { to: CONTRACT, data: "0xa9059cbb" },
+      ),
+    ).toBe(false);
     expect(
       sameExecutionIntent({ to: CONTRACT }, { to: CONTRACT, value: "5" }),
+    ).toBe(false);
+    // Nor pick a chain the caller did not name.
+    expect(
+      sameExecutionIntent({ to: CONTRACT }, { to: CONTRACT, chainId: 1 }),
+    ).toBe(false);
+    // Absent and zero mean the same thing.
+    expect(
+      sameExecutionIntent(
+        { to: CONTRACT },
+        { to: CONTRACT, value: "0", data: "0x" },
+      ),
     ).toBe(true);
   });
 });

@@ -140,11 +140,17 @@ export function useSmartAccount(
     accountInfo.value = info;
   };
 
-  /** One account operation at a time; a late result for a replaced config is dropped. */
+  /**
+   * One account operation at a time. State is written only through `commit`,
+   * which is a no-op once the config, manager or scope that started the
+   * operation has been replaced — so a slow result for a previous account or
+   * chain cannot overwrite the current one, not even briefly.
+   */
   const operate = async <T>(
     action: (
       manager: SmartAccountManager,
       cfg: SmartAccountConfig,
+      commit: (write: () => void) => void,
     ) => Promise<T>,
     fallback: string,
   ): Promise<T | null> => {
@@ -162,11 +168,14 @@ export function useSmartAccount(
     }
     inFlight = true;
     const own = generation;
+    const current = () => !disposed && own === generation;
+    const commit = (write: () => void): void => {
+      if (current()) write();
+    };
     try {
       return await guard.run(async () => {
-        const result = await action(manager, cfg);
-        if (disposed || own !== generation) return null;
-        return result;
+        const result = await action(manager, cfg, commit);
+        return current() ? result : null;
       }, fallback);
     } catch {
       return null;
@@ -176,14 +185,14 @@ export function useSmartAccount(
   };
 
   const createWallet = () =>
-    operate(async (manager, cfg) => {
+    operate(async (manager, cfg, commit) => {
       const info = await manager.createAccount(cfg);
-      apply(info);
+      commit(() => apply(info));
       return info;
     }, "Failed to create smart account");
 
   const deployWallet = () =>
-    operate(async (manager, cfg) => {
+    operate(async (manager, cfg, commit) => {
       const send = unref(options.sendTransaction);
       if (!send) {
         throw new WalletError(
@@ -193,7 +202,7 @@ export function useSmartAccount(
       }
       const before = await manager.createAccount(cfg);
       if (before.isDeployed) {
-        apply(before);
+        commit(() => apply(before));
         return before.address;
       }
       // Manager builds the factory call; the caller's wallet broadcasts it.
@@ -204,14 +213,17 @@ export function useSmartAccount(
         value: deployTx.value.toString(),
         chainId: cfg.chainId,
       });
-      apply(await manager.createAccount(cfg));
+      const after = await manager.createAccount(cfg);
+      commit(() => apply(after));
       return hash;
     }, "Failed to deploy smart account");
 
   const getAddress = () =>
-    operate(async (manager, cfg) => {
+    operate(async (manager, cfg, commit) => {
       const addr = await manager.getAccountAddress(cfg);
-      address.value = addr;
+      commit(() => {
+        address.value = addr;
+      });
       return addr;
     }, "Failed to get smart account address");
 

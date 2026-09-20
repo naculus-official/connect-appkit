@@ -294,19 +294,24 @@ export function useSendUserOperation(
         setError(nextError);
         return null;
       } finally {
+        // The operation that took the single-flight slot has settled, whether
+        // or not its result is still wanted.
+        inFlightRef.current = false;
         if (requestId === requestIdRef.current) {
           setIsPending(false);
           setIsEstimating(false);
-          inFlightRef.current = false;
         }
       }
     },
     [client, connectedChainId, evmAccount, options, session],
   );
 
+  // reset() does not unlock single-flight: an operation already handed to
+  // the manager may still sign and broadcast, and a second sendUserOp in the
+  // meantime would be a second on-chain side effect. The flag clears when
+  // that operation settles.
   const reset = useCallback(() => {
     requestIdRef.current += 1;
-    inFlightRef.current = false;
     setUserOpHash(null);
     setReceipt(null);
     setIsPending(false);

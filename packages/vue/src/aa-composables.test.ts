@@ -167,3 +167,72 @@ describe("useUserOpStatus (Vue)", () => {
     expect(api.receipt.value).toBeNull();
   });
 });
+
+describe("review follow-ups", () => {
+  it("useSmartAccount drops a slow result after the chain changed, without a transient write", async () => {
+    let release!: (info: SmartAccountInfo) => void;
+    const manager = {
+      createAccount: vi.fn(
+        () =>
+          new Promise<SmartAccountInfo>((resolve) => {
+            release = resolve;
+          }),
+      ),
+      getAccountAddress: vi.fn(),
+      getDeployCallData: vi.fn(),
+    } as unknown as SmartAccountManager;
+    const chain = ref<string | undefined>("eip155:1");
+    const { api } = inScope(() =>
+      useSmartAccount({
+        account: OWNER,
+        connectedChainId: chain,
+        rpcUrl: "https://rpc",
+        manager,
+      }),
+    );
+    await nextTick();
+    const pending = api.createWallet();
+    chain.value = "eip155:10";
+    await nextTick();
+    release({
+      address: ACCOUNT,
+      isDeployed: true,
+      owner: OWNER,
+    } as unknown as SmartAccountInfo);
+    expect(await pending).toBeNull();
+    expect(api.address.value).toBeNull();
+    expect(api.isDeployed.value).toBe(false);
+    expect(api.accountInfo.value).toBeNull();
+  });
+
+  it("useSendUserOperation keeps single-flight locked across reset() until the first send settles", async () => {
+    let release!: () => void;
+    const signer = vi.fn(async () => "0xabcd" as const);
+    const { api } = inScope(() =>
+      useSendUserOperation({
+        account: OWNER,
+        connectedChainId: "eip155:1",
+        rpcUrl: "https://rpc",
+        bundlerUrl: "https://bundler",
+        signer,
+      }),
+    );
+    // Hold the dynamic import so the first send stays in flight.
+    const original = (globalThis as { fetch?: unknown }).fetch;
+    vi.stubGlobal("fetch", () => new Promise(() => {}));
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const first = api.sendUserOp([{ to: OWNER, value: 0n, data: "0x" }]);
+    await nextTick();
+    api.reset();
+    expect(
+      await api.sendUserOp([{ to: OWNER, value: 0n, data: "0x" }]),
+    ).toBeNull();
+    expect(api.error.value?.message).toMatch(/already in progress/);
+    release();
+    void gate;
+    void first;
+    vi.stubGlobal("fetch", original);
+  });
+});

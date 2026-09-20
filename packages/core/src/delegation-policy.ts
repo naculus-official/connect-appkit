@@ -123,31 +123,35 @@ function sorted(values: string[] | undefined): string[] | null {
   return values ? [...values].map((value) => value.toLowerCase()).sort() : null;
 }
 
-/** True when the adapter's prepared transaction still means what was requested. */
+/**
+ * True when the adapter's prepared transaction still means what was
+ * requested. Fail-closed: a field the caller left undefined is not a
+ * wildcard. An adapter may not add a target to a creation, add calldata to
+ * a plain transfer, or pick a chain the caller did not name — each of those
+ * changes what the session key ends up signing. Only "no value" and "0"
+ * (and "no data" and "0x") are treated as the same thing.
+ */
 export function sameExecutionIntent(
   requested: SessionKeyTransaction,
   prepared: SessionKeyTransaction,
 ): boolean {
-  const sameAddress =
-    requested.to === undefined ||
-    requested.to.toLowerCase() === prepared.to?.toLowerCase();
-  const sameData =
-    requested.data === undefined ||
-    requested.data.toLowerCase() === prepared.data?.toLowerCase();
+  const sameHex = (left?: string, right?: string, empty?: string) => {
+    const l = left === undefined ? empty : left.toLowerCase();
+    const r = right === undefined ? empty : right.toLowerCase();
+    return l === r;
+  };
   const sameQuantity = (left?: string, right?: string) => {
-    if (left === undefined) return true;
-    if (right === undefined) return false;
     try {
-      return BigInt(left) === BigInt(right);
+      return BigInt(left ?? "0") === BigInt(right ?? "0");
     } catch {
       return false;
     }
   };
   return (
-    sameAddress &&
-    sameData &&
+    sameHex(requested.to, prepared.to) &&
+    sameHex(requested.data, prepared.data, "0x") &&
     sameQuantity(requested.value, prepared.value) &&
-    (requested.chainId === undefined || requested.chainId === prepared.chainId)
+    requested.chainId === prepared.chainId
   );
 }
 

@@ -147,19 +147,22 @@ export function useSendUserOperation(
           : new Error("Failed to send UserOperation"),
       );
     } finally {
-      if (own === requestId) {
-        inFlight = false;
-        if (!disposed) {
-          isPending.value = false;
-          isEstimating.value = false;
-        }
+      inFlight = false;
+      if (!disposed && own === requestId) {
+        isPending.value = false;
+        isEstimating.value = false;
       }
     }
   };
 
+  /**
+   * Clears published state and drops the in-flight operation's future
+   * writes. Deliberately does not unlock single-flight: the operation may
+   * still be signing or broadcasting, and a second sendUserOp meanwhile
+   * would be a second on-chain side effect.
+   */
   const reset = (): void => {
     requestId++;
-    inFlight = false;
     userOpHash.value = null;
     receipt.value = null;
     isPending.value = false;
