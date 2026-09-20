@@ -1,5 +1,22 @@
 # @naculus/connect-appkit-ui
 
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [a5c0f58]
+- Updated dependencies [11a4fd8]
+- Updated dependencies [622a46f]
+- Updated dependencies [531cbc2]
+- Updated dependencies [ef9ac4f]
+- Updated dependencies [1c42c23]
+- Updated dependencies [1ba2f9b]
+- Updated dependencies [88f72c9]
+- Updated dependencies [36f2ccc]
+- Updated dependencies [a8ebb69]
+  - @naculus/connect-appkit-core@0.2.6
+  - @naculus/connect-appkit-react@0.2.6
+
 ## 0.2.5
 
 ### Patch Changes

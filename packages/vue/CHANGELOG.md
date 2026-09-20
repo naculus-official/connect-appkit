@@ -1,5 +1,47 @@
 # @naculus/connect-appkit-vue
 
+## 0.2.6
+
+### Patch Changes
+
+- 531cbc2: Fail closed in three places found in review. `sameExecutionIntent` no longer
+  treats a field the caller omitted as a wildcard, so an execution adapter
+  cannot add a target, calldata, value or chain to what the session key signs.
+  Vue `useSmartAccount` writes address and deployment state only if the
+  account, chain and manager that started the operation are still current.
+  `useSendUserOperation` (React and Vue) keeps its single-flight lock across
+  `reset()` until the in-flight UserOperation settles, so a reset cannot start
+  a second on-chain submission alongside the first.
+- ce39294: Add Vue `useSmartAccount`, `useSendUserOperation` and `useUserOpStatus` over
+  connect-core's `SmartAccountManager` and the shared appkit-core decisions.
+  Deployment goes through the caller's transaction sender and the
+  UserOperation signer is caller-supplied.
+- 6cef78b: Add Vue `useDelegationPolicy` over appkit-core's shared delegation-policy
+  flow, with caller-supplied signer, signature verifier, execution planner and
+  delegation state.
+- 3084748: Add Vue `useExecuteCalls` and `useSendCalls` composables around caller-owned EIP-5792 actions and policy state.
+- 9b982bc: Add a Vue `useEmbeddedWallet` composable around caller-owned wallet state and actions.
+- bf47ae4: Add Vue ERC-20 transfer, approval, and transfer simulation composables backed by the shared strict calldata encoders. Wallet reads and sends remain caller-owned, chain mismatches fail closed, and invalid transfer inputs cannot display a stale simulation result.
+- 5129ba5: Add Vue `useSessionKeys`, `useCreateSessionKey`, `useRevokeSession` and
+  `useSendWithSession` over connect-core's `SessionKeyManager`, sharing the
+  process-wide instance and config guard with React or taking a caller-owned
+  manager.
+- a39097c: Add a Vue `useSignInWithEthereum` composable around a caller-owned SIWX sign-in action.
+- e90d340: Add Vue composables for message signing, EVM transaction sending, and Solana transaction signing, sending, and status reads. Each composable wraps caller-owned actions without changing message or transaction payloads.
+- a8ebb69: Share simulation chain and RPC decisions between React and Vue, and add Vue `useSimulateTransfer` and `useTransactionSimulation` composables. Simulation remains a basic revert check with no asset-change or risk coverage. Simulation now rejects a chain override that would reuse another chain's RPC or client; pass a matching RPC URL when overriding the chain.
+- ff3f4c1: Add Vue SIWX login and session composables around caller-owned signing, persistence, and temporal-policy state.
+- Updated dependencies [a5c0f58]
+- Updated dependencies [11a4fd8]
+- Updated dependencies [531cbc2]
+- Updated dependencies [ef9ac4f]
+- Updated dependencies [1c42c23]
+- Updated dependencies [1ba2f9b]
+- Updated dependencies [88f72c9]
+- Updated dependencies [36f2ccc]
+- Updated dependencies [a8ebb69]
+  - @naculus/connect-appkit-core@0.2.6
+  - @naculus/connect-appkit-wc@0.2.6
+
 ## 0.2.5
 
 ### Patch Changes

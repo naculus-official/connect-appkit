@@ -1,5 +1,50 @@
 # @naculus/connect-appkit-react
 
+## 0.2.6
+
+### Patch Changes
+
+- a5c0f58: Move the signed off-chain delegation-policy flow into
+  `@naculus/connect-appkit-core` (`createDelegationPolicyFlow`,
+  `buildDelegationPolicyMessage`, `sameExecutionIntent`, the policy/adapter
+  types). The React `useDelegationPolicy` keeps every export and behaviour and
+  now only wires React state and provider hooks to the shared flow.
+- 622a46f: Use shared ERC-20 calldata encoding for transfer, approval, and transfer previews. Transfer simulation now rejects malformed recipients and amounts with excess precision instead of previewing a different transaction than the send path, and hides stale results when inputs become invalid.
+- 531cbc2: Fail closed in three places found in review. `sameExecutionIntent` no longer
+  treats a field the caller omitted as a wildcard, so an execution adapter
+  cannot add a target, calldata, value or chain to what the session key signs.
+  Vue `useSmartAccount` writes address and deployment state only if the
+  account, chain and manager that started the operation are still current.
+  `useSendUserOperation` (React and Vue) keeps its single-flight lock across
+  `reset()` until the in-flight UserOperation settles, so a reset cannot start
+  a second on-chain submission alongside the first.
+- ef9ac4f: Move the process-wide `SessionKeyManager` registry and its spending-config
+  guard into `@naculus/connect-appkit-core` (`getSharedSessionKeyManager`,
+  `resetSharedSessionKeyManager`, `sessionKeyConfigFingerprint`). The React
+  session-key hooks keep their exports and delegate to it.
+- 1ba2f9b: Centralize SIWX browser defaults, temporal validity checks, and result-to-session mapping in appkit-core while preserving React behavior.
+- 88f72c9: Move the smart-account decisions shared by React and Vue into
+  `@naculus/connect-appkit-core`: `resolveUserOpChain` (fail-closed chain
+  selection and mismatch check), `buildSmartAccountConfig` and
+  `assertHexSignature`. React `useSmartAccount` / `useSendUserOperation`
+  delegate to them and use the shared `bareEvmAddress`.
+- 36f2ccc: Move ERC-4337 receipt validation and the `eth_getUserOperationReceipt` call
+  into `@naculus/connect-appkit-core` (`parseUserOperationReceipt`,
+  `fetchUserOperationReceipt`, `InvalidUserOperationReceiptError`). React
+  `useUserOpStatus` keeps its behaviour and delegates to them.
+- a8ebb69: Share simulation chain and RPC decisions between React and Vue, and add Vue `useSimulateTransfer` and `useTransactionSimulation` composables. Simulation remains a basic revert check with no asset-change or risk coverage. Simulation now rejects a chain override that would reuse another chain's RPC or client; pass a matching RPC URL when overriding the chain.
+- Updated dependencies [a5c0f58]
+- Updated dependencies [11a4fd8]
+- Updated dependencies [531cbc2]
+- Updated dependencies [ef9ac4f]
+- Updated dependencies [1c42c23]
+- Updated dependencies [1ba2f9b]
+- Updated dependencies [88f72c9]
+- Updated dependencies [36f2ccc]
+- Updated dependencies [a8ebb69]
+  - @naculus/connect-appkit-core@0.2.6
+  - @naculus/connect-appkit-wc@0.2.6
+
 ## 0.2.5
 
 ### Patch Changes
