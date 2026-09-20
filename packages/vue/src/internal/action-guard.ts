@@ -11,6 +11,8 @@ export interface ActionGuard {
    * publish an error; the error is rethrown so callers still see it.
    */
   run<T>(action: () => Promise<T>, fallbackMessage: string): Promise<T>;
+  /** Clear the visible error without invalidating an in-flight call. */
+  clearError(): void;
   /** Forget the current error and stop any in-flight call from publishing. */
   reset(): void;
 }
@@ -51,11 +53,14 @@ export function useActionGuard(): ActionGuard {
     generation++;
     error.value = null;
   };
+  const clearError = (): void => {
+    error.value = null;
+  };
 
   onScopeDispose(() => {
     disposed = true;
     generation++;
   });
 
-  return { busy, error, run, reset };
+  return { busy, error, run, clearError, reset };
 }

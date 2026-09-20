@@ -1,5 +1,6 @@
 import type { MaybeRef, ShallowRef } from "vue";
-import { onScopeDispose, shallowRef, unref } from "vue";
+import { unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export type SignMessageAction = (message: string) => Promise<string>;
 
@@ -14,38 +15,17 @@ export interface UseSignMessageReturn {
 export function useSignMessage(
   action: MaybeRef<SignMessageAction>,
 ): UseSignMessageReturn {
-  const isSigning = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let active = 0;
-  let generation = 0;
-  let disposed = false;
+  const guard = useActionGuard();
 
-  const signMessage: SignMessageAction = async (message) => {
+  const signMessage: SignMessageAction = (message) => {
     const invoke = unref(action);
-    const own = ++generation;
-    active++;
-    isSigning.value = true;
-    error.value = null;
-    try {
-      return await invoke(message);
-    } catch (cause) {
-      const normalized =
-        cause instanceof Error ? cause : new Error("Signing failed");
-      if (!disposed && own === generation) error.value = normalized;
-      throw normalized;
-    } finally {
-      active--;
-      if (!disposed) isSigning.value = active > 0;
-    }
+    return guard.run(() => invoke(message), "Signing failed");
   };
 
-  const reset = (): void => {
-    generation++;
-    error.value = null;
+  return {
+    signMessage,
+    isSigning: guard.busy,
+    error: guard.error,
+    reset: guard.reset,
   };
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
-  return { signMessage, isSigning, error, reset };
 }

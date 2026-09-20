@@ -1,10 +1,11 @@
 import type { ComputedRef, MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
-import { computed, onScopeDispose, shallowRef, toValue, unref } from "vue";
+import { computed, toValue, unref } from "vue";
 import type {
   ExecuteCallsAction,
   ExecutionRoute,
   PreviewExecutionAction,
 } from "./eip5792";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseExecuteCallsOptions {
   preview: MaybeRef<PreviewExecutionAction>;
@@ -26,50 +27,26 @@ export interface UseExecuteCallsReturn {
 export function useExecuteCalls(
   options: UseExecuteCallsOptions,
 ): UseExecuteCallsReturn {
-  const isExecuting = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let active = 0;
-  let disposed = false;
+  const guard = useActionGuard();
 
   const preview: PreviewExecutionAction = (callCount, atomicity) =>
     unref(options.preview)(callCount, atomicity);
 
-  const execute: ExecuteCallsAction = async (calls, atomicity) => {
+  const execute: ExecuteCallsAction = (calls, atomicity) => {
     const invoke = unref(options.execute);
-    const own = ++generation;
-    active++;
-    isExecuting.value = true;
-    error.value = null;
-    try {
-      return await invoke(calls, atomicity);
-    } catch (cause) {
-      const normalized =
-        cause instanceof Error ? cause : new Error("Execution failed");
-      if (!disposed && own === generation) error.value = normalized;
-      throw normalized;
-    } finally {
-      active--;
-      if (!disposed) isExecuting.value = active > 0;
-    }
+    return guard.run(() => invoke(calls, atomicity), "Execution failed");
   };
 
   const reset = (): void => {
-    generation++;
-    error.value = null;
+    guard.reset();
     unref(options.reset)();
   };
-
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
 
   return {
     preview,
     execute,
-    isExecuting,
-    error,
+    isExecuting: guard.busy,
+    error: guard.error,
     lastRoute: computed(() => toValue(options.lastRoute)),
     reset,
   };

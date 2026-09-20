@@ -1,5 +1,6 @@
 import type { ComputedRef, MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
-import { computed, onScopeDispose, shallowRef, toValue, unref } from "vue";
+import { computed, toValue, unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 import type { SiwxSessionLike, SiwxSignInOptions } from "./siwx";
 
 export interface UseSIWxSessionOptions {
@@ -30,56 +31,25 @@ export interface UseSIWxSessionReturn {
 export function useSIWxSession(
   options: UseSIWxSessionOptions,
 ): UseSIWxSessionReturn {
-  const isSigningIn = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let active = 0;
-  let disposed = false;
-
-  const run = async <T>(
-    action: () => Promise<T>,
-    message: string,
-  ): Promise<T> => {
-    const own = ++generation;
-    active++;
-    isSigningIn.value = true;
-    error.value = null;
-    try {
-      return await action();
-    } catch (cause) {
-      const normalized = cause instanceof Error ? cause : new Error(message);
-      if (!disposed && own === generation) error.value = normalized;
-      throw normalized;
-    } finally {
-      active--;
-      if (!disposed) isSigningIn.value = active > 0;
-    }
-  };
-
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
+  const guard = useActionGuard();
   return {
     session: computed(() => toValue(options.session)),
     isAuthenticated: computed(
       () => toValue(options.session) !== null && !toValue(options.isExpired),
     ),
     isRestoring: computed(() => toValue(options.isRestoring)),
-    isSigningIn,
+    isSigningIn: guard.busy,
     isExpired: computed(() => toValue(options.isExpired)),
     timeUntilExpiry: computed(() => toValue(options.timeUntilExpiry)),
     signIn: (input) =>
-      run(() => unref(options.signIn)(input), "SIWX sign-in failed"),
+      guard.run(() => unref(options.signIn)(input), "SIWX sign-in failed"),
     signOut: async () => {
       await unref(options.signOut)();
-      error.value = null;
+      guard.clearError();
     },
     refresh: () =>
-      run(() => unref(options.refresh)(), "Session refresh failed"),
-    error,
-    clearError: () => {
-      error.value = null;
-    },
+      guard.run(() => unref(options.refresh)(), "Session refresh failed"),
+    error: guard.error,
+    clearError: guard.clearError,
   };
 }

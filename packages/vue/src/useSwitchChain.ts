@@ -1,7 +1,8 @@
 import { toChainSwitchError } from "@naculus/connect-appkit-core";
 import type { WalletError } from "@naculus/connect-core";
 import type { ComputedRef, MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
-import { computed, onScopeDispose, shallowRef, toValue, unref } from "vue";
+import { computed, toValue, unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseSwitchChainReturn {
   switchChain: (chainId: string) => Promise<void>;
@@ -16,41 +17,24 @@ export function useSwitchChain(
   action: MaybeRef<(chainId: string) => Promise<void>>,
   chainId: MaybeRefOrGetter<string | null | undefined>,
 ): UseSwitchChainReturn {
-  const isSwitching = shallowRef(false);
-  const error = shallowRef<WalletError | null>(null);
-  let generation = 0;
-  let active = 0;
-  let disposed = false;
+  const guard = useActionGuard();
 
-  const switchChain = async (targetChainId: string): Promise<void> => {
+  const switchChain = (targetChainId: string): Promise<void> => {
     const invoke = unref(action);
-    const mine = ++generation;
-    active++;
-    isSwitching.value = true;
-    error.value = null;
-    try {
-      await invoke(targetChainId);
-    } catch (cause) {
-      const walletError = toChainSwitchError(cause);
-      if (!disposed && mine === generation) error.value = walletError;
-      throw walletError;
-    } finally {
-      active--;
-      if (!disposed) isSwitching.value = active > 0;
-    }
+    return guard.run(async () => {
+      try {
+        await invoke(targetChainId);
+      } catch (cause) {
+        throw toChainSwitchError(cause);
+      }
+    }, "Failed to switch chain");
   };
 
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
   return {
     switchChain,
-    isSwitching,
+    isSwitching: guard.busy,
     currentChainId: computed(() => toValue(chainId) ?? null),
-    error,
-    clearError: () => {
-      error.value = null;
-    },
+    error: guard.error as ShallowRef<WalletError | null>,
+    clearError: guard.clearError,
   };
 }

@@ -1,5 +1,6 @@
 import type { ComputedRef, MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
-import { computed, onScopeDispose, shallowRef, toValue, unref } from "vue";
+import { computed, toValue, unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface EmbeddedWalletAccountView {
   namespace: string;
@@ -71,35 +72,10 @@ export function useEmbeddedWallet<
 >(
   options: UseEmbeddedWalletOptions<TWalletData, TSecurityReport>,
 ): UseEmbeddedWalletReturn<TWalletData, TSecurityReport> {
-  const isBusy = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let active = 0;
-  let generation = 0;
-  let disposed = false;
-  const run = async <T>(action: () => Promise<T>): Promise<T> => {
-    const own = ++generation;
-    active++;
-    isBusy.value = true;
-    error.value = null;
-    try {
-      return await action();
-    } catch (cause) {
-      const normalized =
-        cause instanceof Error
-          ? cause
-          : new Error("Embedded wallet action failed");
-      if (!disposed && own === generation) error.value = normalized;
-      throw normalized;
-    } finally {
-      active--;
-      if (!disposed) isBusy.value = active > 0;
-    }
-  };
+  const guard = useActionGuard();
+  const run = <T>(action: () => Promise<T>): Promise<T> =>
+    guard.run(action, "Embedded wallet action failed");
   const wallet = computed(() => toValue(options.wallet));
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
   return {
     wallet,
     hasWallet: computed(() => wallet.value !== null),
@@ -122,10 +98,8 @@ export function useEmbeddedWallet<
     getSeedPhrase: () => unref(options.getSeedPhrase)(),
     getPrivateKey: () => unref(options.getPrivateKey)(),
     confirmBackup: () => unref(options.confirmBackup)(),
-    isBusy,
-    error,
-    clearError: () => {
-      error.value = null;
-    },
+    isBusy: guard.busy,
+    error: guard.error,
+    clearError: guard.clearError,
   };
 }
