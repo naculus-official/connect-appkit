@@ -128,6 +128,13 @@ export type {
   UseSendCallsOptions,
   UseSendCallsReturn,
 } from "./useSendCalls";
+export { useEmbeddedWallet } from "./useEmbeddedWallet";
+export type {
+  EmbeddedWalletAccountView,
+  EmbeddedWalletView,
+  UseEmbeddedWalletOptions,
+  UseEmbeddedWalletReturn,
+} from "./useEmbeddedWallet";
 export { useSIWxLogin } from "./useSIWxLogin";
 export type { UseSIWxLoginReturn } from "./useSIWxLogin";
 export { useSIWxSession } from "./useSIWxSession";
