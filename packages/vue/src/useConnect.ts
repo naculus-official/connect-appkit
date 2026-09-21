@@ -1,6 +1,7 @@
 import { WalletError } from "@naculus/connect-core";
 import type { ComputedRef, MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
-import { computed, onScopeDispose, shallowRef, toValue, unref } from "vue";
+import { computed, toValue, unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseConnectReturn {
   connect: () => Promise<void>;
@@ -13,40 +14,35 @@ export function useConnect(
   action: MaybeRef<() => Promise<void>>,
   status: MaybeRefOrGetter<string>,
 ): UseConnectReturn {
-  const isLoading = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let disposed = false;
+  const guard = useActionGuard();
   let inFlight: Promise<void> | null = null;
 
   const connect = (): Promise<void> => {
     if (inFlight) return inFlight;
     const invoke = unref(action);
-    isLoading.value = true;
-    error.value = null;
-    const pending = Promise.resolve()
-      .then(() => invoke())
-      .catch((cause: unknown) => {
-        if (disposed) return;
-        const message =
-          cause instanceof Error ? cause.message : "Connection failed";
-        error.value = cause instanceof WalletError ? cause : new Error(message);
-      })
+    const pending = guard
+      .run(
+        () => Promise.resolve().then(() => invoke()),
+        "Connection failed",
+        (cause) => {
+          const message =
+            cause instanceof Error ? cause.message : "Connection failed";
+          return cause instanceof WalletError ? cause : new Error(message);
+        },
+      )
+      .catch(() => {})
       .finally(() => {
         if (inFlight === pending) inFlight = null;
-        if (!disposed) isLoading.value = false;
       });
     inFlight = pending;
     return pending;
   };
 
-  onScopeDispose(() => {
-    disposed = true;
-  });
   return {
     connect,
     isConnecting: computed(
-      () => isLoading.value || toValue(status) === "connecting",
+      () => guard.busy.value || toValue(status) === "connecting",
     ),
-    error,
+    error: guard.error,
   };
 }

@@ -10,11 +10,17 @@ export interface ActionGuard {
    * Run `action`. Concurrency-counted busy flag; only the newest call may
    * publish an error; the error is rethrown so callers still see it.
    */
-  run<T>(action: () => Promise<T>, fallbackMessage: string): Promise<T>;
+  run<T>(
+    action: () => Promise<T>,
+    fallbackMessage: string,
+    normalizeError?: (cause: unknown) => Error,
+  ): Promise<T>;
   /** Clear the visible error without invalidating an in-flight call. */
   clearError(): void;
   /** Forget the current error and stop any in-flight call from publishing. */
   reset(): void;
+  /** Permanently stop this guard from publishing state. */
+  dispose(): void;
 }
 
 /**
@@ -31,6 +37,7 @@ export function useActionGuard(): ActionGuard {
   const run = async <T>(
     action: () => Promise<T>,
     fallbackMessage: string,
+    normalizeError?: (cause: unknown) => Error,
   ): Promise<T> => {
     const own = ++generation;
     active++;
@@ -39,8 +46,11 @@ export function useActionGuard(): ActionGuard {
     try {
       return await action();
     } catch (cause) {
-      const normalized =
-        cause instanceof Error ? cause : new Error(fallbackMessage);
+      const normalized = normalizeError
+        ? normalizeError(cause)
+        : cause instanceof Error
+          ? cause
+          : new Error(fallbackMessage);
       if (!disposed && own === generation) error.value = normalized;
       throw normalized;
     } finally {
@@ -57,10 +67,12 @@ export function useActionGuard(): ActionGuard {
     error.value = null;
   };
 
-  onScopeDispose(() => {
+  const dispose = (): void => {
     disposed = true;
     generation++;
-  });
+  };
 
-  return { busy, error, run, clearError, reset };
+  onScopeDispose(dispose);
+
+  return { busy, error, run, clearError, reset, dispose };
 }

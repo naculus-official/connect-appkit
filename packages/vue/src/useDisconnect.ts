@@ -1,5 +1,6 @@
 import type { MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
-import { onScopeDispose, shallowRef, toValue, unref } from "vue";
+import { toValue, unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseDisconnectReturn {
   disconnect: () => Promise<void>;
@@ -13,36 +14,30 @@ export function useDisconnect(
   action: MaybeRef<() => Promise<void>>,
   status: MaybeRefOrGetter<string>,
 ): UseDisconnectReturn {
-  const isDisconnecting = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let disposed = false;
+  const guard = useActionGuard();
   let inFlight: Promise<void> | null = null;
 
   const disconnect = (): Promise<void> => {
     if (inFlight) return inFlight;
     if (toValue(status) === "disconnected") return Promise.resolve();
     const invoke = unref(action);
-    isDisconnecting.value = true;
-    error.value = null;
-    const pending = Promise.resolve()
-      .then(() => invoke())
-      .catch((cause: unknown) => {
-        if (!disposed) {
-          error.value =
-            cause instanceof Error ? cause : new Error("Disconnect failed");
-        }
-      })
+    const pending = guard
+      .run(() => Promise.resolve().then(() => invoke()), "Disconnect failed")
+      .catch(() => {})
       .finally(() => {
         if (inFlight === pending) inFlight = null;
-        if (!disposed) isDisconnecting.value = false;
       });
     inFlight = pending;
     return pending;
   };
 
   const cleanup = (): void => {
-    disposed = true;
+    guard.dispose();
   };
-  onScopeDispose(cleanup);
-  return { disconnect, isDisconnecting, error, cleanup };
+  return {
+    disconnect,
+    isDisconnecting: guard.busy,
+    error: guard.error,
+    cleanup,
+  };
 }
