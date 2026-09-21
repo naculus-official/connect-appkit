@@ -35,11 +35,17 @@ function subscribeToSessionManager(
   sm.on("sessionConnected", handler);
   sm.on("sessionDisconnected", handler);
   sm.on("chainChanged", handler);
+  // CAIP-25 lifecycle (connect-core >= 0.2.6): the wallet narrowed or
+  // ended the session without the app asking.
+  sm.on("sessionScopeChanged", handler);
+  sm.on("sessionRevoked", handler);
 
   return () => {
     sm.off("sessionConnected", handler);
     sm.off("sessionDisconnected", handler);
     sm.off("chainChanged", handler);
+    sm.off("sessionScopeChanged", handler);
+    sm.off("sessionRevoked", handler);
   };
 }
 
@@ -119,10 +125,7 @@ export function useSession(
     [sm],
   );
 
-  const getSnapshot = useCallback(
-    () => getSessionSnapshot(sm),
-    [sm],
-  );
+  const getSnapshot = useCallback(() => getSessionSnapshot(sm), [sm]);
 
   return useSyncExternalStore(subscribe, getSnapshot);
 }

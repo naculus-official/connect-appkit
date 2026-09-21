@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  ActiveSessionBundle,
   SessionManager,
   UniversalWalletSession,
 } from "@naculus/connect-core";
@@ -177,16 +178,32 @@ export function Web3ConnectProvider({
       dispatch({ type: "SET_CHAIN", payload: payload.newChainId });
     };
 
+    // The wallet narrowed the scope: re-read accounts and active chain from
+    // the bundle rather than keeping what the wider session had.
+    const onScopeChanged = (payload: { bundle: ActiveSessionBundle }) =>
+      onConnected(payload);
+    // The wallet ended the session (revoked, expired, or scope emptied).
+    // Covers the persisted-session-cleared case for every connector,
+    // replacing WalletConnect's connector-private onSessionExpiry.
+    const onRevoked = () => {
+      storage.clear();
+      dispatch({ type: "RESET" });
+    };
+
     sessionManager.on("sessionConnected", onConnected);
     sessionManager.on("sessionDisconnected", onDisconnected);
     sessionManager.on("chainChanged", onChainChanged);
+    sessionManager.on("sessionScopeChanged", onScopeChanged);
+    sessionManager.on("sessionRevoked", onRevoked);
 
     return () => {
       sessionManager.off("sessionConnected", onConnected);
       sessionManager.off("sessionDisconnected", onDisconnected);
       sessionManager.off("chainChanged", onChainChanged);
+      sessionManager.off("sessionScopeChanged", onScopeChanged);
+      sessionManager.off("sessionRevoked", onRevoked);
     };
-  }, [sessionManager]);
+  }, [sessionManager, storage]);
 
   useEffect(() => {
     const handler = () => {

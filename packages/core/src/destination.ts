@@ -1,4 +1,8 @@
-import { isEvmAddress, isZeroAddress } from "@naculus/connect-core";
+import {
+  isBurnAddress,
+  isEvmAddress,
+  isZeroAddress,
+} from "@naculus/connect-core";
 
 /**
  * Destination-address checks shared by the React hook and the Vue composable.
@@ -25,19 +29,13 @@ export interface DestinationValidation {
   issue: DestinationIssue | null;
 }
 
-const DEAD_ADDRESSES = new Set([
-  "0x0000000000000000000000000000000000000001",
-  "0x000000000000000000000000000000000000dead",
-]);
-
 /**
- * Burn heuristic kept from the React hook: known sinks plus any well-formed
- * address containing "dead". Stricter than connect-core's prefix-only
- * `isBurnAddress`; unifying the two is a connect-lib change.
+ * connect-core's `isBurnAddress` is the single definition (sinks, vanity
+ * prefixes, "dead" anywhere) since connect-lib 0.2.6; this name stays for
+ * callers that imported it.
  */
 export function isBurnDestination(address: string): boolean {
-  const lower = address.toLowerCase();
-  return DEAD_ADDRESSES.has(lower) || lower.includes("dead");
+  return isBurnAddress(address);
 }
 
 export function validateDestination(address: string): DestinationValidation {

@@ -58,10 +58,16 @@ export function useSession(
       current.on("sessionConnected", update);
       current.on("sessionDisconnected", update);
       current.on("chainChanged", update);
+      // CAIP-25 lifecycle (connect-core >= 0.2.6): the wallet narrowed or
+      // ended the session without the app asking.
+      current.on("sessionScopeChanged", update);
+      current.on("sessionRevoked", update);
       onCleanup(() => {
         current.off("sessionConnected", update);
         current.off("sessionDisconnected", update);
         current.off("chainChanged", update);
+        current.off("sessionScopeChanged", update);
+        current.off("sessionRevoked", update);
       });
     },
     { immediate: true },
