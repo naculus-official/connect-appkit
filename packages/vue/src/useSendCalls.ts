@@ -35,7 +35,13 @@ export interface UseSendCallsReturn {
   reset: () => void;
 }
 
-/** Reactive state around caller-owned EIP-5792 actions and execution policy. */
+/**
+ * Reactive state around caller-owned EIP-5792 actions and execution policy.
+ * This deliberately keeps two publication generations instead of using the
+ * shared action guard: sending and status reads are independent channels, and
+ * a late completion in either channel must not suppress or overwrite the
+ * newest completion in the other.
+ */
 export function useSendCalls(options: UseSendCallsOptions): UseSendCallsReturn {
   const status = shallowRef<SendCallsStatus>("idle");
   const error = shallowRef<Error | null>(null);

@@ -26,7 +26,9 @@ export interface UseExecuteRouteReturn {
  * Execute a quoted route once through a caller-supplied executor, mirroring
  * the React hook. The recipient check and error shape are appkit-core's. A
  * second call while one is in flight is refused, and `reset()` deliberately
- * does not unlock that guard: the first request is still out there.
+ * does not unlock that guard: the first request is still out there. This is a
+ * side-effect single-flight contract, not the shared action guard's
+ * latest-error publication contract, so it intentionally remains local.
  */
 export function useExecuteRoute(
   executeRoute?: MaybeRef<ExecuteRoute | null | undefined>,

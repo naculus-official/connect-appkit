@@ -78,6 +78,42 @@ describe("Vue EIP-5792 shells", () => {
     scope.stop();
   });
 
+  it("publishes only the newest status read and drops one invalidated by reset", async () => {
+    const resolvers: Array<(status: CallsStatus) => void> = [];
+    const getCallsStatus = vi.fn<GetCallsStatusAction>(
+      () => new Promise<CallsStatus>((done) => resolvers.push(done)),
+    );
+    const scope = effectScope();
+    const state = scope.run(() =>
+      useSendCalls({
+        sendCalls: vi.fn<SendCallsAction>(),
+        getCallsStatus,
+        showCallsStatus: vi.fn<ShowCallsStatusAction>(),
+      }),
+    )!;
+
+    const older = state.getCallsStatus("0xolder");
+    const newer = state.getCallsStatus("0xnewer");
+    const newestStatus: CallsStatus = {
+      ...callsStatus,
+      id: "0xnewer",
+      status: 100,
+    };
+    resolvers[1]!(newestStatus);
+    await newer;
+    expect(state.callsStatus.value).toBe(newestStatus);
+    resolvers[0]!(callsStatus);
+    await older;
+    expect(state.callsStatus.value).toBe(newestStatus);
+
+    const invalidated = state.getCallsStatus("0xreset");
+    state.reset();
+    resolvers[2]!(callsStatus);
+    await invalidated;
+    expect(state.callsStatus.value).toBeNull();
+    scope.stop();
+  });
+
   it("delegates preview, execute, route, and reset without policy changes", async () => {
     const previewResult: ExecutionPreview = {
       strategy: "atomic-batch",
