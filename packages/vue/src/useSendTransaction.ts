@@ -1,5 +1,6 @@
 import type { ComputedRef, MaybeRef, ShallowRef } from "vue";
-import { computed, onScopeDispose, shallowRef, unref } from "vue";
+import { computed, shallowRef, unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface EvmTransaction {
   to: string;
@@ -34,44 +35,37 @@ export interface UseSendTransactionReturn {
 export function useSendTransaction(
   action: MaybeRef<SendTransactionAction>,
 ): UseSendTransactionReturn {
+  const guard = useActionGuard();
   const status = shallowRef<SendTransactionStatus>("idle");
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let disposed = false;
 
-  const sendTransaction: SendTransactionAction = async (transaction) => {
+  const sendTransaction: SendTransactionAction = (transaction) => {
     const invoke = unref(action);
-    const own = ++generation;
     status.value = "awaiting_approval";
-    error.value = null;
-    try {
-      const hash = await invoke(transaction);
-      if (!disposed && own === generation) status.value = "submitted";
-      return hash;
-    } catch (cause) {
-      const normalized =
-        cause instanceof Error ? cause : new Error("Transaction failed");
-      if (!disposed && own === generation) {
-        status.value = "failed";
-        error.value = normalized;
-      }
-      throw normalized;
-    }
+    return guard
+      .run(async (commit) => {
+        const hash = await invoke(transaction);
+        commit(() => {
+          status.value = "submitted";
+        });
+        return hash;
+      }, "Transaction failed")
+      .catch((cause: unknown) => {
+        // The guard already published the error if this call is current;
+        // status follows the same rule.
+        if (guard.error.value === cause) status.value = "failed";
+        throw cause;
+      });
   };
 
   const reset = (): void => {
-    generation++;
+    guard.reset();
     status.value = "idle";
-    error.value = null;
   };
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
+
   return {
     sendTransaction,
     status,
-    error,
+    error: guard.error,
     reset,
     isSending: computed(() => status.value === "awaiting_approval"),
   };

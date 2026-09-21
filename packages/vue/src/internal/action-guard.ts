@@ -8,10 +8,13 @@ export interface ActionGuard {
   error: ShallowRef<Error | null>;
   /**
    * Run `action`. Concurrency-counted busy flag; only the newest call may
-   * publish an error; the error is rethrown so callers still see it.
+   * publish an error; the error is rethrown so callers still see it. The
+   * action receives `commit(write)`, which runs `write` only while this call
+   * is still the newest and the guard is not disposed — for result state
+   * (a status, a hash) that must not be written by a superseded call.
    */
   run<T>(
-    action: () => Promise<T>,
+    action: (commit: (write: () => void) => void) => Promise<T>,
     fallbackMessage: string,
     normalizeError?: (cause: unknown) => Error,
   ): Promise<T>;
@@ -35,16 +38,19 @@ export function useActionGuard(): ActionGuard {
   let disposed = false;
 
   const run = async <T>(
-    action: () => Promise<T>,
+    action: (commit: (write: () => void) => void) => Promise<T>,
     fallbackMessage: string,
     normalizeError?: (cause: unknown) => Error,
   ): Promise<T> => {
     const own = ++generation;
+    const commit = (write: () => void): void => {
+      if (!disposed && own === generation) write();
+    };
     active++;
     busy.value = true;
     error.value = null;
     try {
-      return await action();
+      return await action(commit);
     } catch (cause) {
       const normalized = normalizeError
         ? normalizeError(cause)
