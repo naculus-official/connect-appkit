@@ -29,7 +29,7 @@
     "@naculus/connect-appkit-core": "workspace:*",
     "@naculus/connect-appkit-wc": "workspace:*",
     "@naculus/connect-core": "^0.2.5",
-    "@naculus/connector-embedded": "^0.2.1",
+    "@naculus/connector-embedded": "^0.2.5",
     "@naculus/connector-evm-injected": "^0.2.1",
     "@naculus/connector-passkeys": "^0.2.1",
     "@naculus/connector-solana": "^0.2.1",

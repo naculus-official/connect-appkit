@@ -97,8 +97,8 @@ importers:
         specifier: ^0.2.5
         version: 0.2.5
       '@naculus/connector-embedded':
-        specifier: ^0.2.1
-        version: 0.2.4
+        specifier: ^0.2.5
+        version: 0.2.5
       '@naculus/connector-evm-injected':
         specifier: ^0.2.1
         version: 0.2.4
@@ -1188,8 +1188,8 @@ packages:
   '@naculus/connect-core@0.2.5':
     resolution: {integrity: sha512-y5eml5eYFucPSrmMrBsVtJVQjJcS/wfzLviJ7nFmUtx+r8ACca5H3nX70HgF/AB++Os9eMtRRkuKxGcbylaaeg==}
 
-  '@naculus/connector-embedded@0.2.4':
-    resolution: {integrity: sha512-dV4YKI+5F+QghayvFTUf4B6ekJS0LF0zOk6D5mCq/S5iCLDorr0ZShIY4GgVl1uDZCm8o/E4vjWnQh/GtH+S+Q==}
+  '@naculus/connector-embedded@0.2.5':
+    resolution: {integrity: sha512-nyzYRAiDziXz0+kL+OIOknwx2eVPB41ETtH9AHrave+DWE/lSjeYbv+Xn005qdx0njqUExQkC0TZW6bagGTGAw==}
 
   '@naculus/connector-evm-injected@0.2.4':
     resolution: {integrity: sha512-JUoK8fK5gJJdUffs6N5D8rrOsqJxmpenI0mPPorMKMDfaOmnjEe0z/Ysof8MuD2zjtEdDnODK+63/kwcnp5VLA==}
@@ -1219,6 +1219,9 @@ packages:
 
   '@naculus/wallet-engine@0.2.4':
     resolution: {integrity: sha512-bz5aqAFIZUaJzeRgpJLnABg/gamWl/qeD3Qrpya3eXjntZuZKZGN1hAC53g/OiexE8yDp4lXk5nRWgtcYl2vUw==}
+
+  '@naculus/wallet-engine@0.2.5':
+    resolution: {integrity: sha512-IVInmJk1nrh0CQ5X0ggd8dlADgRrNCPqQSipXS5F4TN4t/46bGJVAQEMSQT1/GA5fHWJt903O8F9vH/nO269oA==}
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     resolution: {integrity: sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==}
@@ -5218,10 +5221,10 @@ snapshots:
       '@noble/hashes': 2.4.0
       '@scure/base': 2.4.0
 
-  '@naculus/connector-embedded@0.2.4':
+  '@naculus/connector-embedded@0.2.5':
     dependencies:
-      '@naculus/connect-core': 0.2.4
-      '@naculus/wallet-engine': 0.2.4
+      '@naculus/connect-core': 0.2.5
+      '@naculus/wallet-engine': 0.2.5
 
   '@naculus/connector-evm-injected@0.2.4':
     dependencies:
@@ -5297,6 +5300,16 @@ snapshots:
   '@naculus/wallet-engine@0.2.4':
     dependencies:
       '@naculus/connect-core': 0.2.4
+      '@noble/ciphers': 2.4.0
+      '@noble/curves': 2.4.0
+      '@noble/hashes': 2.4.0
+      '@scure/base': 2.4.0
+      '@scure/bip32': 2.4.0
+      '@scure/bip39': 2.4.0
+
+  '@naculus/wallet-engine@0.2.5':
+    dependencies:
+      '@naculus/connect-core': 0.2.5
       '@noble/ciphers': 2.4.0
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
