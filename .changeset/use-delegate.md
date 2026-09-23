@@ -1,6 +1,6 @@
 ---
-"@naculus/connect-appkit-react": minor
-"@naculus/connect-appkit-vue": minor
+"@naculus/connect-appkit-react": patch
+"@naculus/connect-appkit-vue": patch
 ---
 
 Add `useDelegate` (React and Vue): the EIP-7702 owner path for the embedded
