@@ -212,6 +212,12 @@ export type {
   UseTokenBalanceOptions,
   UseTokenBalanceReturn,
 } from "./useTokenBalance";
+export { useDelegate } from "./useDelegate";
+export type {
+  DelegationNonceReader,
+  UseDelegateOptions,
+  UseDelegateReturn,
+} from "./useDelegate";
 export { useDelegation } from "./useDelegation";
 export type { DelegationCodeReader, UseDelegationReturn } from "./useDelegation";
 export { useResolveName } from "./useResolveName";

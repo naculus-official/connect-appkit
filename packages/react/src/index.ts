@@ -60,6 +60,11 @@ export type {
 export { useCapabilities } from "./hooks/useCapabilities";
 export { useChain } from "./hooks/useChain";
 export { useConnect } from "./hooks/useConnect";
+export type {
+  UseDelegateOptions,
+  UseDelegateReturn,
+} from "./hooks/useDelegate";
+export { useDelegate } from "./hooks/useDelegate";
 export type { UseDelegationReturn } from "./hooks/useDelegation";
 export { useDelegation } from "./hooks/useDelegation";
 export type {
