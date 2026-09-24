@@ -1,5 +1,14 @@
 # @naculus/connect-appkit-vue
 
+## 0.2.8
+
+### Patch Changes
+
+- Require connect-lib 0.2.8, which binds session-key recipient limits to what is signed. `createDelegationPolicyFlow().createPolicy` now refuses a scope with `allowedRecipients`: this flow's executions sign raw digests, which connect-core 0.2.8 refuses while recipients are limited, so such a policy could be created and previewed as valid yet never sign.
+- Updated dependencies
+  - @naculus/connect-appkit-core@0.2.8
+  - @naculus/connect-appkit-wc@0.2.8
+
 ## 0.2.7
 
 ### Patch Changes
