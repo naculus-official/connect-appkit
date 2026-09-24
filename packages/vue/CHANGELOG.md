@@ -1,5 +1,26 @@
 # @naculus/connect-appkit-vue
 
+## 0.2.7
+
+### Patch Changes
+
+- 2250cd2: Consume connect-lib 0.2.6's CAIP-25 session lifecycle: `useSession` (React
+  and Vue) and the React provider react to `sessionScopeChanged` and
+  `sessionRevoked`, so a wallet narrowing or ending a session updates app state
+  on every connector, not only WalletConnect. `isBurnDestination` now delegates
+  to connect-core's unified `isBurnAddress`. Peer minimum for `@naculus/*` is
+  `^0.2.6`.
+- ee26569: Add `useDelegate` (React and Vue): the EIP-7702 owner path for the embedded
+  wallet — `delegate(address)` sends a type-4 transaction delegating the
+  connected account to an allowlisted implementation, `revoke()` clears it.
+  Thin shells over connect-core's `delegateAccount`; the allowlist is required
+  and empty by default, and other wallets fail with `method_unsupported`.
+  Requires `@naculus/connect-core` 0.2.7 (peer minimum raised with that
+  release).
+- Updated dependencies [2250cd2]
+  - @naculus/connect-appkit-core@0.2.7
+  - @naculus/connect-appkit-wc@0.2.7
+
 ## 0.2.6
 
 ### Patch Changes
