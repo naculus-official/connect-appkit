@@ -153,6 +153,15 @@ describe("createDelegationPolicyFlow", () => {
         allowedContracts: [CONTRACT],
       }),
     ).rejects.toMatchObject({ code: "method_not_allowed" });
+    // Executions here sign raw digests, which connect-core refuses while
+    // recipients are limited: such a policy could never sign.
+    await expect(
+      createDelegationPolicyFlow(d).createPolicy({
+        allowedContracts: [CONTRACT],
+        allowedRecipients: [CONTRACT],
+      }),
+    ).rejects.toMatchObject({ code: "method_not_allowed" });
+    expect(d.signMessage).not.toHaveBeenCalled();
   });
 
   it("revokes the draft when the wallet's signature does not recover to the signer", async () => {

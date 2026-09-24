@@ -256,6 +256,17 @@ export function createDelegationPolicyFlow(
         "This flow creates signed off-chain policies only. EIP-7702 and AA-module policies require a configured on-chain execution adapter.",
       );
     }
+    if (scope.allowedRecipients && scope.allowedRecipients.length > 0) {
+      // connect-core refuses raw-digest signing while recipients are limited,
+      // and every execution in this flow signs a raw digest; such a policy
+      // could be created and previewed as valid yet never sign. The recipient
+      // list is also not part of the owner-signed policy message. Refuse it
+      // until this flow has a typed-data path.
+      throw new WalletError(
+        "method_not_allowed",
+        "Recipient-limited policies are not supported by this flow: its executions sign raw digests, which connect-core refuses while allowedRecipients is set.",
+      );
+    }
     if (!deps.encryptionKeyConfigured) {
       throw new WalletError(
         "method_not_allowed",
