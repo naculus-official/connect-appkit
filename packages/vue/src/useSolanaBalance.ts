@@ -37,6 +37,10 @@ export function useSolanaBalance(
     const addr = toValue(address);
     const url = toValue(rpcUrl);
     if (!addr || !url) {
+      // Supersede any in-flight read so a late one cannot write the balance
+      // back. The visible error is kept, as before.
+      guard.invalidate();
+      isFetching.value = false;
       balance.value = null;
       return;
     }
