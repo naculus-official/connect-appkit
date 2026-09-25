@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { effectScope, nextTick, ref } from "vue";
+import { effectScope, nextTick, ref, watch, watchEffect } from "vue";
 import { useTransactionSimulation } from "./useTransactionSimulation";
 
 const tx = { to: `0x${"1".repeat(40)}` };
@@ -124,10 +124,14 @@ describe("useTransactionSimulation", () => {
 
     transaction.value = undefined;
     await nextTick(); // let the input watcher settle before the call
+    const writes: Array<Error | null> = [];
+    watch(hook.error, (value) => writes.push(value), { flush: "sync" });
     const result = await hook.simulate();
     expect(result.status).toBe("unavailable");
     expect(hook.result.value).toBe(result);
     expect(hook.error.value).toBe(visible);
+    // Not even a transient clear-and-restore.
+    expect(writes).toEqual([]);
     expect(hook.isSimulating.value).toBe(false);
     scope.stop();
   });
@@ -145,5 +149,74 @@ describe("useTransactionSimulation", () => {
     const pending = hook.simulate();
     await expect(pending).rejects.toThrow("bad input");
     scope.stop();
+  });
+
+  it("does not re-run a consumer effect that calls a failing simulate()", async () => {
+    const scope = effectScope();
+    let runs = 0;
+    let failures = 0;
+    scope.run(() => {
+      // No chain context: every call rejects.
+      const hook = useTransactionSimulation(tx);
+      watchEffect(() => {
+        runs++;
+        // Bounded so a regression fails the assertion instead of hanging.
+        if (runs > 20) return;
+        hook.simulate().catch(() => {
+          failures++;
+        });
+      });
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(failures).toBe(1);
+    expect(runs).toBe(1);
+    scope.stop();
+  });
+
+  it("clears isSimulating only once the error is visible", async () => {
+    const scope = effectScope();
+    const seen: string[] = [];
+    const hook = scope.run(() => {
+      // No chain context: the call rejects.
+      const state = useTransactionSimulation(tx);
+      const record = (flush: string) => (busy: boolean) => {
+        if (!busy) seen.push(`${flush}:${state.error.value?.message ?? null}`);
+      };
+      watch(state.isSimulating, record("sync"), { flush: "sync" });
+      watch(state.isSimulating, record("pre"));
+      return state;
+    })!;
+    const failure = await hook.simulate().catch((cause: Error) => cause);
+    await nextTick();
+    expect(failure).toBeInstanceOf(Error);
+    const message = (failure as Error).message;
+    expect(seen).toEqual([`sync:${message}`, `pre:${message}`]);
+    scope.stop();
+  });
+
+  it("drops a late result and error after disposal", async () => {
+    const pending: Array<{ resolve: () => void; reject: (e: Error) => void }> =
+      [];
+    const call = vi.fn(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          pending.push({ resolve, reject });
+        }),
+    );
+    const scope = effectScope();
+    const hook = scope.run(() =>
+      useTransactionSimulation(tx, {
+        chainId: 1,
+        publicClient: { chain: { id: 1 }, call },
+      }),
+    )!;
+    const callA = hook.simulate();
+    await vi.waitFor(() => expect(call).toHaveBeenCalledTimes(1));
+    scope.stop();
+    pending[0]!.resolve();
+    await callA;
+    expect(hook.result.value).toBeUndefined();
+    expect(hook.isSimulating.value).toBe(true);
+    expect(hook.error.value).toBeNull();
   });
 });

@@ -39,12 +39,10 @@ export function useTransactionSimulation(
     const transaction = toValue(tx);
     // Without a transaction the call still supersedes older ones and
     // publishes its ("unavailable") result, but it has never cleared the
-    // visible error or touched isSimulating. guard.run() clears the error
-    // synchronously, so it is put back in the same tick.
-    const keptError = guard.error.value;
+    // visible error or touched isSimulating.
     if (transaction) isSimulating.value = true;
-    const pending = guard.run(async (commit) => {
-      try {
+    return await guard.run(
+      async (commit) => {
         const value = await simulateTransactionPreview(transaction, {
           chainId: unref(options.chainId),
           currentChain: unref(options.currentChain),
@@ -55,16 +53,18 @@ export function useTransactionSimulation(
           result.value = value;
         });
         return value;
-      } finally {
-        if (transaction) {
-          commit(() => {
-            isSimulating.value = false;
-          });
-        }
-      }
-    }, "Simulation failed");
-    if (!transaction) guard.error.value = keptError;
-    return await pending;
+      },
+      "Simulation failed",
+      undefined,
+      {
+        keepError: !transaction,
+        onSettled: transaction
+          ? () => {
+              isSimulating.value = false;
+            }
+          : undefined,
+      },
+    );
   };
 
   watch(
