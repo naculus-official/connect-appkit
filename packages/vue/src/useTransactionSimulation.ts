@@ -79,7 +79,12 @@ export function useTransactionSimulation(
       // Supersede the in-flight simulation without clearing the error.
       guard.invalidate();
       if (timer) clearTimeout(timer);
-      if (!transaction) return;
+      if (!transaction) {
+        // Nothing left to simulate: the superseded call can no longer clear
+        // the flag itself. The last result and visible error stay as they are.
+        isSimulating.value = false;
+        return;
+      }
       timer = setTimeout(() => {
         timer = undefined;
         void simulate().catch(() => {
