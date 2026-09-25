@@ -79,4 +79,36 @@ describe("useTokenList (Vue)", () => {
     expect(api.error.value?.message).toBe("offline");
     expect(api.isLoaded.value).toBe(false);
   });
+
+  it("keeps the newest refresh when an older one resolves last", async () => {
+    const manager = fakeManager();
+    const refreshes: Array<() => void> = [];
+    manager.refresh.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          refreshes.push(resolve);
+        }),
+    );
+    let reads = 0;
+    manager.getTokens.mockImplementation(() => [
+      { ...usdc, symbol: `read-${++reads}` },
+    ]);
+    const { api, scope } = inScope(() =>
+      useTokenList("eip155:1", { manager, autoLoad: false }),
+    );
+
+    const callA = api.refetch();
+    const callB = api.refetch();
+    refreshes[1]!();
+    await callB;
+    const newest = api.tokens.value;
+    expect(newest[0]?.symbol).toBe("read-1");
+    refreshes[0]!();
+    await callA;
+    // A's completion would re-select and replace the list; it must not.
+    expect(api.tokens.value).toBe(newest);
+    expect(manager.getTokens).toHaveBeenCalledTimes(1);
+    expect(api.isLoading.value).toBe(false);
+    scope.stop();
+  });
 });

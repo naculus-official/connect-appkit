@@ -87,4 +87,29 @@ describe("useDelegation", () => {
     await nextTick();
     expect(result.delegated.value).toBeNull();
   });
+
+  it("keeps the newest read when an older one resolves last", async () => {
+    const reads: Array<(code: `0x${string}`) => void> = [];
+    const client: DelegationCodeReader = {
+      getCode: vi.fn(
+        () =>
+          new Promise<`0x${string}`>((resolve) => {
+            reads.push(resolve);
+          }),
+      ),
+    };
+    const { result, scope } = scoped(() => useDelegation(FIRST, client));
+
+    const callA = result.refetch();
+    const callB = result.refetch();
+    reads[2]!(`0xef0100${DELEGATE.slice(2)}`);
+    await callB;
+    reads[1]!("0x");
+    reads[0]!("0x");
+    await callA;
+    expect(result.delegated.value).toBe(true);
+    expect(result.delegate.value?.toLowerCase()).toBe(DELEGATE);
+    expect(result.isFetching.value).toBe(false);
+    scope.stop();
+  });
 });

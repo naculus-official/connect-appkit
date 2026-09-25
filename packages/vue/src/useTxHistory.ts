@@ -1,5 +1,6 @@
 import { computed, shallowRef, toValue, watch } from "vue";
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 import type { TxMonitorLike, TxStatusEntry } from "./useTxMonitor";
 
 export interface UseTxHistoryReturn {
@@ -16,37 +17,37 @@ export function useTxHistory(
   chainId: MaybeRefOrGetter<number | null | undefined>,
   monitor: MaybeRefOrGetter<TxMonitorLike | null | undefined>,
 ): UseTxHistoryReturn {
+  // isLoading stays newest-only rather than the guard's counted busy flag.
+  const guard = useActionGuard();
   const entries = shallowRef<TxStatusEntry[]>([]);
   const isLoading = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
 
   const refresh = async (): Promise<void> => {
-    const mine = ++generation;
     const activeMonitor = toValue(monitor);
     if (!activeMonitor) {
+      guard.reset();
       entries.value = [];
       isLoading.value = false;
-      error.value = null;
       return;
     }
     isLoading.value = true;
-    error.value = null;
-    try {
-      const result = await activeMonitor.getTxHistory(
-        toValue(address) ?? undefined,
-        toValue(chainId) ?? undefined,
-      );
-      if (mine === generation) entries.value = result;
-    } catch (err) {
-      if (mine !== generation) return;
-      error.value =
-        err instanceof Error
-          ? err
-          : new Error("Failed to load transaction history");
-    } finally {
-      if (mine === generation) isLoading.value = false;
-    }
+    await guard
+      .run(async (commit) => {
+        try {
+          const result = await activeMonitor.getTxHistory(
+            toValue(address) ?? undefined,
+            toValue(chainId) ?? undefined,
+          );
+          commit(() => {
+            entries.value = result;
+          });
+        } finally {
+          commit(() => {
+            isLoading.value = false;
+          });
+        }
+      }, "Failed to load transaction history")
+      .catch(() => {});
   };
 
   watch(
@@ -69,7 +70,7 @@ export function useTxHistory(
   return {
     entries,
     isLoading,
-    error,
+    error: guard.error,
     refresh,
     summary: computed(() => ({
       pending: entries.value.filter((item) => item.status === "pending").length,

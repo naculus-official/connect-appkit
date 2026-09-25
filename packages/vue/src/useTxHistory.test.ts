@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextTick, ref } from "vue";
+import { effectScope, nextTick, ref } from "vue";
 import { useTxHistory } from "./useTxHistory";
 import type { TxMonitorLike, TxStatusEntry } from "./useTxMonitor";
 
@@ -48,5 +48,28 @@ describe("useTxHistory (Vue)", () => {
     monitor.emitStatus();
     await Promise.resolve();
     expect(out.summary.value).toEqual({ pending: 0, confirmed: 0, failed: 1 });
+  });
+
+  it("keeps the newest history when an older read resolves last", async () => {
+    const monitor = new Monitor();
+    const reads: Array<(entries: TxStatusEntry[]) => void> = [];
+    monitor.getTxHistory = () =>
+      new Promise<TxStatusEntry[]>((resolve) => {
+        reads.push(resolve);
+      });
+    const scope = effectScope();
+    const history = scope.run(() => useTxHistory(null, 1, monitor))!;
+
+    const callA = history.refresh();
+    const callB = history.refresh();
+    const newest = [entry("confirmed")];
+    reads[2]!(newest);
+    await callB;
+    reads[1]!([entry("failed")]);
+    reads[0]!([entry("pending")]);
+    await callA;
+    expect(history.entries.value).toBe(newest);
+    expect(history.isLoading.value).toBe(false);
+    scope.stop();
   });
 });

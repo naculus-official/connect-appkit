@@ -5,7 +5,8 @@ import {
   UNKNOWN_DELEGATION,
 } from "@naculus/connect-core";
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from "vue";
-import { computed, onScopeDispose, shallowRef, toValue, watch } from "vue";
+import { computed, shallowRef, toValue, watch } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 /** Minimal read-only contract; a viem PublicClient can supply getCode. */
 export interface DelegationCodeReader {
@@ -26,37 +27,40 @@ export function useDelegation(
   client: MaybeRefOrGetter<DelegationCodeReader | null | undefined>,
   chainId?: MaybeRefOrGetter<string | null | undefined>,
 ): UseDelegationReturn {
+  // isFetching stays newest-only rather than the guard's counted busy flag.
+  const guard = useActionGuard();
   const status = shallowRef<DelegationStatus>(UNKNOWN_DELEGATION);
   const isFetching = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let disposed = false;
 
   const refetch = async (): Promise<void> => {
-    const mine = ++generation;
     const reader = toValue(client);
     const address = bareEvmAddress(toValue(account));
     status.value = UNKNOWN_DELEGATION;
-    error.value = null;
     if (!reader || !address) {
+      guard.reset();
       isFetching.value = false;
       return;
     }
     isFetching.value = true;
-    try {
-      const code = await reader.getCode({ address });
-      if (!disposed && mine === generation) {
-        status.value = readDelegation(code ?? "0x");
-      }
-    } catch (cause) {
-      if (!disposed && mine === generation) {
-        status.value = UNKNOWN_DELEGATION;
-        error.value =
-          cause instanceof Error ? cause : new Error("Code read failed");
-      }
-    } finally {
-      if (!disposed && mine === generation) isFetching.value = false;
-    }
+    await guard
+      .run(async (commit) => {
+        try {
+          const code = await reader.getCode({ address });
+          commit(() => {
+            status.value = readDelegation(code ?? "0x");
+          });
+        } catch (cause) {
+          commit(() => {
+            status.value = UNKNOWN_DELEGATION;
+          });
+          throw cause;
+        } finally {
+          commit(() => {
+            isFetching.value = false;
+          });
+        }
+      }, "Code read failed")
+      .catch(() => {});
   };
 
   watch(
@@ -66,16 +70,12 @@ export function useDelegation(
     },
     { immediate: true, flush: "sync" },
   );
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
 
   return {
     delegated: computed(() => status.value.delegated),
     delegate: computed(() => status.value.delegate),
     isFetching,
-    error,
+    error: guard.error,
     refetch,
   };
 }
