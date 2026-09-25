@@ -80,6 +80,7 @@ export * from "./session-key-manager";
 // ── Account abstraction ───────────────────────────────────────────
 export * from "./user-op-receipt";
 export * from "./smart-account";
+export * from "./delegation-framework-adapter";
 export * from "./delegation-policy";
 
 // ── Connection state machine ──────────────────────────────────────

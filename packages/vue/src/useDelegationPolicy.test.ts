@@ -1,5 +1,10 @@
 import { buildDelegationPolicyMessage } from "@naculus/connect-appkit-core";
-import { MemoryStorageAdapter, SessionKeyManager } from "@naculus/connect-core";
+import {
+  DELEGATION_FRAMEWORK,
+  MemoryStorageAdapter,
+  SessionKeyManager,
+} from "@naculus/connect-core";
+import { privateKeyToAccount } from "viem/accounts";
 import { describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 import { inScope } from "../test-utils/scope";
@@ -90,5 +95,65 @@ describe("useDelegationPolicy (Vue)", () => {
     expect(api.error.value).toMatchObject({ code: "wallet_unavailable" });
     api.clearError();
     expect(api.error.value).toBeNull();
+  });
+
+  it("creates an eip7702 policy with the caller's typed-data signer and chain", async () => {
+    const owner = privateKeyToAccount(`0x${"42".repeat(32)}`);
+    const manager = new SessionKeyManager(
+      { pbkdf2Iterations: 1_000, unsafeAllowWeakKdf: true, encryptionKey: "k" },
+      new MemoryStorageAdapter(),
+    );
+    const signTypedData = vi.fn(async (typed: { message: { salt: string } }) =>
+      owner.signTypedData({
+        ...typed,
+        message: { ...typed.message, salt: BigInt(typed.message.salt) },
+      } as never),
+    );
+    const chainId = ref<number | null>(8453);
+    const { api } = inScope(() =>
+      useDelegationPolicy({
+        account: `eip155:8453:${owner.address}`,
+        connected: true,
+        signMessage: async () => SIG,
+        verifySignature: async () => true,
+        previewExecution: () => ({
+          strategy: "sequential",
+          atomic: false,
+          sponsored: false,
+          reason: "plan",
+          route: "sequential",
+        }),
+        delegation: {
+          delegated: true,
+          delegate: DELEGATION_FRAMEWORK.eip7702StatelessDeleGator,
+        },
+        managerConfig: { encryptionKey: "k" },
+        manager,
+        origin: "https://app.test",
+        signTypedData,
+        chainId,
+      }),
+    );
+    const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
+    const policy = await api.createPolicy({
+      mode: "eip7702",
+      allowedContracts: [USDC],
+      allowedMethods: ["0xa9059cbb"],
+      tokenAllowances: { [USDC]: 1_000n },
+    });
+    expect(signTypedData).toHaveBeenCalledTimes(1);
+    expect(policy.authorized).toBe(true);
+    await vi.waitFor(() => expect(api.activePolicies.value).toHaveLength(1));
+
+    // The chain is read at call time from the caller's ref.
+    chainId.value = null;
+    await expect(
+      api.createPolicy({
+        mode: "eip7702",
+        allowedContracts: [USDC],
+        allowedMethods: ["0xa9059cbb"],
+        tokenAllowances: { [USDC]: 1_000n },
+      }),
+    ).rejects.toMatchObject({ code: "wallet_unavailable" });
   });
 });

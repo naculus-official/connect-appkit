@@ -8,7 +8,11 @@ import type {
   SessionKeyScope,
   SessionKeyTransaction,
 } from "@naculus/connect-core";
-import { WalletError } from "@naculus/connect-core";
+import {
+  DELEGATION_FRAMEWORK,
+  delegationTypedData,
+  WalletError,
+} from "@naculus/connect-core";
 
 /**
  * Signed off-chain delegation policies: the complete product flow, shared by
@@ -110,11 +114,34 @@ export interface DelegationPolicyDeps {
     delegated: boolean | null;
     delegate: `0x${string}` | null;
   };
+  /**
+   * For `eip7702` policies: the connected wallet's EIP-712 signature
+   * (eth_signTypedData_v4) over `{ domain, types, primaryType, message }` —
+   * viem-style typed data, without an `EIP712Domain` entry in `types`.
+   */
+  signTypedData?: (typedData: DelegationTypedData) => Promise<string>;
+  /** For `eip7702` policies: the connected EIP-155 chain number, or null. */
+  chainId?: () => number | null;
   /** A host-provided encryption key is required for persistent policies. */
   encryptionKeyConfigured: boolean;
   storageAvailable: () => boolean;
   /** Re-read the policy list after a mutation. */
   refresh: () => Promise<void>;
+}
+
+/** The typed data an owner signs to authorize an `eip7702` policy. */
+export type DelegationTypedData = ReturnType<typeof delegationTypedData>;
+
+/** Whether the account delegates to the framework's stateless DeleGator. */
+function delegatesToStatelessDeleGator(delegation: {
+  delegated: boolean | null;
+  delegate: `0x${string}` | null;
+}): boolean {
+  return (
+    delegation.delegated === true &&
+    delegation.delegate?.toLowerCase() ===
+      DELEGATION_FRAMEWORK.eip7702StatelessDeleGator.toLowerCase()
+  );
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────
@@ -202,7 +229,7 @@ export function isVerifiablePolicy(policy: SessionKeyInfo): boolean {
   return (
     policy.status === "active" &&
     Boolean(policy.authorized) &&
-    policy.scope.mode === "offchain"
+    (policy.scope.mode === "offchain" || policy.scope.mode === "eip7702")
   );
 }
 
@@ -235,7 +262,11 @@ export function createDelegationPolicyFlow(
   const { manager, origin } = deps;
 
   const verifyStoredPolicy = async (policy: SessionKeyInfo) => {
+    // An eip7702 policy's authorization is the owner's signed delegation,
+    // verified by connect-core when it was attached; redeeming a tampered
+    // record fails on chain, where the delegation signature is checked.
     if (!isVerifiablePolicy(policy)) return false;
+    if (policy.scope.mode === "eip7702") return true;
     return manager.verifyOffchainAuthorization(
       policy.id,
       buildDelegationPolicyMessage(policy, origin),
@@ -250,10 +281,11 @@ export function createDelegationPolicyFlow(
     if (!signer) {
       throw new WalletError("wallet_unavailable", "No active EVM account");
     }
+    if (scope.mode === "eip7702") return createDelegatedPolicy(scope, signer);
     if (scope.mode && scope.mode !== "offchain") {
       throw new WalletError(
         "method_not_allowed",
-        "This flow creates signed off-chain policies only. EIP-7702 and AA-module policies require a configured on-chain execution adapter.",
+        "This flow creates off-chain and EIP-7702 policies only; AA-module policies need an on-chain module.",
       );
     }
     if (scope.allowedRecipients && scope.allowedRecipients.length > 0) {
@@ -342,6 +374,77 @@ export function createDelegationPolicyFlow(
     }
   };
 
+  /**
+   * An `eip7702` policy: the connected account, already delegated to
+   * EIP7702StatelessDeleGatorImpl, signs a Delegation to the session key
+   * whose caveats enforce the scope on chain (MetaMask Delegation Framework
+   * v1.3.0). connect-core refuses a scope the chain cannot enforce and checks
+   * the signature before attaching it.
+   */
+  const createDelegatedPolicy = async (
+    scope: Partial<SessionKeyScope>,
+    signer: `0x${string}`,
+  ): Promise<SessionKeyInfo> => {
+    if (!deps.signTypedData || !deps.chainId) {
+      throw new WalletError(
+        "method_not_allowed",
+        "EIP-7702 policies need the wallet's signTypedData and the current chain.",
+      );
+    }
+    if (!deps.encryptionKeyConfigured) {
+      throw new WalletError(
+        "method_not_allowed",
+        "Persistent delegation policies require a host-provided encryptionKey. The deterministic compatibility fallback is not a production key boundary.",
+      );
+    }
+    if (!deps.storageAvailable()) {
+      throw new WalletError(
+        "storage_unavailable",
+        "Persistent delegation policy storage is unavailable in this browser",
+      );
+    }
+    if (!delegatesToStatelessDeleGator(deps.delegation())) {
+      throw new WalletError(
+        "method_not_allowed",
+        `The account must first delegate to EIP7702StatelessDeleGatorImpl (${DELEGATION_FRAMEWORK.eip7702StatelessDeleGator}).`,
+      );
+    }
+    const chainId = deps.chainId();
+    if (chainId === null || !Number.isSafeInteger(chainId)) {
+      throw new WalletError("wallet_unavailable", "No connected EVM chain");
+    }
+    let draft: SessionKeyInfo | null = null;
+    try {
+      draft = await manager.createSessionKey(
+        { ...scope, mode: "eip7702" },
+        signer,
+      );
+      const delegation = await manager.prepareDelegation(draft.id, chainId);
+      const signature = await deps.signTypedData(
+        delegationTypedData(delegation),
+      );
+      if (!/^0x[0-9a-fA-F]{130}$/.test(signature)) {
+        throw new WalletError(
+          "invalid_input",
+          "Wallet did not return a valid 65-byte EVM signature",
+        );
+      }
+      await manager.attachDelegation(
+        draft.id,
+        delegation,
+        signature as `0x${string}`,
+      );
+      await deps.refresh();
+      return (
+        (await manager.listSessions()).find((s) => s.id === draft?.id) ?? draft
+      );
+    } catch (cause) {
+      if (draft) await manager.revokeSession(draft.id).catch(() => {});
+      await deps.refresh().catch(() => {});
+      throw cause;
+    }
+  };
+
   const revokePolicy = async (policyId: string) => {
     await manager.revokeSession(policyId);
     await deps.refresh();
@@ -399,11 +502,12 @@ export function createDelegationPolicyFlow(
           delegation.delegate?.toLowerCase() ===
             adapterCheck.executorAddress.toLowerCase()),
     );
+    const delegatedPolicy = policy?.scope.mode === "eip7702";
     const policyReady = Boolean(
       policy?.status === "active" &&
         policy.authorized &&
         authorizationVerified &&
-        policy.scope.mode === "offchain" &&
+        (policy.scope.mode === "offchain" || delegatedPolicy) &&
         signerMatches &&
         scope.valid,
     );
@@ -417,9 +521,15 @@ export function createDelegationPolicyFlow(
         adapterCheck.authorizationInstalled &&
         adapterCheck.promptless &&
         adapterSponsorshipReady &&
-        delegationMatches,
+        delegationMatches &&
+        // An eip7702 policy executes only through a redemption: the key
+        // signs nothing else, so only an eip7702 adapter can carry it.
+        (!delegatedPolicy || adapter?.route === "eip7702"),
     );
-    const ready = Boolean(policyReady && (plan.route || broadcastReady));
+    const ready = Boolean(
+      policyReady &&
+        (delegatedPolicy ? broadcastReady : plan.route || broadcastReady),
+    );
     const reason = !policy
       ? "Policy not found."
       : policy.status !== "active"
@@ -485,12 +595,86 @@ export function createDelegationPolicyFlow(
       tx,
     );
 
+  /**
+   * An eip7702 policy's signature is over its redemption transaction. The
+   * adapter hands the redemption facts in `payload`; connect-core re-encodes
+   * the redemption from the stored delegation and refuses anything else.
+   */
+  const signRedemption = (
+    policyId: string,
+    prepared: PreparedPolicyExecution,
+  ) => {
+    const payload = prepared.payload as
+      | {
+          outerTx?: {
+            to?: string;
+            value?: string;
+            data?: string;
+            chainId?: number;
+            gas?: string;
+          };
+          execution?: {
+            target: `0x${string}`;
+            value: bigint;
+            callData: `0x${string}`;
+          };
+        }
+      | null
+      | undefined;
+    if (!payload?.outerTx || !payload.execution) {
+      throw new WalletError(
+        "invalid_input",
+        "The EIP-7702 adapter did not return a redemption to sign.",
+      );
+    }
+    // The redemption runs on the delegation's chain; a request for another
+    // chain must not be silently redirected there.
+    if (
+      prepared.transaction.chainId !== undefined &&
+      prepared.transaction.chainId !== payload.outerTx.chainId
+    ) {
+      throw new WalletError(
+        "chain_mismatch",
+        `The delegation is for chain ${String(payload.outerTx.chainId)}, not ${prepared.transaction.chainId}.`,
+      );
+    }
+    // The execution redeemed must be the transaction that was checked.
+    const { execution } = payload;
+    if (
+      typeof execution.value !== "bigint" ||
+      execution.value < 0n ||
+      !sameExecutionIntent(prepared.transaction, {
+        to: execution.target,
+        data: execution.callData,
+        value: `0x${execution.value.toString(16)}`,
+        chainId: prepared.transaction.chainId,
+      })
+    ) {
+      throw new WalletError(
+        "invalid_input",
+        "The EIP-7702 adapter's execution differs from the requested transaction.",
+      );
+    }
+    return manager.signDelegationRedemption(
+      policyId,
+      prepared.digest,
+      payload.outerTx,
+      payload.execution,
+    );
+  };
+
   const signPolicyDigest = async (
     policyId: string,
     digest: `0x${string}`,
     tx: SessionKeyTransaction,
   ) => {
     const preview = await previewPolicyExecution(policyId, tx, 1, "any");
+    if (preview.policy?.scope.mode === "eip7702") {
+      throw new WalletError(
+        "method_not_allowed",
+        "An EIP-7702 policy signs only its delegation redemptions; use executePolicy.",
+      );
+    }
     if (!preview.ready) {
       throw new WalletError("method_not_allowed", preview.reason);
     }
@@ -553,11 +737,10 @@ export function createDelegationPolicyFlow(
           "The on-chain policy authorization is not ready.",
       );
     }
-    const signature = await signVerified(
-      policyId,
-      prepared.digest,
-      prepared.transaction,
-    );
+    const signature =
+      preview.policy.scope.mode === "eip7702"
+        ? await signRedemption(policyId, prepared)
+        : await signVerified(policyId, prepared.digest, prepared.transaction);
     const submission = await adapter.broadcast({
       policy: preview.policy,
       prepared,

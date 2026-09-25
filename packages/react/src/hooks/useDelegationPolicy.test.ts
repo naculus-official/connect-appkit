@@ -195,7 +195,9 @@ describe("useDelegationPolicy", () => {
     );
   });
 
-  it("refuses to label a local record as EIP-7702 authorization", async () => {
+  it("refuses an EIP-7702 policy without a typed-data signer", async () => {
+    // An eip7702 policy is authorized only by a signed Delegation; without
+    // the wallet's signTypedData there is nothing to authorize it with.
     const { result } = renderHook(() =>
       useDelegationPolicy({ managerConfig, origin: "https://example.test" }),
     );
@@ -203,7 +205,56 @@ describe("useDelegationPolicy", () => {
     await act(async () => {
       await expect(
         result.current.createPolicy({ ...scope, mode: "eip7702" }),
-      ).rejects.toThrow(/on-chain execution adapter/);
+      ).rejects.toMatchObject({ code: "method_not_allowed" });
+    });
+    expect(mockSignMessage).not.toHaveBeenCalled();
+  });
+
+  it("passes the EIP-7702 delegation for the given chain to signTypedData", async () => {
+    mockUseDelegation.mockReturnValue({
+      delegated: true,
+      delegate: "0x63c0c19a282a1B52b07dD5a65b58948A07DAE32B",
+      code: "0x",
+      isFetching: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    const signTypedData = vi.fn(async () => `0x${"12".repeat(65)}`);
+    const { result } = renderHook(() =>
+      useDelegationPolicy({
+        managerConfig,
+        origin: "https://example.test",
+        signTypedData,
+        chainId: 11155111,
+      }),
+    );
+
+    await act(async () => {
+      // The stub's signature does not recover to the account: core refuses
+      // to attach it, and the draft is revoked.
+      await expect(
+        result.current.createPolicy({
+          ...scope,
+          mode: "eip7702",
+          // Not the account itself: that target is refused before signing.
+          allowedContracts: ["0x1111111111111111111111111111111111111111"],
+          allowedMethods: ["0x12345678"],
+        }),
+      ).rejects.toMatchObject({ code: "session_key_invalid_input" });
+    });
+    expect(signTypedData).toHaveBeenCalledTimes(1);
+    const typed = (
+      signTypedData.mock.calls[0] as unknown as [
+        {
+          primaryType: string;
+          domain: { chainId: number; verifyingContract: string };
+        },
+      ]
+    )[0];
+    expect(typed.primaryType).toBe("Delegation");
+    expect(typed.domain).toMatchObject({
+      chainId: 11155111,
+      verifyingContract: "0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3",
     });
     expect(mockSignMessage).not.toHaveBeenCalled();
   });

@@ -2,6 +2,7 @@ import {
   bareEvmAddress,
   createDelegationPolicyFlow,
   type DelegationPolicyPreview,
+  type DelegationTypedData,
   getSharedSessionKeyManager,
   isVerifiablePolicy,
   type PolicyExecutionAdapter,
@@ -62,6 +63,14 @@ export interface UseDelegationPolicyOptions {
   origin?: string;
   sponsorship?: AtomicityRequirement;
   adapter?: PolicyExecutionAdapter;
+  /**
+   * For `eip7702` policies: the wallet's EIP-712 signer. `message.salt` is a
+   * decimal string (JSON-safe, as `eth_signTypedData_v4` takes it); for viem's
+   * `signTypedData`, pass `{ ...t, message: { ...t.message, salt: BigInt(t.message.salt) } }`.
+   */
+  signTypedData?: MaybeRef<(typedData: DelegationTypedData) => Promise<string>>;
+  /** For `eip7702` policies: the connected EVM chain number. */
+  chainId?: MaybeRefOrGetter<number | null>;
 }
 
 export interface UseDelegationPolicyReturn {
@@ -128,6 +137,15 @@ export function useDelegationPolicy(
       unref(options.previewExecution)(callCount, atomicity),
     sponsorship: options.sponsorship,
     adapter: options.adapter,
+    signTypedData: options.signTypedData
+      ? (typedData) =>
+          unref(
+            options.signTypedData as MaybeRef<
+              (typedData: DelegationTypedData) => Promise<string>
+            >,
+          )(typedData)
+      : undefined,
+    chainId: () => toValue(options.chainId) ?? null,
     delegation: () => toValue(options.delegation),
     encryptionKeyConfigured: Boolean(options.managerConfig?.encryptionKey),
     storageAvailable: () => sessionKeys.storageAvailable,
