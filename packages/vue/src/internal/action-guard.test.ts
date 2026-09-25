@@ -180,3 +180,53 @@ describe("useActionGuard onSettled", () => {
     expect(settled).toEqual([]);
   });
 });
+
+describe("useActionGuard onSettled throwing", () => {
+  it("rejects with the settle error after a success, without leaving busy stuck", async () => {
+    const { guard, scope } = scopedGuard();
+    const settleError = new Error("settle");
+    const outcome = guard.run(async () => "value", "fallback", undefined, {
+      onSettled: () => {
+        throw settleError;
+      },
+    });
+    // The settle error replaces the resolved value.
+    await expect(outcome).rejects.toBe(settleError);
+    expect(guard.busy.value).toBe(false);
+    expect(guard.error.value).toBeNull();
+
+    await expect(guard.run(async () => "next", "fallback")).resolves.toBe(
+      "next",
+    );
+    expect(guard.busy.value).toBe(false);
+    scope.stop();
+  });
+
+  it("rejects with the settle error after a failure, keeping the published action error", async () => {
+    const { guard, scope } = scopedGuard();
+    const actionError = new Error("action");
+    const settleError = new Error("settle");
+    const outcome = guard.run(
+      () => Promise.reject(actionError),
+      "fallback",
+      undefined,
+      {
+        onSettled: () => {
+          throw settleError;
+        },
+      },
+    );
+    // The settle error replaces the rethrown action error; the action error
+    // was already published before onSettled ran.
+    await expect(outcome).rejects.toBe(settleError);
+    expect(guard.error.value).toBe(actionError);
+    expect(guard.busy.value).toBe(false);
+
+    await expect(guard.run(async () => "next", "fallback")).resolves.toBe(
+      "next",
+    );
+    expect(guard.busy.value).toBe(false);
+    expect(guard.error.value).toBeNull();
+    scope.stop();
+  });
+});

@@ -80,9 +80,14 @@ export function useActionGuard(): ActionGuard {
       if (!disposed && own === generation) error.value = normalized;
       throw normalized;
     } finally {
-      if (options.onSettled) commit(options.onSettled);
-      active--;
-      if (!disposed) busy.value = active > 0;
+      // A throwing onSettled rejects the call with its own error, but must
+      // not leave the concurrency count (and so busy) stuck.
+      try {
+        if (options.onSettled) commit(options.onSettled);
+      } finally {
+        active--;
+        if (!disposed) busy.value = active > 0;
+      }
     }
   };
 

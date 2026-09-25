@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { effectScope, ref } from "vue";
+import { effectScope, ref, watch } from "vue";
 
 const mocks = vi.hoisted(() => ({ simulate: vi.fn(), config: vi.fn() }));
 vi.mock("@naculus/connect-core", async () => {
@@ -94,6 +94,29 @@ describe("useSimulateTransfer", () => {
     await callA;
     expect(hook.result.value).toBe(newest);
     expect(hook.loading.value).toBe(false);
+    scope.stop();
+  });
+
+  it("rejects rather than throws when a sync loading watcher throws", async () => {
+    const scope = effectScope();
+    const failure = new Error("watcher");
+    const hook = scope.run(() => {
+      const state = useSimulateTransfer({ chainId: 1 });
+      watch(
+        state.loading,
+        (busy) => {
+          if (busy) throw failure;
+        },
+        { flush: "sync" },
+      );
+      return state;
+    })!;
+
+    let pending!: Promise<unknown>;
+    expect(() => {
+      pending = hook.simulate(address, address, address, "1");
+    }).not.toThrow();
+    await expect(pending).rejects.toBe(failure);
     scope.stop();
   });
 });

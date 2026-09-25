@@ -36,7 +36,8 @@ export function useSimulateTransfer(
   const loading = shallowRef(false);
   let manager: SimulationManager | undefined;
 
-  const simulate: UseSimulateTransferReturn["simulate"] = (
+  // Async so a throw from the synchronous loading write still rejects.
+  const simulate: UseSimulateTransferReturn["simulate"] = async (
     tokenAddress,
     from,
     to,
@@ -44,7 +45,7 @@ export function useSimulateTransfer(
     callOptions,
   ) => {
     loading.value = true;
-    return guard.run(
+    return await guard.run(
       async (commit) => {
         const fallbackRpcUrl = unref(options.rpcUrl);
         const endpoint = resolveSimulationEndpoint(
