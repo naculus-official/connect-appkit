@@ -42,12 +42,12 @@ export function useRouteQuote(
     timer = null;
   };
 
-  // The quote function when the current input permits a request. Otherwise
+  // The quote function when `current` permits a request. Otherwise
   // supersede the in-flight request, stop loading and return null. The
   // visible error is kept, as before; quotes are cleared for unquotable input
   // and kept when only the quote function is missing.
-  const requestable = (): GetRouteQuotes | null => {
-    if (!isQuotableInput(toValue(input))) {
+  const requestable = (current: RouteQuoteInput): GetRouteQuotes | null => {
+    if (!isQuotableInput(current)) {
       guard.invalidate();
       loading.value = false;
       quotes.value = [];
@@ -63,9 +63,10 @@ export function useRouteQuote(
   };
 
   const fetchQuotes = async (): Promise<void> => {
-    const fn = requestable();
-    if (!fn) return;
+    // One snapshot: the input that is validated is the input that is quoted.
     const current = toValue(input);
+    const fn = requestable(current);
+    if (!fn) return;
     loading.value = true;
     await guard
       .run(
@@ -111,7 +112,12 @@ export function useRouteQuote(
     ],
     () => {
       clearTimer();
-      if (!requestable()) return;
+      // Any input change supersedes the in-flight request at once, not when
+      // the debounced replacement starts. Committed quotes and the visible
+      // error stay; loading stays true if a request was running, until the
+      // replacement settles or the input permits no request.
+      guard.invalidate();
+      if (!requestable(toValue(input))) return;
       timer = setTimeout(() => {
         timer = null;
         void fetchQuotes();

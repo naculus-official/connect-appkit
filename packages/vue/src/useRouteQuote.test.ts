@@ -255,3 +255,176 @@ describe("useRouteQuote (Vue) input that permits no request", () => {
     scope.stop();
   });
 });
+
+describe("useRouteQuote (Vue) valid input changes during the debounce", () => {
+  const inputB: RouteQuoteInput = { ...input, amount: "2000000" };
+
+  /** Mount on `input`, let the debounced fetch publish `shown`, then start A. */
+  async function withRequestARunning() {
+    const answers: Array<{
+      resolve: (quotes: RouteQuote[]) => void;
+      reject: (cause: Error) => void;
+    }> = [];
+    const getQuotes = vi.fn(
+      () =>
+        new Promise<RouteQuote[]>((resolve, reject) => {
+          answers.push({ resolve, reject });
+        }),
+    );
+    const current = ref<RouteQuoteInput>({ ...input, amount: "500000" });
+    const { api, scope } = inScope(() =>
+      useRouteQuote(current, getQuotes, { debounceMs: 100 }),
+    );
+    await vi.advanceTimersByTimeAsync(100);
+    const shown = [quote("shown")];
+    answers[0]!.resolve(shown);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(api.quotes.value).toBe(shown);
+
+    current.value = input;
+    await vi.advanceTimersByTimeAsync(100);
+    expect(getQuotes).toHaveBeenCalledTimes(2);
+    expect(api.loading.value).toBe(true);
+    return { answers, getQuotes, current, api, scope, shown };
+  }
+
+  it("drops A's late quotes and keeps loading until B settles", async () => {
+    vi.useFakeTimers();
+    try {
+      const { answers, getQuotes, current, api, scope, shown } =
+        await withRequestARunning();
+
+      current.value = inputB;
+      await nextTick();
+      answers[1]!.resolve([quote("a")]);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(getQuotes).toHaveBeenCalledTimes(2);
+      expect(api.quotes.value).toBe(shown);
+      expect(api.error.value).toBeNull();
+      expect(api.loading.value).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(100);
+      expect(getQuotes).toHaveBeenCalledTimes(3);
+      expect(getQuotes).toHaveBeenLastCalledWith(
+        inputB.fromChain,
+        inputB.toChain,
+        inputB.fromToken,
+        inputB.amount,
+        undefined,
+        undefined,
+      );
+      const newest = [quote("b")];
+      answers[2]!.resolve(newest);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(api.quotes.value).toBe(newest);
+      expect(api.error.value).toBeNull();
+      expect(api.loading.value).toBe(false);
+      scope.stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("drops A's late failure and keeps loading until B settles", async () => {
+    vi.useFakeTimers();
+    try {
+      const { answers, current, api, scope, shown } =
+        await withRequestARunning();
+
+      current.value = inputB;
+      await nextTick();
+      answers[1]!.reject(new Error("stale"));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(api.quotes.value).toBe(shown);
+      expect(api.error.value).toBeNull();
+      expect(api.loading.value).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(100);
+      const newest = [quote("b")];
+      answers[2]!.resolve(newest);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(api.quotes.value).toBe(newest);
+      expect(api.error.value).toBeNull();
+      expect(api.loading.value).toBe(false);
+      scope.stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps the visible error until B starts", async () => {
+    vi.useFakeTimers();
+    try {
+      const current = ref<RouteQuoteInput>(input);
+      const getQuotes = vi
+        .fn<GetRouteQuotes>()
+        .mockRejectedValueOnce(new Error("no route"))
+        .mockResolvedValueOnce([quote("b")]);
+      const { api, scope } = inScope(() =>
+        useRouteQuote(current, getQuotes, { debounceMs: 100 }),
+      );
+      await vi.advanceTimersByTimeAsync(100);
+      const visible = api.error.value;
+      expect(visible?.message).toBe("no route");
+
+      current.value = inputB;
+      await vi.advanceTimersByTimeAsync(50);
+      expect(api.error.value).toBe(visible);
+      expect(api.loading.value).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(50);
+      expect(api.error.value).toBeNull();
+      expect(api.quotes.value.map((q) => q.routeId)).toEqual(["b"]);
+      scope.stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("useRouteQuote (Vue) input snapshot and clearing", () => {
+  it("validates and quotes the same read of the input", async () => {
+    let armed = false;
+    let reads = 0;
+    // Once armed, only the first read is quotable.
+    const source = (): RouteQuoteInput => {
+      if (!armed) return input;
+      reads++;
+      return reads === 1 ? input : { ...input, amount: "" };
+    };
+    const getQuotes = vi.fn<GetRouteQuotes>().mockResolvedValue([quote("a")]);
+    const { api, scope } = inScope(() =>
+      useRouteQuote(source, getQuotes, { debounceMs: 60_000 }),
+    );
+    armed = true;
+    await api.refresh();
+    expect(reads).toBe(1);
+    expect(getQuotes).toHaveBeenCalledWith(
+      input.fromChain,
+      input.toChain,
+      input.fromToken,
+      input.amount,
+      undefined,
+      undefined,
+    );
+    scope.stop();
+  });
+
+  it("clears published quotes once the input is unquotable", async () => {
+    const current = ref<RouteQuoteInput>(input);
+    const shown = [quote("shown")];
+    const { api, scope } = inScope(() =>
+      useRouteQuote(current, () => Promise.resolve(shown), {
+        debounceMs: 60_000,
+      }),
+    );
+    await api.refresh();
+    expect(api.quotes.value).toBe(shown);
+
+    current.value = { ...input, amount: "0" };
+    await nextTick();
+    expect(api.quotes.value).toEqual([]);
+    expect(api.loading.value).toBe(false);
+    scope.stop();
+  });
+});

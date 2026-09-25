@@ -285,3 +285,24 @@ describe("useSolanaBalance (Vue) once the address or endpoint is removed", () =>
     scope.stop();
   });
 });
+
+describe("useSolanaBalance (Vue) clearing a published balance", () => {
+  it.each(["address", "endpoint"] as const)(
+    "clears the balance once the %s is removed",
+    async (removed) => {
+      rpc({ result: { value: 4_000_000_000 } }, { result: { value: {} } });
+      const address = ref<string | null>(ADDRESS);
+      const rpcUrl = ref<string | null>("https://rpc.test");
+      const { api, scope } = inScope(() => useSolanaBalance(address, rpcUrl));
+      await vi.waitFor(() => expect(api.balance.value?.sol).toBe("4"));
+
+      if (removed === "address") address.value = null;
+      else rpcUrl.value = null;
+      await nextTick();
+      expect(api.balance.value).toBeNull();
+      expect(api.error.value).toBeNull();
+      expect(api.isFetching.value).toBe(false);
+      scope.stop();
+    },
+  );
+});
