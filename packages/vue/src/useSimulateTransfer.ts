@@ -46,40 +46,39 @@ export function useSimulateTransfer(
     loading.value = true;
     return guard.run(
       async (commit) => {
-        try {
-          const fallbackRpcUrl = unref(options.rpcUrl);
-          const endpoint = resolveSimulationEndpoint(
-            callOptions?.chainId,
-            unref(options.chainId),
-            callOptions?.rpcUrl,
-            fallbackRpcUrl,
-          );
-          manager ??= new SimulationManager({
-            enabled: true,
-            rpcUrl: fallbackRpcUrl,
-            autoSimulate: false,
-          });
-          const value = await manager.simulateERC20Transfer(
-            tokenAddress,
-            from,
-            to,
-            amount,
-            endpoint.chainId,
-            callOptions?.decimals,
-            endpoint.rpcUrl,
-          );
-          commit(() => {
-            result.value = value;
-          });
-          return value;
-        } finally {
-          commit(() => {
-            loading.value = false;
-          });
-        }
+        const fallbackRpcUrl = unref(options.rpcUrl);
+        const endpoint = resolveSimulationEndpoint(
+          callOptions?.chainId,
+          unref(options.chainId),
+          callOptions?.rpcUrl,
+          fallbackRpcUrl,
+        );
+        manager ??= new SimulationManager({
+          enabled: true,
+          rpcUrl: fallbackRpcUrl,
+          autoSimulate: false,
+        });
+        const value = await manager.simulateERC20Transfer(
+          tokenAddress,
+          from,
+          to,
+          amount,
+          endpoint.chainId,
+          callOptions?.decimals,
+          endpoint.rpcUrl,
+        );
+        commit(() => {
+          result.value = value;
+        });
+        return value;
       },
       "Simulation failed",
       (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+      {
+        onSettled: () => {
+          loading.value = false;
+        },
+      },
     );
   };
 

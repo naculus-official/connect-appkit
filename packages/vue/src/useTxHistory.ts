@@ -32,8 +32,8 @@ export function useTxHistory(
     }
     isLoading.value = true;
     await guard
-      .run(async (commit) => {
-        try {
+      .run(
+        async (commit) => {
           const result = await activeMonitor.getTxHistory(
             toValue(address) ?? undefined,
             toValue(chainId) ?? undefined,
@@ -41,12 +41,15 @@ export function useTxHistory(
           commit(() => {
             entries.value = result;
           });
-        } finally {
-          commit(() => {
+        },
+        "Failed to load transaction history",
+        undefined,
+        {
+          onSettled: () => {
             isLoading.value = false;
-          });
-        }
-      }, "Failed to load transaction history")
+          },
+        },
+      )
       .catch(() => {});
   };
 

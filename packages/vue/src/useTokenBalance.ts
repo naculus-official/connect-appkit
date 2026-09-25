@@ -64,7 +64,7 @@ export function useTokenBalance(
   options: UseTokenBalanceOptions = {},
 ): UseTokenBalanceReturn {
   // The guard owns generation, disposal and error. isFetching stays
-  // newest-only (written through commit), not the guard's counted busy flag.
+  // newest-only (cleared via onSettled), not the guard's counted busy flag.
   const guard = useActionGuard();
   const tokenBalances = shallowRef<TokenBalanceResult[]>([]);
   const isFetching = shallowRef(false);
@@ -82,42 +82,47 @@ export function useTokenBalance(
     }
     isFetching.value = true;
     await guard
-      .run(async (commit) => {
-        try {
-          const results = await Promise.all(
-            list.map(async (token): Promise<TokenBalanceResult> => {
-              try {
-                const raw = await reader.readContract({
-                  address: token.address,
-                  abi: ERC20_MIN_ABI,
-                  functionName: "balanceOf",
-                  args: [address],
-                });
-                const value = BigInt(raw as bigint | string | number);
-                return {
-                  ...token,
-                  balance: value.toString(),
-                  formatted: formatUnits(value, token.decimals),
-                };
-              } catch {
-                return { ...token, balance: null, formatted: null };
-              }
-            }),
-          );
-          commit(() => {
-            tokenBalances.value = results;
-          });
-        } catch (cause) {
-          commit(() => {
-            tokenBalances.value = [];
-          });
-          throw cause;
-        } finally {
-          commit(() => {
+      .run(
+        async (commit) => {
+          try {
+            const results = await Promise.all(
+              list.map(async (token): Promise<TokenBalanceResult> => {
+                try {
+                  const raw = await reader.readContract({
+                    address: token.address,
+                    abi: ERC20_MIN_ABI,
+                    functionName: "balanceOf",
+                    args: [address],
+                  });
+                  const value = BigInt(raw as bigint | string | number);
+                  return {
+                    ...token,
+                    balance: value.toString(),
+                    formatted: formatUnits(value, token.decimals),
+                  };
+                } catch {
+                  return { ...token, balance: null, formatted: null };
+                }
+              }),
+            );
+            commit(() => {
+              tokenBalances.value = results;
+            });
+          } catch (cause) {
+            commit(() => {
+              tokenBalances.value = [];
+            });
+            throw cause;
+          }
+        },
+        "Failed to fetch token balances",
+        undefined,
+        {
+          onSettled: () => {
             isFetching.value = false;
-          });
-        }
-      }, "Failed to fetch token balances")
+          },
+        },
+      )
       .catch(() => {});
   };
 

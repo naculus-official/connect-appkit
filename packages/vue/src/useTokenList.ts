@@ -62,20 +62,19 @@ export function useTokenList(
     await guard
       .run(
         async (commit) => {
-          try {
-            await op();
-            commit(() => {
-              tokens.value = select();
-              isLoaded.value = true;
-            });
-          } finally {
-            commit(() => {
-              isLoading.value = false;
-            });
-          }
+          await op();
+          commit(() => {
+            tokens.value = select();
+            isLoaded.value = true;
+          });
         },
         "Token list load failed",
         (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        {
+          onSettled: () => {
+            isLoading.value = false;
+          },
+        },
       )
       .catch(() => {});
   };

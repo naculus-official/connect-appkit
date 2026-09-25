@@ -58,14 +58,15 @@ export function useCompareCosts(
               comparisons.value = [];
             });
             throw cause;
-          } finally {
-            commit(() => {
-              loading.value = false;
-            });
           }
         },
         "Cost comparison failed",
         (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        {
+          onSettled: () => {
+            loading.value = false;
+          },
+        },
       )
       .catch(() => {});
   };

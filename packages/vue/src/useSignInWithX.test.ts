@@ -37,4 +37,35 @@ describe("useSignInWithX (Vue) stale results", () => {
     expect(state.isSigningIn.value).toBe(false);
     scope.stop();
   });
+
+  it("publishes nothing after disposal", async () => {
+    let finish!: (value: SiwxResult) => void;
+    let fail!: (cause: Error) => void;
+    const action = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<SiwxResult>((resolve) => {
+            finish = resolve;
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<SiwxResult>((_resolve, reject) => {
+            fail = reject;
+          }),
+      );
+    const scope = effectScope();
+    const state = scope.run(() => useSignInWithX(action))!;
+    const callA = state.signIn({ domain: "example.com" });
+    const callB = state.signIn({ domain: "example.com" }).catch(() => {});
+    scope.stop();
+    fail(new Error("late"));
+    finish(signed("0xLate"));
+    await callA;
+    await callB;
+    expect(state.result.value).toBeNull();
+    expect(state.error.value).toBeNull();
+    expect(state.isSigningIn.value).toBe(true);
+  });
 });

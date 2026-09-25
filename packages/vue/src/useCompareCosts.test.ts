@@ -38,4 +38,24 @@ describe("useCompareCosts (Vue) stale results", () => {
     expect(api.loading.value).toBe(false);
     scope.stop();
   });
+
+  it("publishes nothing after disposal", async () => {
+    const answers: Array<(rows: CostComparison[]) => void> = [];
+    const compare = vi.fn(
+      () =>
+        new Promise<CostComparison[]>((resolve) => {
+          answers.push(resolve);
+        }),
+    );
+    const { api, scope } = inScope(() =>
+      useCompareCosts({ operation: "swap", chains: ["eip155:1"] }, compare),
+    );
+    const call = api.refresh();
+    scope.stop();
+    answers[0]!([comparison("eip155:1")]);
+    answers[1]!([comparison("eip155:1")]);
+    await call;
+    expect(api.comparisons.value).toEqual([]);
+    expect(api.loading.value).toBe(true);
+  });
 });

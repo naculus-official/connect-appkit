@@ -116,4 +116,22 @@ describe("useTokenBalance (Vue)", () => {
     expect(api.isFetching.value).toBe(false);
     scope.stop();
   });
+
+  it("publishes nothing after disposal", async () => {
+    const releases: Array<(value: bigint) => void> = [];
+    const readContract = vi.fn(
+      () =>
+        new Promise<bigint>((resolve) => {
+          releases.push(resolve);
+        }),
+    );
+    const { api, scope } = inScope(() =>
+      useTokenBalance(OWNER, { readContract }, [USDC]),
+    );
+    scope.stop();
+    releases[0]!(1_000_000n);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(api.tokenBalances.value).toEqual([]);
+    expect(api.isFetching.value).toBe(true);
+  });
 });

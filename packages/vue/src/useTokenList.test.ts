@@ -111,4 +111,24 @@ describe("useTokenList (Vue)", () => {
     expect(api.isLoading.value).toBe(false);
     scope.stop();
   });
+
+  it("publishes nothing after disposal", async () => {
+    const manager = fakeManager();
+    let fail!: (cause: Error) => void;
+    manager.refresh.mockImplementation(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          fail = reject;
+        }),
+    );
+    const { api, scope } = inScope(() =>
+      useTokenList("eip155:1", { manager, autoLoad: false }),
+    );
+    const call = api.refetch();
+    scope.stop();
+    fail(new Error("late"));
+    await call;
+    expect(api.error.value).toBeNull();
+    expect(api.isLoading.value).toBe(true);
+  });
 });

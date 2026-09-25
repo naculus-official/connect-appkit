@@ -43,23 +43,28 @@ export function useDelegation(
     }
     isFetching.value = true;
     await guard
-      .run(async (commit) => {
-        try {
-          const code = await reader.getCode({ address });
-          commit(() => {
-            status.value = readDelegation(code ?? "0x");
-          });
-        } catch (cause) {
-          commit(() => {
-            status.value = UNKNOWN_DELEGATION;
-          });
-          throw cause;
-        } finally {
-          commit(() => {
+      .run(
+        async (commit) => {
+          try {
+            const code = await reader.getCode({ address });
+            commit(() => {
+              status.value = readDelegation(code ?? "0x");
+            });
+          } catch (cause) {
+            commit(() => {
+              status.value = UNKNOWN_DELEGATION;
+            });
+            throw cause;
+          }
+        },
+        "Code read failed",
+        undefined,
+        {
+          onSettled: () => {
             isFetching.value = false;
-          });
-        }
-      }, "Code read failed")
+          },
+        },
+      )
       .catch(() => {});
   };
 

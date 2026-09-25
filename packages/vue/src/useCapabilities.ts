@@ -68,26 +68,31 @@ export function useCapabilities(
     }
     isFetching.value = true;
     await guard
-      .run(async (commit) => {
-        try {
-          // Checked above; the closure does not keep the narrowing.
-          const raw = await activeClient.getCapabilities!(activeSession);
-          commit(() => {
-            capabilities.value = normalizeCapabilities(raw);
-          });
-        } catch (err) {
-          // Cleared rather than left stale. A capability map from a previous
-          // wallet is a worse answer than no answer.
-          commit(() => {
-            capabilities.value = null;
-          });
-          throw err;
-        } finally {
-          commit(() => {
+      .run(
+        async (commit) => {
+          try {
+            // Checked above; the closure does not keep the narrowing.
+            const raw = await activeClient.getCapabilities!(activeSession);
+            commit(() => {
+              capabilities.value = normalizeCapabilities(raw);
+            });
+          } catch (err) {
+            // Cleared rather than left stale. A capability map from a previous
+            // wallet is a worse answer than no answer.
+            commit(() => {
+              capabilities.value = null;
+            });
+            throw err;
+          }
+        },
+        "Capability query failed",
+        undefined,
+        {
+          onSettled: () => {
             isFetching.value = false;
-          });
-        }
-      }, "Capability query failed")
+          },
+        },
+      )
       .catch(() => {});
   };
 

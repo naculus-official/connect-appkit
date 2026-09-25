@@ -136,4 +136,33 @@ describe("useSolanaBalance (Vue)", () => {
     expect(api.isFetching.value).toBe(false);
     scope.stop();
   });
+
+  it("publishes nothing after disposal", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: { body: string }) => {
+        await gate;
+        const { method } = JSON.parse(init.body) as { method: string };
+        return {
+          ok: true,
+          json: async () =>
+            method === "getBalance"
+              ? { result: { value: 1_000_000_000 } }
+              : { result: { value: {} } },
+        };
+      }),
+    );
+    const { api, scope } = inScope(() =>
+      useSolanaBalance(ADDRESS, "https://rpc.test"),
+    );
+    scope.stop();
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(api.balance.value).toBeNull();
+    expect(api.isFetching.value).toBe(true);
+  });
 });

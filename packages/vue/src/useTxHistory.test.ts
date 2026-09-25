@@ -72,4 +72,21 @@ describe("useTxHistory (Vue)", () => {
     expect(history.isLoading.value).toBe(false);
     scope.stop();
   });
+
+  it("publishes nothing after disposal", async () => {
+    const monitor = new Monitor();
+    const reads: Array<(entries: TxStatusEntry[]) => void> = [];
+    monitor.getTxHistory = () =>
+      new Promise<TxStatusEntry[]>((resolve) => {
+        reads.push(resolve);
+      });
+    const scope = effectScope();
+    const history = scope.run(() => useTxHistory(null, 1, monitor))!;
+    scope.stop();
+    reads[0]!([entry("confirmed")]);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(history.entries.value).toEqual([]);
+    expect(history.isLoading.value).toBe(true);
+  });
 });

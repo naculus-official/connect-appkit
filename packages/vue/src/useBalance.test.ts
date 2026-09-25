@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { nextTick, ref } from "vue";
+import { nextTick, ref, watch } from "vue";
 import { inScope } from "../test-utils/scope";
 import { useBalance } from "./useBalance";
 
@@ -104,6 +104,51 @@ describe("useBalance (Vue)", () => {
     reads[0]!.resolve(0n);
     await callA;
     expect(api.balance.value).toBe("2");
+    expect(api.isFetching.value).toBe(false);
+    scope.stop();
+  });
+
+  it("clears isFetching only once a failure's error is visible", async () => {
+    const seen: string[] = [];
+    const { api, scope } = inScope(() => {
+      const state = useBalance(ADDRESS, {
+        getBalance: () => Promise.reject(new Error("boom")),
+      });
+      const record = (flush: string) => (busy: boolean) => {
+        if (!busy) seen.push(`${flush}:${state.error.value?.message ?? null}`);
+      };
+      watch(state.isFetching, record("sync"), { flush: "sync" });
+      watch(state.isFetching, record("pre"));
+      return state;
+    });
+    await vi.waitFor(() => expect(api.isFetching.value).toBe(false));
+    await nextTick();
+    expect(seen).toEqual(["sync:boom", "pre:boom"]);
+    scope.stop();
+  });
+
+  it("ignores an older failure and settlement while a newer read is in flight", async () => {
+    const reads: Array<ReturnType<typeof deferred<bigint>>> = [];
+    const getBalance = vi.fn(() => {
+      const read = deferred<bigint>();
+      reads.push(read);
+      return read.promise;
+    });
+    const { api, scope } = inScope(() => useBalance(ADDRESS, { getBalance }));
+
+    const callA = api.refetch();
+    const callB = api.refetch();
+    reads[1]!.reject(new Error("stale"));
+    await callA;
+    // A settling must not clear B's loading flag or publish A's error.
+    expect(api.isFetching.value).toBe(true);
+    expect(api.error.value).toBeNull();
+    reads[2]!.resolve(2n);
+    await callB;
+    reads[0]!.reject(new Error("initial"));
+    await Promise.resolve();
+    expect(api.balance.value).toBe("2");
+    expect(api.error.value).toBeNull();
     expect(api.isFetching.value).toBe(false);
     scope.stop();
   });

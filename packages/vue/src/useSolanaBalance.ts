@@ -27,8 +27,8 @@ export function useSolanaBalance(
   rpcUrl: MaybeRefOrGetter<string | null | undefined>,
 ): UseSolanaBalanceReturn {
   // Guards against a slow response for a previous address overwriting the
-  // balance of the one now on screen. isFetching stays newest-only (written
-  // through commit), not the guard's counted busy flag.
+  // balance of the one now on screen. isFetching stays newest-only (cleared
+  // via onSettled), not the guard's counted busy flag.
   const guard = useActionGuard();
   const balance = shallowRef<SolanaBalance | null>(null);
   const isFetching = ref(false);
@@ -42,25 +42,30 @@ export function useSolanaBalance(
     }
     isFetching.value = true;
     await guard
-      .run(async (commit) => {
-        try {
-          const next = await getSolanaBalance(url, addr);
-          commit(() => {
-            balance.value = next;
-          });
-        } catch (err) {
-          // Cleared rather than left stale: a balance shown next to an error
-          // reads as the current balance, and it is not.
-          commit(() => {
-            balance.value = null;
-          });
-          throw err;
-        } finally {
-          commit(() => {
+      .run(
+        async (commit) => {
+          try {
+            const next = await getSolanaBalance(url, addr);
+            commit(() => {
+              balance.value = next;
+            });
+          } catch (err) {
+            // Cleared rather than left stale: a balance shown next to an error
+            // reads as the current balance, and it is not.
+            commit(() => {
+              balance.value = null;
+            });
+            throw err;
+          }
+        },
+        "Balance read failed",
+        undefined,
+        {
+          onSettled: () => {
             isFetching.value = false;
-          });
-        }
-      }, "Balance read failed")
+          },
+        },
+      )
       .catch(() => {});
   };
 

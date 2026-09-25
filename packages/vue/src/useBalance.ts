@@ -45,7 +45,7 @@ export function useBalance(
   options: UseBalanceOptions = {},
 ): UseBalanceReturn {
   // The guard owns generation, disposal and error. isFetching stays
-  // newest-only (written through commit), not the guard's counted busy flag.
+  // newest-only (cleared via onSettled), not the guard's counted busy flag.
   const guard = useActionGuard();
   const balance = shallowRef<string | null>(null);
   const isFetching = shallowRef(false);
@@ -62,25 +62,30 @@ export function useBalance(
     }
     isFetching.value = true;
     await guard
-      .run(async (commit) => {
-        try {
-          const next = await reader.getBalance({ address });
-          commit(() => {
-            balance.value = next.toString();
-          });
-        } catch (cause) {
-          // Cleared rather than left stale: a balance shown next to an error
-          // reads as the current balance, and it is not.
-          commit(() => {
-            balance.value = null;
-          });
-          throw cause;
-        } finally {
-          commit(() => {
+      .run(
+        async (commit) => {
+          try {
+            const next = await reader.getBalance({ address });
+            commit(() => {
+              balance.value = next.toString();
+            });
+          } catch (cause) {
+            // Cleared rather than left stale: a balance shown next to an error
+            // reads as the current balance, and it is not.
+            commit(() => {
+              balance.value = null;
+            });
+            throw cause;
+          }
+        },
+        "Balance read failed",
+        undefined,
+        {
+          onSettled: () => {
             isFetching.value = false;
-          });
-        }
-      }, "Balance read failed")
+          },
+        },
+      )
       .catch(() => {});
   };
 

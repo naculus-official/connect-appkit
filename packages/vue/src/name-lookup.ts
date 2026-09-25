@@ -57,18 +57,21 @@ export function useNameLookup<T>(
             );
             commit(() => {
               data.value = result;
-              loading.value = false;
             });
           } catch (cause) {
             commit(() => {
               data.value = null;
-              loading.value = false;
             });
             throw cause;
           }
         },
         "Name lookup failed",
         (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        {
+          onSettled: () => {
+            loading.value = false;
+          },
+        },
       )
       .catch(() => {});
   };

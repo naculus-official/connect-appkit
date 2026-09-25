@@ -77,14 +77,15 @@ export function useRouteQuote(
               quotes.value = [];
             });
             throw cause;
-          } finally {
-            commit(() => {
-              loading.value = false;
-            });
           }
         },
         "Route quote failed",
         (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        {
+          onSettled: () => {
+            loading.value = false;
+          },
+        },
       )
       .catch(() => {});
   };
