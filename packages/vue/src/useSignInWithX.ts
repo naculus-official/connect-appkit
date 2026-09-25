@@ -1,5 +1,6 @@
 import type { MaybeRef, ShallowRef } from "vue";
-import { onScopeDispose, shallowRef, unref } from "vue";
+import { shallowRef, unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 import type { SiwxResult, SiwxSignInAction } from "./siwx";
 
 export interface UseSignInWithXReturn {
@@ -15,44 +16,32 @@ export interface UseSignInWithXReturn {
 export function useSignInWithX(
   action: MaybeRef<SiwxSignInAction>,
 ): UseSignInWithXReturn {
-  const isSigningIn = shallowRef(false);
+  // The previous contract is exactly the guard's: counted busy flag,
+  // newest-only error and result, rethrow, reset() and clearError().
+  const guard = useActionGuard();
   const result = shallowRef<SiwxResult | null>(null);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let active = 0;
-  let disposed = false;
 
-  const signIn: SiwxSignInAction = async (options) => {
+  const signIn: SiwxSignInAction = (options) => {
     const invoke = unref(action);
-    const own = ++generation;
-    active++;
-    isSigningIn.value = true;
-    error.value = null;
-    try {
+    return guard.run(async (commit) => {
       const next = await invoke(options);
-      if (!disposed && own === generation) result.value = next;
+      commit(() => {
+        result.value = next;
+      });
       return next;
-    } catch (cause) {
-      const normalized =
-        cause instanceof Error ? cause : new Error("SIWX sign-in failed");
-      if (!disposed && own === generation) error.value = normalized;
-      throw normalized;
-    } finally {
-      active--;
-      if (!disposed) isSigningIn.value = active > 0;
-    }
-  };
-  const clearError = (): void => {
-    error.value = null;
+    }, "SIWX sign-in failed");
   };
   const reset = (): void => {
-    generation++;
+    guard.reset();
     result.value = null;
-    error.value = null;
   };
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
-  return { signIn, isSigningIn, result, error, clearError, reset };
+
+  return {
+    signIn,
+    isSigningIn: guard.busy,
+    result,
+    error: guard.error,
+    clearError: guard.clearError,
+    reset,
+  };
 }
