@@ -22,6 +22,8 @@ export interface ActionGuard {
   clearError(): void;
   /** Forget the current error and stop any in-flight call from publishing. */
   reset(): void;
+  /** Stop any in-flight call from publishing, keeping the visible error. */
+  invalidate(): void;
   /** Permanently stop this guard from publishing state. */
   dispose(): void;
 }
@@ -65,8 +67,11 @@ export function useActionGuard(): ActionGuard {
     }
   };
 
-  const reset = (): void => {
+  const invalidate = (): void => {
     generation++;
+  };
+  const reset = (): void => {
+    invalidate();
     error.value = null;
   };
   const clearError = (): void => {
@@ -80,5 +85,5 @@ export function useActionGuard(): ActionGuard {
 
   onScopeDispose(dispose);
 
-  return { busy, error, run, clearError, reset, dispose };
+  return { busy, error, run, clearError, reset, invalidate, dispose };
 }
