@@ -35,7 +35,7 @@ export function useTransactionSimulation(
   const isSimulating = shallowRef(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const simulate = (): Promise<SimulationResult> => {
+  const simulate = async (): Promise<SimulationResult> => {
     const transaction = toValue(tx);
     // Without a transaction the call still supersedes older ones and
     // publishes its ("unavailable") result, but it has never cleared the
@@ -64,7 +64,7 @@ export function useTransactionSimulation(
       }
     }, "Simulation failed");
     if (!transaction) guard.error.value = keptError;
-    return pending;
+    return await pending;
   };
 
   watch(

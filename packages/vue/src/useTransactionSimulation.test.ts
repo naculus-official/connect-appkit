@@ -131,4 +131,19 @@ describe("useTransactionSimulation", () => {
     expect(hook.isSimulating.value).toBe(false);
     scope.stop();
   });
+
+  it("rejects rather than throws when the transaction getter throws", async () => {
+    const scope = effectScope();
+    let armed = false;
+    const hook = scope.run(() =>
+      useTransactionSimulation(() => {
+        if (armed) throw new Error("bad input");
+        return undefined;
+      }),
+    )!;
+    armed = true;
+    const pending = hook.simulate();
+    await expect(pending).rejects.toThrow("bad input");
+    scope.stop();
+  });
 });
