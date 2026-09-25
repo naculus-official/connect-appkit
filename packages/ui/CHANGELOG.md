@@ -1,5 +1,17 @@
 # @naculus/connect-appkit-ui
 
+## 0.3.0
+
+### Minor Changes
+
+- Require connect-lib 0.3.0. The `@naculus/connect-core` peer ranges of appkit-core and appkit-ui move from `^0.2.x` to `^0.3.0` (a `^0.2` range does not admit 0.3.0), and the React and Vue dependencies on connect-lib packages follow. No appkit API change: this release keeps the two SDKs in lockstep. connect-lib 0.3.0 is breaking only for apps that use `@naculus/wallet-engine` session keys directly — see its CHANGELOG.
+
+### Patch Changes
+
+- Updated dependencies
+  - @naculus/connect-appkit-core@0.3.0
+  - @naculus/connect-appkit-react@0.3.0
+
 ## 0.2.8
 
 ### Patch Changes
