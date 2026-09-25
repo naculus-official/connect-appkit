@@ -1,6 +1,10 @@
-import type { RouteQuote } from "@naculus/connect-appkit-core";
+import type {
+  GetRouteQuotes,
+  RouteQuote,
+  RouteQuoteInput,
+} from "@naculus/connect-appkit-core";
 import { describe, expect, it, vi } from "vitest";
-import { nextTick, watch } from "vue";
+import { nextTick, ref, watch } from "vue";
 import { inScope } from "../test-utils/scope";
 import { useRouteQuote } from "./useRouteQuote";
 
@@ -112,5 +116,142 @@ describe("useRouteQuote (Vue) stale results", () => {
     await call;
     expect(api.quotes.value).toEqual([]);
     expect(api.loading.value).toBe(true);
+  });
+});
+
+describe("useRouteQuote (Vue) input that permits no request", () => {
+  function deferredQuotes() {
+    const answers: Array<{
+      resolve: (quotes: RouteQuote[]) => void;
+      reject: (cause: Error) => void;
+    }> = [];
+    const getQuotes = vi.fn(
+      () =>
+        new Promise<RouteQuote[]>((resolve, reject) => {
+          answers.push({ resolve, reject });
+        }),
+    );
+    return { answers, getQuotes };
+  }
+
+  it.each([
+    ["empty", ""],
+    ["unquotable", "0"],
+  ])("drops a late result once the amount is %s", async (_label, amount) => {
+    const { answers, getQuotes } = deferredQuotes();
+    const current = ref<RouteQuoteInput>(input);
+    const { api, scope } = inScope(() =>
+      useRouteQuote(current, getQuotes, { debounceMs: 60_000 }),
+    );
+
+    const callA = api.refresh();
+    expect(api.loading.value).toBe(true);
+    current.value = { ...input, amount };
+    await nextTick();
+    expect(api.loading.value).toBe(false);
+    expect(api.quotes.value).toEqual([]);
+
+    answers[0]!.resolve([quote("late")]);
+    await callA;
+    expect(api.quotes.value).toEqual([]);
+    expect(api.error.value).toBeNull();
+    expect(api.loading.value).toBe(false);
+    scope.stop();
+  });
+
+  it("drops a late failure once the input is emptied", async () => {
+    const { answers, getQuotes } = deferredQuotes();
+    const current = ref<RouteQuoteInput>(input);
+    const { api, scope } = inScope(() =>
+      useRouteQuote(current, getQuotes, { debounceMs: 60_000 }),
+    );
+
+    const callA = api.refresh();
+    current.value = { ...input, fromToken: "" };
+    await nextTick();
+    expect(api.loading.value).toBe(false);
+
+    answers[0]!.reject(new Error("stale"));
+    await callA;
+    expect(api.quotes.value).toEqual([]);
+    expect(api.error.value).toBeNull();
+    expect(api.loading.value).toBe(false);
+    scope.stop();
+  });
+
+  it("stops loading without a quote function and keeps the last quotes", async () => {
+    const { answers, getQuotes } = deferredQuotes();
+    const fn = ref<GetRouteQuotes | null>(getQuotes);
+    const { api, scope } = inScope(() =>
+      useRouteQuote(input, fn, { debounceMs: 60_000 }),
+    );
+
+    const first = api.refresh();
+    const shown = [quote("shown")];
+    answers[0]!.resolve(shown);
+    await first;
+
+    const callA = api.refresh();
+    expect(api.loading.value).toBe(true);
+    fn.value = null;
+    await nextTick();
+    expect(api.loading.value).toBe(false);
+    expect(api.quotes.value).toBe(shown);
+
+    answers[1]!.resolve([quote("late")]);
+    await callA;
+    expect(api.quotes.value).toBe(shown);
+    expect(api.error.value).toBeNull();
+    expect(api.loading.value).toBe(false);
+    scope.stop();
+  });
+
+  it("keeps the visible error when the input is emptied", async () => {
+    const current = ref<RouteQuoteInput>(input);
+    const { api, scope } = inScope(() =>
+      useRouteQuote(current, () => Promise.reject(new Error("no route")), {
+        debounceMs: 60_000,
+      }),
+    );
+    await api.refresh();
+    const visible = api.error.value;
+    expect(visible?.message).toBe("no route");
+
+    current.value = { ...input, amount: "" };
+    await nextTick();
+    expect(api.error.value).toBe(visible);
+    expect(api.quotes.value).toEqual([]);
+    expect(api.loading.value).toBe(false);
+    scope.stop();
+  });
+
+  it("keeps B when A resolves after B for a changed valid input", async () => {
+    const { answers, getQuotes } = deferredQuotes();
+    const current = ref<RouteQuoteInput>(input);
+    const { api, scope } = inScope(() =>
+      useRouteQuote(current, getQuotes, { debounceMs: 60_000 }),
+    );
+
+    const callA = api.refresh();
+    current.value = { ...input, amount: "2000000" };
+    await nextTick();
+    const callB = api.refresh();
+    expect(getQuotes).toHaveBeenLastCalledWith(
+      input.fromChain,
+      input.toChain,
+      input.fromToken,
+      "2000000",
+      undefined,
+      undefined,
+    );
+    const newest = [quote("b")];
+    answers[1]!.resolve(newest);
+    await callB;
+    answers[0]!.resolve([quote("a")]);
+    await callA;
+    expect(api.quotes.value).toBe(newest);
+    expect(api.error.value).toBeNull();
+    expect(api.loading.value).toBe(false);
+    scope.stop();
   });
 });

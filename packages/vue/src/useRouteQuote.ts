@@ -42,20 +42,30 @@ export function useRouteQuote(
     timer = null;
   };
 
-  const fetchQuotes = async (): Promise<void> => {
-    const current = toValue(input);
-    const fn = unref(getQuotes);
-    // Early exits supersede the in-flight request but, as before, leave the
-    // visible error and the loading flag alone.
-    if (!isQuotableInput(current)) {
+  // The quote function when the current input permits a request. Otherwise
+  // supersede the in-flight request, stop loading and return null. The
+  // visible error is kept, as before; quotes are cleared for unquotable input
+  // and kept when only the quote function is missing.
+  const requestable = (): GetRouteQuotes | null => {
+    if (!isQuotableInput(toValue(input))) {
       guard.invalidate();
+      loading.value = false;
       quotes.value = [];
-      return;
+      return null;
     }
+    const fn = unref(getQuotes);
     if (!fn) {
       guard.invalidate();
-      return;
+      loading.value = false;
+      return null;
     }
+    return fn;
+  };
+
+  const fetchQuotes = async (): Promise<void> => {
+    const fn = requestable();
+    if (!fn) return;
+    const current = toValue(input);
     loading.value = true;
     await guard
       .run(
@@ -99,12 +109,9 @@ export function useRouteQuote(
       () => toValue(input).amount,
       () => unref(getQuotes),
     ],
-    ([fromChain, toChain, fromToken, , amount]) => {
+    () => {
       clearTimer();
-      if (!fromChain || !toChain || !fromToken || !amount) {
-        quotes.value = [];
-        return;
-      }
+      if (!requestable()) return;
       timer = setTimeout(() => {
         timer = null;
         void fetchQuotes();
