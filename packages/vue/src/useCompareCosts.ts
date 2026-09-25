@@ -33,15 +33,17 @@ export function useCompareCosts(
   const fetchComparisons = async (): Promise<void> => {
     const { operation, chains, options } = toValue(input);
     const fn = unref(compareCosts);
-    // Early exits supersede the in-flight request but, as before, leave the
-    // visible error and the loading flag alone.
+    // Early exits supersede the in-flight request and stop loading, but, as
+    // before, leave the visible error alone.
     if (!chains || chains.length === 0) {
       guard.invalidate();
+      loading.value = false;
       comparisons.value = [];
       return;
     }
     if (!fn) {
       guard.invalidate();
+      loading.value = false;
       return;
     }
     loading.value = true;

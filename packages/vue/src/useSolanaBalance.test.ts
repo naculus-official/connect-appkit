@@ -166,3 +166,143 @@ describe("useSolanaBalance (Vue)", () => {
     expect(api.isFetching.value).toBe(true);
   });
 });
+
+describe("useSolanaBalance (Vue) once the address or endpoint is removed", () => {
+  const OTHER_RPC = "https://other-rpc.test";
+
+  /**
+   * Stubs fetch so every read waits on its endpoint's gate, then answers
+   * with `lamports` or fails with HTTP 500 (`lamports === null`).
+   */
+  function gatedRpc(answers: Record<string, number | null>) {
+    const release = new Map<string, () => void>();
+    const gates = new Map<string, Promise<void>>();
+    for (const url of Object.keys(answers)) {
+      gates.set(
+        url,
+        new Promise<void>((resolve) => {
+          release.set(url, resolve);
+        }),
+      );
+    }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init: { body: string }) => {
+        await gates.get(url);
+        const lamports = answers[url];
+        if (lamports === null) return { ok: false, status: 500 };
+        const { method } = JSON.parse(init.body) as { method: string };
+        return {
+          ok: true,
+          json: async () =>
+            method === "getBalance"
+              ? { result: { value: lamports } }
+              : { result: { value: {} } },
+        };
+      }),
+    );
+    return (url: string) => release.get(url)!();
+  }
+
+  const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it("drops a late balance once the address is removed", async () => {
+    const release = gatedRpc({ "https://rpc.test": 1_000_000_000 });
+    const address = ref<string | null>(ADDRESS);
+    const { api, scope } = inScope(() =>
+      useSolanaBalance(address, "https://rpc.test"),
+    );
+    expect(api.isFetching.value).toBe(true);
+
+    address.value = null;
+    await nextTick();
+    expect(api.isFetching.value).toBe(false);
+    expect(api.balance.value).toBeNull();
+
+    release("https://rpc.test");
+    await flush();
+    expect(api.balance.value).toBeNull();
+    expect(api.error.value).toBeNull();
+    expect(api.isFetching.value).toBe(false);
+    scope.stop();
+  });
+
+  it("drops a late failure once the endpoint is removed", async () => {
+    const release = gatedRpc({ "https://rpc.test": null });
+    const rpcUrl = ref<string | null>("https://rpc.test");
+    const { api, scope } = inScope(() => useSolanaBalance(ADDRESS, rpcUrl));
+    expect(api.isFetching.value).toBe(true);
+
+    rpcUrl.value = null;
+    await nextTick();
+    expect(api.isFetching.value).toBe(false);
+
+    release("https://rpc.test");
+    await flush();
+    expect(api.balance.value).toBeNull();
+    expect(api.error.value).toBeNull();
+    expect(api.isFetching.value).toBe(false);
+    scope.stop();
+  });
+
+  it("keeps the visible error and clears the balance once the address is removed", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 500 })),
+    );
+    const address = ref<string | null>(ADDRESS);
+    const { api, scope } = inScope(() =>
+      useSolanaBalance(address, "https://rpc.test"),
+    );
+    await vi.waitFor(() => expect(api.error.value).not.toBeNull());
+    const visible = api.error.value;
+
+    address.value = null;
+    await nextTick();
+    expect(api.error.value).toBe(visible);
+    expect(api.balance.value).toBeNull();
+    expect(api.isFetching.value).toBe(false);
+    scope.stop();
+  });
+
+  it("keeps B when the old endpoint's failure arrives after B", async () => {
+    const release = gatedRpc({
+      "https://rpc.test": null,
+      [OTHER_RPC]: 2_000_000_000,
+    });
+    const rpcUrl = ref<string>("https://rpc.test");
+    const { api, scope } = inScope(() => useSolanaBalance(ADDRESS, rpcUrl));
+
+    rpcUrl.value = OTHER_RPC;
+    await nextTick();
+    release(OTHER_RPC);
+    await vi.waitFor(() => expect(api.balance.value?.sol).toBe("2"));
+    release("https://rpc.test");
+    await flush();
+    expect(api.balance.value?.sol).toBe("2");
+    expect(api.error.value).toBeNull();
+    expect(api.isFetching.value).toBe(false);
+    scope.stop();
+  });
+});
+
+describe("useSolanaBalance (Vue) clearing a published balance", () => {
+  it.each(["address", "endpoint"] as const)(
+    "clears the balance once the %s is removed",
+    async (removed) => {
+      rpc({ result: { value: 4_000_000_000 } }, { result: { value: {} } });
+      const address = ref<string | null>(ADDRESS);
+      const rpcUrl = ref<string | null>("https://rpc.test");
+      const { api, scope } = inScope(() => useSolanaBalance(address, rpcUrl));
+      await vi.waitFor(() => expect(api.balance.value?.sol).toBe("4"));
+
+      if (removed === "address") address.value = null;
+      else rpcUrl.value = null;
+      await nextTick();
+      expect(api.balance.value).toBeNull();
+      expect(api.error.value).toBeNull();
+      expect(api.isFetching.value).toBe(false);
+      scope.stop();
+    },
+  );
+});

@@ -1,6 +1,43 @@
+import {
+  type SimulationTransaction,
+  simulateTransactionPreview,
+} from "@naculus/connect-appkit-core";
+import type { SimulationResult } from "@naculus/connect-core";
 import { describe, expect, it, vi } from "vitest";
 import { effectScope, nextTick, ref, watch, watchEffect } from "vue";
 import { useTransactionSimulation } from "./useTransactionSimulation";
+
+// Pass-through by default; a test can hand one call a deferred promise to
+// settle a simulation (with a result or a thrown error) on its own schedule.
+vi.mock("@naculus/connect-appkit-core", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@naculus/connect-appkit-core")>();
+  return {
+    ...actual,
+    simulateTransactionPreview: vi.fn(actual.simulateTransactionPreview),
+  };
+});
+
+function deferPreview() {
+  let resolve!: (value: SimulationResult) => void;
+  let reject!: (cause: Error) => void;
+  vi.mocked(simulateTransactionPreview).mockImplementationOnce(
+    () =>
+      new Promise<SimulationResult>((res, rej) => {
+        resolve = res;
+        reject = rej;
+      }),
+  );
+  return {
+    resolve: (value: SimulationResult) => resolve(value),
+    reject: (cause: Error) => reject(cause),
+  };
+}
+
+/** A distinct result object; tests compare results by identity only. */
+function preview(summary: string): SimulationResult {
+  return { status: "success", summary } as unknown as SimulationResult;
+}
 
 const tx = { to: `0x${"1".repeat(40)}` };
 
@@ -218,5 +255,75 @@ describe("useTransactionSimulation", () => {
     expect(hook.result.value).toBeUndefined();
     expect(hook.isSimulating.value).toBe(true);
     expect(hook.error.value).toBeNull();
+  });
+});
+
+describe("useTransactionSimulation once the transaction is removed", () => {
+  it("drops a late result and stops simulating", async () => {
+    const transaction = ref<SimulationTransaction | undefined>(tx);
+    const scope = effectScope();
+    const hook = scope.run(() => useTransactionSimulation(transaction))!;
+    const a = deferPreview();
+    const callA = hook.simulate();
+    expect(hook.isSimulating.value).toBe(true);
+
+    transaction.value = undefined;
+    await nextTick();
+    expect(hook.isSimulating.value).toBe(false);
+
+    a.resolve(preview("late"));
+    await callA;
+    expect(hook.result.value).toBeUndefined();
+    expect(hook.error.value).toBeNull();
+    expect(hook.isSimulating.value).toBe(false);
+    scope.stop();
+  });
+
+  it("drops a late failure and keeps the last result", async () => {
+    const transaction = ref<SimulationTransaction | undefined>(tx);
+    const scope = effectScope();
+    const hook = scope.run(() => useTransactionSimulation(transaction))!;
+    const shown = preview("shown");
+    const first = deferPreview();
+    const firstCall = hook.simulate();
+    first.resolve(shown);
+    await firstCall;
+    expect(hook.result.value).toBe(shown);
+
+    const a = deferPreview();
+    const callA = hook.simulate().catch((cause: Error) => cause);
+    expect(hook.isSimulating.value).toBe(true);
+    transaction.value = undefined;
+    await nextTick();
+    expect(hook.isSimulating.value).toBe(false);
+    expect(hook.result.value).toBe(shown);
+
+    a.reject(new Error("stale"));
+    expect(await callA).toBeInstanceOf(Error);
+    expect(hook.result.value).toBe(shown);
+    expect(hook.error.value).toBeNull();
+    expect(hook.isSimulating.value).toBe(false);
+    scope.stop();
+  });
+
+  it("keeps B when A settles after B for a changed transaction", async () => {
+    const transaction = ref<SimulationTransaction | undefined>(tx);
+    const scope = effectScope();
+    const hook = scope.run(() => useTransactionSimulation(transaction))!;
+    const a = deferPreview();
+    const callA = hook.simulate().catch((cause: Error) => cause);
+    transaction.value = { to: `0x${"4".repeat(40)}` };
+    await nextTick();
+    const b = deferPreview();
+    const callB = hook.simulate();
+    const newest = preview("b");
+    b.resolve(newest);
+    await callB;
+    a.reject(new Error("stale"));
+    await callA;
+    expect(hook.result.value).toBe(newest);
+    expect(hook.error.value).toBeNull();
+    expect(hook.isSimulating.value).toBe(false);
+    scope.stop();
   });
 });
