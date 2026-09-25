@@ -92,4 +92,46 @@ describe("useTokenBalance (Vue)", () => {
     await nextTick();
     expect(api.getTokenBalance(USDC.address)?.balance).toBe("9");
   });
+
+  it("keeps the newest refetch when an older one resolves last", async () => {
+    const releases: Array<(value: bigint) => void> = [];
+    const readContract = vi.fn(
+      () =>
+        new Promise<bigint>((resolve) => {
+          releases.push(resolve);
+        }),
+    );
+    const { api, scope } = inScope(() =>
+      useTokenBalance(OWNER, { readContract }, [USDC]),
+    );
+
+    const callA = api.refetch();
+    const callB = api.refetch();
+    releases[2]!(2_000_000n);
+    await callB;
+    releases[1]!(1_000_000n);
+    releases[0]!(0n);
+    await callA;
+    expect(api.getTokenBalance(USDC.address)?.formatted).toBe("2");
+    expect(api.isFetching.value).toBe(false);
+    scope.stop();
+  });
+
+  it("publishes nothing after disposal", async () => {
+    const releases: Array<(value: bigint) => void> = [];
+    const readContract = vi.fn(
+      () =>
+        new Promise<bigint>((resolve) => {
+          releases.push(resolve);
+        }),
+    );
+    const { api, scope } = inScope(() =>
+      useTokenBalance(OWNER, { readContract }, [USDC]),
+    );
+    scope.stop();
+    releases[0]!(1_000_000n);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(api.tokenBalances.value).toEqual([]);
+    expect(api.isFetching.value).toBe(true);
+  });
 });

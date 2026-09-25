@@ -91,4 +91,78 @@ describe("useSolanaBalance (Vue)", () => {
     await nextTick();
     expect(api.balance.value).toBeNull();
   });
+
+  it("keeps the newest address when an older read resolves last", async () => {
+    const OTHER = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
+    const release = new Map<string, () => void>();
+    const gates = new Map<string, Promise<void>>();
+    for (const key of [ADDRESS, OTHER]) {
+      gates.set(
+        key,
+        new Promise<void>((resolve) => {
+          release.set(key, resolve);
+        }),
+      );
+    }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: { body: string }) => {
+        const key = init.body.includes(OTHER) ? OTHER : ADDRESS;
+        await gates.get(key);
+        const { method } = JSON.parse(init.body) as { method: string };
+        const lamports = key === OTHER ? 2_000_000_000 : 1_000_000_000;
+        return {
+          ok: true,
+          json: async () =>
+            method === "getBalance"
+              ? { result: { value: lamports } }
+              : { result: { value: {} } },
+        };
+      }),
+    );
+    const address = ref<string>(ADDRESS);
+    const { api, scope } = inScope(() =>
+      useSolanaBalance(address, "https://rpc.test"),
+    );
+
+    // Request A is the initial read; request B starts on the address change.
+    address.value = OTHER;
+    await nextTick();
+    release.get(OTHER)!();
+    await vi.waitFor(() => expect(api.balance.value?.sol).toBe("2"));
+    release.get(ADDRESS)!();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(api.balance.value?.sol).toBe("2");
+    expect(api.isFetching.value).toBe(false);
+    scope.stop();
+  });
+
+  it("publishes nothing after disposal", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: { body: string }) => {
+        await gate;
+        const { method } = JSON.parse(init.body) as { method: string };
+        return {
+          ok: true,
+          json: async () =>
+            method === "getBalance"
+              ? { result: { value: 1_000_000_000 } }
+              : { result: { value: {} } },
+        };
+      }),
+    );
+    const { api, scope } = inScope(() =>
+      useSolanaBalance(ADDRESS, "https://rpc.test"),
+    );
+    scope.stop();
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(api.balance.value).toBeNull();
+    expect(api.isFetching.value).toBe(true);
+  });
 });

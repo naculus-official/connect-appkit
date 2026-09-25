@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { nextTick, ref } from "vue";
+import { effectScope, nextTick, ref } from "vue";
 import { useCapabilities } from "./useCapabilities";
 
 const SESSION = { id: "session-1" };
@@ -122,5 +122,84 @@ describe("useCapabilities (Vue)", () => {
     await nextTick();
     expect(atomic.value).toBe("unsupported");
     expect(client.getCapabilities).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the newest answer when an older query resolves last", async () => {
+    const answers: Array<(raw: Record<string, unknown>) => void> = [];
+    const client = {
+      getCapabilities: vi.fn(
+        () =>
+          new Promise<Record<string, unknown>>((resolve) => {
+            answers.push(resolve);
+          }),
+      ),
+    };
+    const scope = effectScope();
+    const state = scope.run(() =>
+      useCapabilities(client, SESSION, "eip155:1"),
+    )!;
+
+    const callA = state.refetch();
+    const callB = state.refetch();
+    answers[2]!({ "eip155:1": { atomic: { status: "supported" } } });
+    await callB;
+    answers[1]!({ "eip155:1": { atomic: { status: "unsupported" } } });
+    answers[0]!({ "eip155:1": { atomic: { status: "unsupported" } } });
+    await callA;
+    expect(state.atomic.value).toBe("supported");
+    expect(state.isFetching.value).toBe(false);
+    scope.stop();
+  });
+
+  it("drops an older failure that arrives after a newer answer", async () => {
+    const pending: Array<{
+      resolve: (raw: Record<string, unknown>) => void;
+      reject: (cause: Error) => void;
+    }> = [];
+    const client = {
+      getCapabilities: vi.fn(
+        () =>
+          new Promise<Record<string, unknown>>((resolve, reject) => {
+            pending.push({ resolve, reject });
+          }),
+      ),
+    };
+    const scope = effectScope();
+    const state = scope.run(() =>
+      useCapabilities(client, SESSION, "eip155:1"),
+    )!;
+
+    const callA = state.refetch();
+    const callB = state.refetch();
+    pending[2]!.resolve({ "eip155:1": { atomic: { status: "supported" } } });
+    await callB;
+    pending[1]!.reject(new Error("stale"));
+    await callA;
+    expect(state.atomic.value).toBe("supported");
+    expect(state.error.value).toBeNull();
+    expect(state.isFetching.value).toBe(false);
+    scope.stop();
+  });
+
+  it("publishes nothing after disposal", async () => {
+    const answers: Array<(raw: Record<string, unknown>) => void> = [];
+    const client = {
+      getCapabilities: vi.fn(
+        () =>
+          new Promise<Record<string, unknown>>((resolve) => {
+            answers.push(resolve);
+          }),
+      ),
+    };
+    const scope = effectScope();
+    const state = scope.run(() =>
+      useCapabilities(client, SESSION, "eip155:1"),
+    )!;
+    scope.stop();
+    answers[0]!({ "eip155:1": { atomic: { status: "supported" } } });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(state.capabilities.value).toBeNull();
+    expect(state.isFetching.value).toBe(true);
   });
 });

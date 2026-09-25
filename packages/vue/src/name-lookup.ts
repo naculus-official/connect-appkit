@@ -1,7 +1,8 @@
 import { getResolver } from "@naculus/connect-appkit-core";
 import type { NameResolver, NameResolverConfig } from "@naculus/connect-core";
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from "vue";
-import { computed, onScopeDispose, shallowRef, toValue, watch } from "vue";
+import { computed, shallowRef, toValue, watch } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface NameLookupReturn<T> {
   data: ShallowRef<T | null>;
@@ -26,42 +27,53 @@ interface NameLookupOptions<T> {
 export function useNameLookup<T>(
   options: NameLookupOptions<T>,
 ): NameLookupReturn<T> {
+  // loading stays newest-only rather than the guard's counted busy flag.
+  const guard = useActionGuard();
   const data = shallowRef<T | null>(null) as ShallowRef<T | null>;
   const loading = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let disposed = false;
 
   const run = (): void => {
     const input = toValue(options.input).trim();
     const skip = toValue(options.skip) ?? false;
     const scope = toValue(options.scope);
     const config = toValue(options.resolverConfig);
-    const mine = ++generation;
     if (!input || skip) {
+      guard.reset();
       data.value = null;
       loading.value = false;
-      error.value = null;
       return;
     }
 
     // Never show the previous name/address beside a new input while it loads.
     data.value = null;
     loading.value = true;
-    error.value = null;
-    Promise.resolve()
-      .then(() => options.query(getResolver(config), input, scope))
-      .then((result) => {
-        if (disposed || mine !== generation) return;
-        data.value = result;
-        loading.value = false;
-      })
-      .catch((cause: unknown) => {
-        if (disposed || mine !== generation) return;
-        data.value = null;
-        error.value = cause instanceof Error ? cause : new Error(String(cause));
-        loading.value = false;
-      });
+    void guard
+      .run(
+        async (commit) => {
+          try {
+            // The query still starts one microtask after the input change.
+            const result = await Promise.resolve().then(() =>
+              options.query(getResolver(config), input, scope),
+            );
+            commit(() => {
+              data.value = result;
+            });
+          } catch (cause) {
+            commit(() => {
+              data.value = null;
+            });
+            throw cause;
+          }
+        },
+        "Name lookup failed",
+        (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        {
+          onSettled: () => {
+            loading.value = false;
+          },
+        },
+      )
+      .catch(() => {});
   };
 
   watch(
@@ -75,15 +87,11 @@ export function useNameLookup<T>(
     run,
     { immediate: true, flush: "sync", deep: true },
   );
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
 
   return {
     data,
     isLoading: computed(() => loading.value),
-    error,
+    error: guard.error,
     refetch: run,
   };
 }

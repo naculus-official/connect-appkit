@@ -7,6 +7,7 @@ import {
 } from "@naculus/connect-appkit-core";
 import { computed, shallowRef, toValue, watchEffect } from "vue";
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export type { AtomicSupport, ChainCapabilities };
 
@@ -48,40 +49,51 @@ export function useCapabilities(
   session: MaybeRefOrGetter<unknown>,
   chainId: MaybeRefOrGetter<string | null | undefined>,
 ): UseCapabilitiesReturn {
+  // Guards a slow answer for a previous session overwriting a newer one.
+  // isFetching stays newest-only rather than the guard's counted busy flag.
+  const guard = useActionGuard();
   const capabilities = shallowRef<Record<string, ChainCapabilities> | null>(
     null,
   );
   const isFetching = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  // Guards a slow answer for a previous session overwriting a newer one.
-  let generation = 0;
 
   const refetch = async () => {
-    const mine = ++generation;
     const activeClient = toValue(client);
     const activeSession = toValue(session);
     if (!activeClient?.getCapabilities || !activeSession) {
+      guard.reset();
       capabilities.value = null;
       isFetching.value = false;
-      error.value = null;
       return;
     }
     isFetching.value = true;
-    error.value = null;
-    try {
-      const raw = await activeClient.getCapabilities(activeSession);
-      if (mine !== generation) return;
-      capabilities.value = normalizeCapabilities(raw);
-    } catch (err) {
-      if (mine !== generation) return;
-      // Cleared rather than left stale. A capability map from a previous
-      // wallet is a worse answer than no answer.
-      capabilities.value = null;
-      error.value =
-        err instanceof Error ? err : new Error("Capability query failed");
-    } finally {
-      if (mine === generation) isFetching.value = false;
-    }
+    await guard
+      .run(
+        async (commit) => {
+          try {
+            // Checked above; the closure does not keep the narrowing.
+            const raw = await activeClient.getCapabilities!(activeSession);
+            commit(() => {
+              capabilities.value = normalizeCapabilities(raw);
+            });
+          } catch (err) {
+            // Cleared rather than left stale. A capability map from a previous
+            // wallet is a worse answer than no answer.
+            commit(() => {
+              capabilities.value = null;
+            });
+            throw err;
+          }
+        },
+        "Capability query failed",
+        undefined,
+        {
+          onSettled: () => {
+            isFetching.value = false;
+          },
+        },
+      )
+      .catch(() => {});
   };
 
   // Re-queries when the client or session changes, the way the React effect
@@ -102,7 +114,7 @@ export function useCapabilities(
       atomicSupportFor(capabilities.value, toValue(chainId)),
     ),
     isFetching,
-    error,
+    error: guard.error,
     refetch,
   };
 }

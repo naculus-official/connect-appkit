@@ -6,7 +6,8 @@ import {
   type TokenListSource,
 } from "@naculus/connect-core";
 import type { MaybeRefOrGetter, ShallowRef } from "vue";
-import { onScopeDispose, shallowRef, toValue, watch } from "vue";
+import { shallowRef, toValue, watch } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseTokenListOptions {
   /** Load on creation (default: true). */
@@ -42,12 +43,11 @@ export function useTokenList(
   if (options.sources) config.sources = options.sources;
   const manager = options.manager ?? new TokenListManager(config);
 
+  // isLoading stays newest-only rather than the guard's counted busy flag.
+  const guard = useActionGuard();
   const tokens = shallowRef<TokenListEntry[]>([]);
   const isLoading = shallowRef(options.autoLoad !== false);
   const isLoaded = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let disposed = false;
 
   const select = (): TokenListEntry[] => {
     const id = toValue(chainId);
@@ -58,20 +58,25 @@ export function useTokenList(
   };
 
   const run = async (op: () => Promise<unknown>): Promise<void> => {
-    const own = ++generation;
     isLoading.value = true;
-    error.value = null;
-    try {
-      await op();
-      if (disposed || own !== generation) return;
-      tokens.value = select();
-      isLoaded.value = true;
-    } catch (cause) {
-      if (disposed || own !== generation) return;
-      error.value = cause instanceof Error ? cause : new Error(String(cause));
-    } finally {
-      if (!disposed && own === generation) isLoading.value = false;
-    }
+    await guard
+      .run(
+        async (commit) => {
+          await op();
+          commit(() => {
+            tokens.value = select();
+            isLoaded.value = true;
+          });
+        },
+        "Token list load failed",
+        (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        {
+          onSettled: () => {
+            isLoading.value = false;
+          },
+        },
+      )
+      .catch(() => {});
   };
 
   watch(
@@ -82,16 +87,11 @@ export function useTokenList(
     { immediate: true },
   );
 
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
-
   return {
     tokens,
     isLoading,
     isLoaded,
-    error,
+    error: guard.error,
     refetch: () => run(() => manager.refresh()),
   };
 }

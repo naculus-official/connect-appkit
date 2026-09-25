@@ -1,9 +1,7 @@
-import {
-  getSolanaBalance,
-  type SolanaBalance,
-} from "@naculus/connect-core";
-import { onScopeDispose, ref, shallowRef, toValue, watchEffect } from "vue";
+import { getSolanaBalance, type SolanaBalance } from "@naculus/connect-core";
+import { ref, shallowRef, toValue, watchEffect } from "vue";
 import type { MaybeRefOrGetter } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseSolanaBalanceReturn {
   balance: ReturnType<typeof shallowRef<SolanaBalance | null>>;
@@ -28,13 +26,12 @@ export function useSolanaBalance(
   address: MaybeRefOrGetter<string | null | undefined>,
   rpcUrl: MaybeRefOrGetter<string | null | undefined>,
 ): UseSolanaBalanceReturn {
+  // Guards against a slow response for a previous address overwriting the
+  // balance of the one now on screen. isFetching stays newest-only (cleared
+  // via onSettled), not the guard's counted busy flag.
+  const guard = useActionGuard();
   const balance = shallowRef<SolanaBalance | null>(null);
   const isFetching = ref(false);
-  const error = shallowRef<Error | null>(null);
-  // Guards against a slow response for a previous address overwriting the
-  // balance of the one now on screen.
-  let generation = 0;
-  let disposed = false;
 
   const refetch = async () => {
     const addr = toValue(address);
@@ -43,23 +40,33 @@ export function useSolanaBalance(
       balance.value = null;
       return;
     }
-    const own = ++generation;
     isFetching.value = true;
-    error.value = null;
-    try {
-      const next = await getSolanaBalance(url, addr);
-      if (disposed || own !== generation) return;
-      balance.value = next;
-    } catch (err) {
-      if (disposed || own !== generation) return;
-      // Cleared rather than left stale: a balance shown next to an error
-      // reads as the current balance, and it is not.
-      balance.value = null;
-      error.value =
-        err instanceof Error ? err : new Error("Balance read failed");
-    } finally {
-      if (!disposed && own === generation) isFetching.value = false;
-    }
+    await guard
+      .run(
+        async (commit) => {
+          try {
+            const next = await getSolanaBalance(url, addr);
+            commit(() => {
+              balance.value = next;
+            });
+          } catch (err) {
+            // Cleared rather than left stale: a balance shown next to an error
+            // reads as the current balance, and it is not.
+            commit(() => {
+              balance.value = null;
+            });
+            throw err;
+          }
+        },
+        "Balance read failed",
+        undefined,
+        {
+          onSettled: () => {
+            isFetching.value = false;
+          },
+        },
+      )
+      .catch(() => {});
   };
 
   watchEffect(() => {
@@ -69,9 +76,5 @@ export function useSolanaBalance(
     void refetch();
   });
 
-  onScopeDispose(() => {
-    disposed = true;
-  });
-
-  return { balance, isFetching, error, refetch };
+  return { balance, isFetching, error: guard.error, refetch };
 }

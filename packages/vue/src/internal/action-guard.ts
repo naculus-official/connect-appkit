@@ -1,6 +1,22 @@
 import type { ShallowRef } from "vue";
 import { onScopeDispose, shallowRef } from "vue";
 
+export interface ActionRunOptions {
+  /**
+   * Leave the visible error in place when the call starts instead of
+   * clearing it. The call still supersedes older ones, and its own failure
+   * is still published.
+   */
+  keepError?: boolean;
+  /**
+   * Runs once the call has settled, only while it is still the newest and
+   * the guard is not disposed: after its result was committed, or after its
+   * error was published, in the same tick as that error. For loading flags
+   * that must never read "done" before the error is visible.
+   */
+  onSettled?: () => void;
+}
+
 export interface ActionGuard {
   /** True while at least one guarded call is in flight. */
   busy: ShallowRef<boolean>;
@@ -17,11 +33,14 @@ export interface ActionGuard {
     action: (commit: (write: () => void) => void) => Promise<T>,
     fallbackMessage: string,
     normalizeError?: (cause: unknown) => Error,
+    options?: ActionRunOptions,
   ): Promise<T>;
   /** Clear the visible error without invalidating an in-flight call. */
   clearError(): void;
   /** Forget the current error and stop any in-flight call from publishing. */
   reset(): void;
+  /** Stop any in-flight call from publishing, keeping the visible error. */
+  invalidate(): void;
   /** Permanently stop this guard from publishing state. */
   dispose(): void;
 }
@@ -41,6 +60,7 @@ export function useActionGuard(): ActionGuard {
     action: (commit: (write: () => void) => void) => Promise<T>,
     fallbackMessage: string,
     normalizeError?: (cause: unknown) => Error,
+    options: ActionRunOptions = {},
   ): Promise<T> => {
     const own = ++generation;
     const commit = (write: () => void): void => {
@@ -48,7 +68,7 @@ export function useActionGuard(): ActionGuard {
     };
     active++;
     busy.value = true;
-    error.value = null;
+    if (!options.keepError) error.value = null;
     try {
       return await action(commit);
     } catch (cause) {
@@ -60,13 +80,22 @@ export function useActionGuard(): ActionGuard {
       if (!disposed && own === generation) error.value = normalized;
       throw normalized;
     } finally {
-      active--;
-      if (!disposed) busy.value = active > 0;
+      // A throwing onSettled rejects the call with its own error, but must
+      // not leave the concurrency count (and so busy) stuck.
+      try {
+        if (options.onSettled) commit(options.onSettled);
+      } finally {
+        active--;
+        if (!disposed) busy.value = active > 0;
+      }
     }
   };
 
-  const reset = (): void => {
+  const invalidate = (): void => {
     generation++;
+  };
+  const reset = (): void => {
+    invalidate();
     error.value = null;
   };
   const clearError = (): void => {
@@ -80,5 +109,5 @@ export function useActionGuard(): ActionGuard {
 
   onScopeDispose(dispose);
 
-  return { busy, error, run, clearError, reset, dispose };
+  return { busy, error, run, clearError, reset, invalidate, dispose };
 }

@@ -7,6 +7,7 @@ import {
 import type { SimulationResult } from "@naculus/connect-core";
 import type { MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
 import { onScopeDispose, shallowRef, toValue, unref, watch } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseTransactionSimulationOptions {
   chainId?: MaybeRef<number | undefined>;
@@ -28,38 +29,42 @@ export function useTransactionSimulation(
   tx: MaybeRefOrGetter<SimulationTransaction | undefined>,
   options: UseTransactionSimulationOptions = {},
 ): UseTransactionSimulationReturn {
+  // isSimulating stays newest-only rather than the guard's counted busy flag.
+  const guard = useActionGuard();
   const result = shallowRef<SimulationResult | undefined>(undefined);
   const isSimulating = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let generation = 0;
-  let disposed = false;
 
   const simulate = async (): Promise<SimulationResult> => {
-    const own = ++generation;
     const transaction = toValue(tx);
-    if (transaction) {
-      isSimulating.value = true;
-      error.value = null;
-    }
-    try {
-      const value = await simulateTransactionPreview(transaction, {
-        chainId: unref(options.chainId),
-        currentChain: unref(options.currentChain),
-        publicClient: unref(options.publicClient),
-        evmAccount: unref(options.evmAccount),
-      });
-      if (!disposed && own === generation) result.value = value;
-      return value;
-    } catch (cause) {
-      const normalized =
-        cause instanceof Error ? cause : new Error("Simulation failed");
-      if (!disposed && own === generation) error.value = normalized;
-      throw normalized;
-    } finally {
-      if (transaction && !disposed && own === generation)
-        isSimulating.value = false;
-    }
+    // Without a transaction the call still supersedes older ones and
+    // publishes its ("unavailable") result, but it has never cleared the
+    // visible error or touched isSimulating.
+    if (transaction) isSimulating.value = true;
+    return await guard.run(
+      async (commit) => {
+        const value = await simulateTransactionPreview(transaction, {
+          chainId: unref(options.chainId),
+          currentChain: unref(options.currentChain),
+          publicClient: unref(options.publicClient),
+          evmAccount: unref(options.evmAccount),
+        });
+        commit(() => {
+          result.value = value;
+        });
+        return value;
+      },
+      "Simulation failed",
+      undefined,
+      {
+        keepError: !transaction,
+        onSettled: transaction
+          ? () => {
+              isSimulating.value = false;
+            }
+          : undefined,
+      },
+    );
   };
 
   watch(
@@ -71,7 +76,8 @@ export function useTransactionSimulation(
       () => unref(options.evmAccount),
     ],
     ([transaction]) => {
-      generation++;
+      // Supersede the in-flight simulation without clearing the error.
+      guard.invalidate();
       if (timer) clearTimeout(timer);
       if (!transaction) return;
       timer = setTimeout(() => {
@@ -85,16 +91,13 @@ export function useTransactionSimulation(
   );
 
   const reset = (): void => {
-    generation++;
+    guard.reset();
     result.value = undefined;
-    error.value = null;
     isSimulating.value = false;
   };
   onScopeDispose(() => {
-    disposed = true;
-    generation++;
     if (timer) clearTimeout(timer);
   });
 
-  return { result, isSimulating, error, simulate, reset };
+  return { result, isSimulating, error: guard.error, simulate, reset };
 }
