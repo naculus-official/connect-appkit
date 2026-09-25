@@ -6,6 +6,7 @@ import {
 } from "@naculus/connect-appkit-core";
 import type { MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
 import { onScopeDispose, shallowRef, toValue, unref, watch } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseRouteQuoteOptions {
   /** Debounce before auto-fetching after an input change (default 300 ms). */
@@ -30,11 +31,10 @@ export function useRouteQuote(
   getQuotes?: MaybeRef<GetRouteQuotes | null | undefined>,
   options: UseRouteQuoteOptions = {},
 ): UseRouteQuoteReturn {
+  // loading stays newest-only rather than the guard's counted busy flag.
+  const guard = useActionGuard();
   const quotes = shallowRef<RouteQuote[]>([]);
   const loading = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let disposed = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
 
   const clearTimer = (): void => {
@@ -45,32 +45,48 @@ export function useRouteQuote(
   const fetchQuotes = async (): Promise<void> => {
     const current = toValue(input);
     const fn = unref(getQuotes);
-    const own = ++generation;
+    // Early exits supersede the in-flight request but, as before, leave the
+    // visible error and the loading flag alone.
     if (!isQuotableInput(current)) {
+      guard.invalidate();
       quotes.value = [];
       return;
     }
-    if (!fn) return;
-    loading.value = true;
-    error.value = null;
-    try {
-      const result = await fn(
-        current.fromChain,
-        current.toChain,
-        current.fromToken,
-        current.amount,
-        current.options,
-        current.toToken,
-      );
-      if (disposed || own !== generation) return;
-      quotes.value = result;
-    } catch (cause) {
-      if (disposed || own !== generation) return;
-      error.value = cause instanceof Error ? cause : new Error(String(cause));
-      quotes.value = [];
-    } finally {
-      if (!disposed && own === generation) loading.value = false;
+    if (!fn) {
+      guard.invalidate();
+      return;
     }
+    loading.value = true;
+    await guard
+      .run(
+        async (commit) => {
+          try {
+            const result = await fn(
+              current.fromChain,
+              current.toChain,
+              current.fromToken,
+              current.amount,
+              current.options,
+              current.toToken,
+            );
+            commit(() => {
+              quotes.value = result;
+            });
+          } catch (cause) {
+            commit(() => {
+              quotes.value = [];
+            });
+            throw cause;
+          } finally {
+            commit(() => {
+              loading.value = false;
+            });
+          }
+        },
+        "Route quote failed",
+        (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+      )
+      .catch(() => {});
   };
 
   watch(
@@ -96,22 +112,17 @@ export function useRouteQuote(
     { immediate: true },
   );
 
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-    clearTimer();
-  });
+  onScopeDispose(clearTimer);
 
   return {
     quotes,
     loading,
-    error,
+    error: guard.error,
     refresh: fetchQuotes,
     clear: () => {
       clearTimer();
-      generation++;
+      guard.reset();
       quotes.value = [];
-      error.value = null;
       loading.value = false;
     },
   };
