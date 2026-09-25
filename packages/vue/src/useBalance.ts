@@ -2,6 +2,7 @@ import { bareEvmAddress } from "@naculus/connect-appkit-core";
 import { formatUnits } from "@naculus/connect-core";
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from "vue";
 import { computed, onScopeDispose, shallowRef, toValue, watch } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 /** Minimal read-only contract; a viem PublicClient satisfies it. */
 export interface NativeBalanceReader {
@@ -43,39 +44,44 @@ export function useBalance(
   client: MaybeRefOrGetter<NativeBalanceReader | null | undefined>,
   options: UseBalanceOptions = {},
 ): UseBalanceReturn {
+  // The guard owns generation, disposal and error. isFetching stays
+  // newest-only (written through commit), not the guard's counted busy flag.
+  const guard = useActionGuard();
   const balance = shallowRef<string | null>(null);
   const isFetching = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let disposed = false;
   let timer: ReturnType<typeof setInterval> | null = null;
 
   const refetch = async (): Promise<void> => {
     const reader = toValue(client);
     const address = bareEvmAddress(toValue(account));
-    const own = ++generation;
     if (!reader || !address) {
+      guard.reset();
       balance.value = null;
-      error.value = null;
       isFetching.value = false;
       return;
     }
     isFetching.value = true;
-    error.value = null;
-    try {
-      const next = await reader.getBalance({ address });
-      if (disposed || own !== generation) return;
-      balance.value = next.toString();
-    } catch (cause) {
-      if (disposed || own !== generation) return;
-      // Cleared rather than left stale: a balance shown next to an error
-      // reads as the current balance, and it is not.
-      balance.value = null;
-      error.value =
-        cause instanceof Error ? cause : new Error("Balance read failed");
-    } finally {
-      if (!disposed && own === generation) isFetching.value = false;
-    }
+    await guard
+      .run(async (commit) => {
+        try {
+          const next = await reader.getBalance({ address });
+          commit(() => {
+            balance.value = next.toString();
+          });
+        } catch (cause) {
+          // Cleared rather than left stale: a balance shown next to an error
+          // reads as the current balance, and it is not.
+          commit(() => {
+            balance.value = null;
+          });
+          throw cause;
+        } finally {
+          commit(() => {
+            isFetching.value = false;
+          });
+        }
+      }, "Balance read failed")
+      .catch(() => {});
   };
 
   const stopTimer = (): void => {
@@ -97,11 +103,7 @@ export function useBalance(
     { immediate: true },
   );
 
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-    stopTimer();
-  });
+  onScopeDispose(stopTimer);
 
   return {
     balance,
@@ -112,7 +114,7 @@ export function useBalance(
     ),
     symbol: computed(() => toValue(options.symbol) ?? null),
     isFetching,
-    error,
+    error: guard.error,
     refetch,
   };
 }

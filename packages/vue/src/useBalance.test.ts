@@ -86,4 +86,25 @@ describe("useBalance (Vue)", () => {
       vi.useRealTimers();
     }
   });
+
+  it("keeps the newest refetch when an older one resolves last", async () => {
+    const reads: Array<ReturnType<typeof deferred<bigint>>> = [];
+    const getBalance = vi.fn(() => {
+      const read = deferred<bigint>();
+      reads.push(read);
+      return read.promise;
+    });
+    const { api, scope } = inScope(() => useBalance(ADDRESS, { getBalance }));
+
+    const callA = api.refetch();
+    const callB = api.refetch();
+    reads[2]!.resolve(2n);
+    await callB;
+    reads[1]!.resolve(1n);
+    reads[0]!.resolve(0n);
+    await callA;
+    expect(api.balance.value).toBe("2");
+    expect(api.isFetching.value).toBe(false);
+    scope.stop();
+  });
 });

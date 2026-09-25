@@ -2,6 +2,7 @@ import { bareEvmAddress } from "@naculus/connect-appkit-core";
 import { ERC20_MIN_ABI, formatUnits } from "@naculus/connect-core";
 import type { MaybeRefOrGetter, ShallowRef } from "vue";
 import { onScopeDispose, shallowRef, toValue, watch } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface TokenInfo {
   /** ERC-20 token contract address */
@@ -62,59 +63,62 @@ export function useTokenBalance(
   tokens: MaybeRefOrGetter<readonly TokenInfo[] | null | undefined>,
   options: UseTokenBalanceOptions = {},
 ): UseTokenBalanceReturn {
+  // The guard owns generation, disposal and error. isFetching stays
+  // newest-only (written through commit), not the guard's counted busy flag.
+  const guard = useActionGuard();
   const tokenBalances = shallowRef<TokenBalanceResult[]>([]);
   const isFetching = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
-  let generation = 0;
-  let disposed = false;
   let timer: ReturnType<typeof setInterval> | null = null;
 
   const refetch = async (): Promise<void> => {
     const reader = toValue(client);
     const address = bareEvmAddress(toValue(account));
     const list = toValue(tokens) ?? [];
-    const own = ++generation;
     if (!reader || !address || list.length === 0) {
+      guard.reset();
       tokenBalances.value = [];
-      error.value = null;
       isFetching.value = false;
       return;
     }
     isFetching.value = true;
-    error.value = null;
-    try {
-      const results = await Promise.all(
-        list.map(async (token): Promise<TokenBalanceResult> => {
-          try {
-            const raw = await reader.readContract({
-              address: token.address,
-              abi: ERC20_MIN_ABI,
-              functionName: "balanceOf",
-              args: [address],
-            });
-            const value = BigInt(raw as bigint | string | number);
-            return {
-              ...token,
-              balance: value.toString(),
-              formatted: formatUnits(value, token.decimals),
-            };
-          } catch {
-            return { ...token, balance: null, formatted: null };
-          }
-        }),
-      );
-      if (disposed || own !== generation) return;
-      tokenBalances.value = results;
-    } catch (cause) {
-      if (disposed || own !== generation) return;
-      tokenBalances.value = [];
-      error.value =
-        cause instanceof Error
-          ? cause
-          : new Error("Failed to fetch token balances");
-    } finally {
-      if (!disposed && own === generation) isFetching.value = false;
-    }
+    await guard
+      .run(async (commit) => {
+        try {
+          const results = await Promise.all(
+            list.map(async (token): Promise<TokenBalanceResult> => {
+              try {
+                const raw = await reader.readContract({
+                  address: token.address,
+                  abi: ERC20_MIN_ABI,
+                  functionName: "balanceOf",
+                  args: [address],
+                });
+                const value = BigInt(raw as bigint | string | number);
+                return {
+                  ...token,
+                  balance: value.toString(),
+                  formatted: formatUnits(value, token.decimals),
+                };
+              } catch {
+                return { ...token, balance: null, formatted: null };
+              }
+            }),
+          );
+          commit(() => {
+            tokenBalances.value = results;
+          });
+        } catch (cause) {
+          commit(() => {
+            tokenBalances.value = [];
+          });
+          throw cause;
+        } finally {
+          commit(() => {
+            isFetching.value = false;
+          });
+        }
+      }, "Failed to fetch token balances")
+      .catch(() => {});
   };
 
   const stopTimer = (): void => {
@@ -139,16 +143,12 @@ export function useTokenBalance(
     { immediate: true },
   );
 
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-    stopTimer();
-  });
+  onScopeDispose(stopTimer);
 
   return {
     tokenBalances,
     isFetching,
-    error,
+    error: guard.error,
     refetch,
     getTokenBalance: (tokenAddress) =>
       tokenBalances.value.find(
