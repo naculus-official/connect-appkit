@@ -4,7 +4,8 @@ import {
   type SimulationResult,
 } from "@naculus/connect-core";
 import type { MaybeRef, ShallowRef } from "vue";
-import { onScopeDispose, shallowRef, unref } from "vue";
+import { shallowRef, unref } from "vue";
+import { useActionGuard } from "./internal/action-guard";
 
 export interface UseSimulateTransferOptions {
   rpcUrl?: MaybeRef<string | undefined>;
@@ -29,68 +30,64 @@ export interface UseSimulateTransferReturn {
 export function useSimulateTransfer(
   options: UseSimulateTransferOptions = {},
 ): UseSimulateTransferReturn {
+  // loading stays newest-only rather than the guard's counted busy flag.
+  const guard = useActionGuard();
   const result = shallowRef<SimulationResult | null>(null);
   const loading = shallowRef(false);
-  const error = shallowRef<Error | null>(null);
   let manager: SimulationManager | undefined;
-  let generation = 0;
-  let disposed = false;
 
-  const simulate: UseSimulateTransferReturn["simulate"] = async (
+  const simulate: UseSimulateTransferReturn["simulate"] = (
     tokenAddress,
     from,
     to,
     amount,
     callOptions,
   ) => {
-    const own = ++generation;
     loading.value = true;
-    error.value = null;
-    try {
-      const fallbackRpcUrl = unref(options.rpcUrl);
-      const endpoint = resolveSimulationEndpoint(
-        callOptions?.chainId,
-        unref(options.chainId),
-        callOptions?.rpcUrl,
-        fallbackRpcUrl,
-      );
-      manager ??= new SimulationManager({
-        enabled: true,
-        rpcUrl: fallbackRpcUrl,
-        autoSimulate: false,
-      });
-      const value = await manager.simulateERC20Transfer(
-        tokenAddress,
-        from,
-        to,
-        amount,
-        endpoint.chainId,
-        callOptions?.decimals,
-        endpoint.rpcUrl,
-      );
-      if (!disposed && own === generation) result.value = value;
-      return value;
-    } catch (cause) {
-      const normalized =
-        cause instanceof Error ? cause : new Error(String(cause));
-      if (!disposed && own === generation) error.value = normalized;
-      throw normalized;
-    } finally {
-      if (!disposed && own === generation) loading.value = false;
-    }
+    return guard.run(
+      async (commit) => {
+        try {
+          const fallbackRpcUrl = unref(options.rpcUrl);
+          const endpoint = resolveSimulationEndpoint(
+            callOptions?.chainId,
+            unref(options.chainId),
+            callOptions?.rpcUrl,
+            fallbackRpcUrl,
+          );
+          manager ??= new SimulationManager({
+            enabled: true,
+            rpcUrl: fallbackRpcUrl,
+            autoSimulate: false,
+          });
+          const value = await manager.simulateERC20Transfer(
+            tokenAddress,
+            from,
+            to,
+            amount,
+            endpoint.chainId,
+            callOptions?.decimals,
+            endpoint.rpcUrl,
+          );
+          commit(() => {
+            result.value = value;
+          });
+          return value;
+        } finally {
+          commit(() => {
+            loading.value = false;
+          });
+        }
+      },
+      "Simulation failed",
+      (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+    );
   };
 
   const reset = (): void => {
-    generation++;
+    guard.reset();
     result.value = null;
-    error.value = null;
     loading.value = false;
   };
 
-  onScopeDispose(() => {
-    disposed = true;
-    generation++;
-  });
-
-  return { result, loading, error, simulate, reset };
+  return { result, loading, error: guard.error, simulate, reset };
 }
