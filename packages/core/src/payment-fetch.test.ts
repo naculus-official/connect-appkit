@@ -94,12 +94,42 @@ describe("describePayment", () => {
     });
   });
 
-  it("does not invent a chain for a non-evm MPP method", () => {
+  it("reads an MPP solana charge's cluster, and invents none otherwise", () => {
+    const MAINNET = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
     const paid = {
+      method: "solana",
       challenge: { params: { method: "solana" } },
-      request: { amount: "1", currency: "So1", recipient: "Rx", chainId: 1 },
+      request: {
+        amount: "250000",
+        currency: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        recipient: "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4",
+        network: MAINNET,
+      },
     };
-    expect(describePayment(URL_, result({ paid }))?.chainId).toBeNull();
+    expect(describePayment(URL_, result({ paid }))).toMatchObject({
+      protocol: "mpp",
+      chainId: MAINNET,
+      amount: "250000",
+    });
+    const other = {
+      challenge: { params: { method: "tempo" } },
+      request: { amount: "1", currency: "x", recipient: "y", chainId: 1 },
+    };
+    expect(describePayment(URL_, result({ paid: other }))?.chainId).toBeNull();
+  });
+
+  it("reads an x402 Solana requirement like an EVM one", () => {
+    const paid = {
+      scheme: "exact",
+      network: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+      amount: "1000",
+      asset: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      payTo: "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4",
+    };
+    expect(describePayment(URL_, result({ paid }))).toMatchObject({
+      protocol: "x402",
+      chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+    });
   });
 
   it("reports an unrecognised shape as unknown rather than guessing", () => {

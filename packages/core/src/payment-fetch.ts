@@ -66,7 +66,8 @@ function requestUrl(input: RequestInfo | URL): string {
 
 /**
  * The payment a paying fetch made, or null when it paid nothing. Reads the
- * x402 requirement / settlement or the MPP `evm` charge / receipt by shape.
+ * x402 requirement / settlement (EVM or Solana) or the MPP `evm` / `solana`
+ * charge / receipt by shape.
  */
 export function describePayment(
   input: RequestInfo | URL,
@@ -103,7 +104,11 @@ export function describePayment(
       typeof request.chainId === "number" &&
       Number.isSafeInteger(request.chainId)
         ? `eip155:${request.chainId}`
-        : null;
+        : challenge.method === "solana" &&
+            typeof request.network === "string" &&
+            /^solana:[1-9A-HJ-NP-Za-km-z]{32}$/.test(request.network)
+          ? request.network
+          : null;
     return {
       protocol: "mpp",
       resource,
