@@ -65,6 +65,8 @@ export type {
   UseDelegateReturn,
 } from "./hooks/useDelegate";
 export { useDelegate } from "./hooks/useDelegate";
+export type { UsePaymentFetchReturn } from "./hooks/usePaymentFetch";
+export { usePaymentFetch } from "./hooks/usePaymentFetch";
 export type { UseDelegationReturn } from "./hooks/useDelegation";
 export { useDelegation } from "./hooks/useDelegation";
 export type {

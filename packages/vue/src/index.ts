@@ -219,6 +219,8 @@ export type {
   UseDelegateReturn,
 } from "./useDelegate";
 export { useDelegation } from "./useDelegation";
+export { usePaymentFetch } from "./usePaymentFetch";
+export type { UsePaymentFetchReturn } from "./usePaymentFetch";
 export type { DelegationCodeReader, UseDelegationReturn } from "./useDelegation";
 export { useResolveName } from "./useResolveName";
 export type { UseResolveNameReturn } from "./useResolveName";

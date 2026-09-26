@@ -83,6 +83,9 @@ export * from "./smart-account";
 export * from "./delegation-framework-adapter";
 export * from "./delegation-policy";
 
+// ── Agentic payments (x402 / MPP) ─────────────────────────────────
+export * from "./payment-fetch";
+
 // ── Connection state machine ──────────────────────────────────────
 export * from "./web3-store";
 
