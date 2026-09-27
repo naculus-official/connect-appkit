@@ -19,6 +19,19 @@ import {
   type WalletConnectConnector,
 } from "@naculus/connector-walletconnect";
 
+/** App-supplied WalletConnect pieces (see `ClientConfig.walletConnect`). */
+export type NativeWalletConnectOptions = {
+  /** A pre-built `@walletconnect/sign-client` SignClient. */
+  client?: unknown;
+  openUrl?: (url: string) => void | Promise<void>;
+};
+
+/** An EIP-1193 provider announced to the injected-wallet connector. */
+export type InjectedProviderRegistration = {
+  info: { uuid: string; name: string; icon: string; rdns: string };
+  provider: unknown;
+};
+
 export type ClientConfig = {
   projectId: string;
   metadata: {
@@ -53,6 +66,22 @@ export type ClientConfig = {
   enableSolana?: boolean;
   /** Default Solana chain (e.g. "solana:0"). Only used when enableSolana is true. */
   solanaDefaultChain?: string;
+  /**
+   * WalletConnect wiring the app supplies — on React Native, a SignClient
+   * built with native storage and `Linking.openURL` for deep links.
+   */
+  walletConnect?: NativeWalletConnectOptions;
+  /**
+   * Wallet Standard wallets to register with the Solana connector (React
+   * Native's Mobile Wallet Adapter wallet). Needs `enableSolana`.
+   */
+  solanaWallets?: readonly unknown[];
+  /**
+   * EIP-1193 providers to register as injected wallets (React Native's
+   * Coinbase Mobile Wallet Protocol provider); connect with
+   * `connectInjected(info.uuid)`.
+   */
+  injectedProviders?: readonly InjectedProviderRegistration[];
   /**
    * Solana JSON-RPC endpoint, for reading balances and submitting
    * transactions.
@@ -197,6 +226,12 @@ export function createClient(config: ClientConfig): Web3Client {
   const connector = createWalletConnectConnector({
     projectId: config.projectId,
     metadata: config.metadata,
+    ...(config.walletConnect?.client
+      ? { client: config.walletConnect.client as never }
+      : {}),
+    ...(config.walletConnect?.openUrl
+      ? { openUrl: config.walletConnect.openUrl }
+      : {}),
   });
 
   let _embeddedConnector: EmbeddedWalletConnector | null = null;
@@ -209,7 +244,8 @@ export function createClient(config: ClientConfig): Web3Client {
 
   // Only when asked for, and never over a callback the app already supplied.
   const _passphraseGate =
-    config.passphrasePrompt && config.enableEmbedded &&
+    config.passphrasePrompt &&
+    config.enableEmbedded &&
     !config.embeddedConfig?.encryptionPassphrase
       ? new PassphraseGate()
       : null;
@@ -286,6 +322,9 @@ export function createClient(config: ClientConfig): Web3Client {
         if (typeof window !== "undefined" && "startDiscovery" in conn) {
           (conn as any).startDiscovery();
         }
+        for (const wallet of config.solanaWallets ?? []) {
+          (conn as any).registerWallet?.(wallet);
+        }
         clientRef?._setSolanaConnector(_solanaConnector);
       })
       .catch((err) => {
@@ -297,6 +336,9 @@ export function createClient(config: ClientConfig): Web3Client {
   // Start EIP-6963 discovery eagerly so wallets are available when user clicks connect
   if (typeof window !== "undefined") {
     eip6963Connector.startDiscovery();
+  }
+  for (const { info, provider } of config.injectedProviders ?? []) {
+    eip6963Connector.registerProvider(info, provider as never);
   }
 
   const client: Web3Client = {

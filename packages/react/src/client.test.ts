@@ -474,3 +474,72 @@ describe("createClient", () => {
     });
   });
 });
+
+describe("createClient — React Native wiring", () => {
+  beforeEach(() => {
+    clearClient();
+    vi.clearAllMocks();
+  });
+
+  it("passes an app-built SignClient and deep-link opener to WalletConnect", async () => {
+    const { createWalletConnectConnector } = await import(
+      "@naculus/connector-walletconnect"
+    );
+    const signClient = { core: {} };
+    const openUrl = vi.fn();
+    createClient({
+      ...defaultConfig,
+      walletConnect: { client: signClient, openUrl },
+    });
+    expect(createWalletConnectConnector).toHaveBeenCalledWith(
+      expect.objectContaining({ client: signClient, openUrl }),
+    );
+  });
+
+  it("leaves WalletConnect as before when nothing is supplied", async () => {
+    const { createWalletConnectConnector } = await import(
+      "@naculus/connector-walletconnect"
+    );
+    createClient(defaultConfig);
+    const arg = vi.mocked(createWalletConnectConnector).mock.calls[0]?.[0];
+    expect(arg).not.toHaveProperty("client");
+    expect(arg).not.toHaveProperty("openUrl");
+  });
+
+  it("registers app-held Solana wallets once the connector loads", async () => {
+    const registerWallet = vi.fn();
+    (mockSolanaConnector as Record<string, unknown>).registerWallet =
+      registerWallet;
+    const wallet = { name: "Mobile Wallet Adapter" };
+    const client = createClient({
+      ...defaultConfig,
+      enableSolana: true,
+      solanaWallets: [wallet],
+    });
+    await client.signMessage(
+      { walletType: "solana", id: "s", namespaces: {} } as never,
+      { message: "x" },
+    );
+    expect(registerWallet).toHaveBeenCalledWith(wallet);
+    delete (mockSolanaConnector as Record<string, unknown>).registerWallet;
+  });
+
+  it("registers app-held EIP-1193 providers as injected wallets", async () => {
+    const { eip6963Connector } = await import(
+      "@naculus/connector-evm-injected"
+    );
+    const info = {
+      uuid: "coinbase-mwp",
+      name: "Coinbase Wallet",
+      icon: "data:,",
+      rdns: "com.coinbase.wallet",
+    };
+    const provider = { request: vi.fn(), on: vi.fn(), removeListener: vi.fn() };
+    createClient({ ...defaultConfig, injectedProviders: [{ info, provider }] });
+    expect(
+      eip6963Connector.getDiscoveredWallets().find((w) => w.id === info.uuid)
+        ?.provider,
+    ).toBe(provider);
+    eip6963Connector.clear();
+  });
+});

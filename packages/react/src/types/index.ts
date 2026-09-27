@@ -1,4 +1,13 @@
-import type { UniversalWalletSession, Namespace, SessionNamespace } from "@naculus/connect-core";
+import type {
+  Namespace,
+  SessionNamespace,
+  SessionStorage,
+  UniversalWalletSession,
+} from "@naculus/connect-core";
+import type {
+  InjectedProviderRegistration,
+  NativeWalletConnectOptions,
+} from "../client";
 import type { PocketConfig } from "@naculus/connector-embedded";
 import type { Chain } from "viem";
 
@@ -18,9 +27,15 @@ export type { ChainInfo, ConnectionStatus, WalletChain, Web3State };
 /** SIWx (Sign-In With X) CAIP-122 configuration */
 export interface SIWxConfig {
   /** Called after wallet connects to build the message to sign */
-  createMessage: (params: { address: string; chainId: string }) => Promise<string>;
+  createMessage: (params: {
+    address: string;
+    chainId: string;
+  }) => Promise<string>;
   /** Called after the user signs the message */
-  handleSignComplete?: (params: { message: string; signature: string }) => Promise<void>;
+  handleSignComplete?: (params: {
+    message: string;
+    signature: string;
+  }) => Promise<void>;
   /** Whether SIWx is required. If true, wallet disconnects on sign failure (default: true) */
   required?: boolean;
   /**
@@ -77,6 +92,17 @@ export interface Web3ConnectConfig {
    * When omitted, existing backward-compatible plaintext storage is used.
    */
   encryptionKey?: string;
+  /**
+   * Where the connected session persists. Defaults to localStorage; React
+   * Native supplies an AsyncStorage-backed one (`@naculus/connect-native`).
+   */
+  sessionStorage?: SessionStorage;
+  /** See `ClientConfig.walletConnect`. */
+  walletConnect?: NativeWalletConnectOptions;
+  /** See `ClientConfig.solanaWallets`. */
+  solanaWallets?: readonly unknown[];
+  /** See `ClientConfig.injectedProviders`. */
+  injectedProviders?: readonly InjectedProviderRegistration[];
 }
 
 export interface Web3Actions {
@@ -115,4 +141,3 @@ export type EvmTransaction = {
   nonce?: string;
   chainId?: number;
 };
-

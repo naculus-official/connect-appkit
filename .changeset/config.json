@@ -8,7 +8,8 @@
       "@naculus/connect-appkit-react",
       "@naculus/connect-appkit-ui",
       "@naculus/connect-appkit-vue",
-      "@naculus/connect-appkit-wc"
+      "@naculus/connect-appkit-wc",
+      "@naculus/connect-native"
     ]
   ],
   "linked": [],

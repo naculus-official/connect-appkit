@@ -30,7 +30,17 @@ export function getAliases(root: string) {
     "@naculus/connect-appkit-react": r("packages/react/src"),
     "@naculus/connect-appkit-ui": r("packages/ui/src"),
     "@naculus/connect-appkit-wc": r("packages/wc/dist"),
-    ...(useSibling ? { "@naculus/connect-core": siblingCore } : {}),
+    ...(useSibling
+      ? {
+          "@naculus/connect-core": siblingCore,
+          "@naculus/connector-evm-injected": r(
+            "../connect-lib/packages/connector-evm-injected/src",
+          ),
+          "@naculus/wallet-engine": r(
+            "../connect-lib/packages/wallet-engine/src",
+          ),
+        }
+      : {}),
     // Connector packages that are not exercised by a test stay stubbed.
     starknet: stub,
     "@cosmjs/amino": stub,

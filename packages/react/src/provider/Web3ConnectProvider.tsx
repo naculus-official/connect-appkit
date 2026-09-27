@@ -81,11 +81,12 @@ export function Web3ConnectProvider({
 
   const storage = useMemo(
     () =>
+      config.sessionStorage ??
       new LocalStorageSessionStorage(
         config.storageKey ?? "naculus_web3_session",
         config.encryptionKey,
       ),
-    [config.storageKey, config.encryptionKey],
+    [config.sessionStorage, config.storageKey, config.encryptionKey],
   );
 
   const client = useMemo(() => {
@@ -97,6 +98,9 @@ export function Web3ConnectProvider({
       enablePasskeys: config.enablePasskeys,
       enableSolana: config.enableSolana,
       solanaDefaultChain: config.solanaDefaultChain,
+      walletConnect: config.walletConnect,
+      solanaWallets: config.solanaWallets,
+      injectedProviders: config.injectedProviders,
     });
   }, [
     config.projectId,
@@ -106,6 +110,9 @@ export function Web3ConnectProvider({
     config.enablePasskeys,
     config.enableSolana,
     config.solanaDefaultChain,
+    config.walletConnect,
+    config.solanaWallets,
+    config.injectedProviders,
   ]);
 
   // ── SessionManager ───────────────────────────────────────────────

@@ -48,7 +48,12 @@ export {
   useExecuteRoute,
   useRouteQuote,
 } from "./chain-abstraction";
-export type { ClientConfig, Web3Client } from "./client";
+export type {
+  ClientConfig,
+  InjectedProviderRegistration,
+  NativeWalletConnectOptions,
+  Web3Client,
+} from "./client";
 export { clearClient, createClient, getClient } from "./client";
 export { useAccount } from "./hooks/useAccount";
 export { useBalance } from "./hooks/useBalance";
