@@ -221,6 +221,8 @@ export type {
 export { useDelegation } from "./useDelegation";
 export { usePaymentFetch } from "./usePaymentFetch";
 export type { UsePaymentFetchReturn } from "./usePaymentFetch";
+export { useSolanaSessionKey } from "./useSolanaSessionKey";
+export type { UseSolanaSessionKeyReturn } from "./useSolanaSessionKey";
 export type { DelegationCodeReader, UseDelegationReturn } from "./useDelegation";
 export { useResolveName } from "./useResolveName";
 export type { UseResolveNameReturn } from "./useResolveName";

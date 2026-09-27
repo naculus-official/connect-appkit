@@ -85,6 +85,7 @@ export * from "./delegation-policy";
 
 // ── Agentic payments (x402 / MPP) ─────────────────────────────────
 export * from "./payment-fetch";
+export * from "./solana-session-key";
 
 // ── Connection state machine ──────────────────────────────────────
 export * from "./web3-store";

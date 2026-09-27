@@ -67,6 +67,8 @@ export type {
 export { useDelegate } from "./hooks/useDelegate";
 export type { UsePaymentFetchReturn } from "./hooks/usePaymentFetch";
 export { usePaymentFetch } from "./hooks/usePaymentFetch";
+export type { UseSolanaSessionKeyReturn } from "./hooks/useSolanaSessionKey";
+export { useSolanaSessionKey } from "./hooks/useSolanaSessionKey";
 export type { UseDelegationReturn } from "./hooks/useDelegation";
 export { useDelegation } from "./hooks/useDelegation";
 export type {
