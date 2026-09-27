@@ -1,5 +1,18 @@
 # @naculus/connect-appkit-core
 
+## 0.4.0
+
+### Minor Changes
+
+- 4f99028: EIP-7702 delegation policies. `createDelegationPolicyFlow().createPolicy({ mode: "eip7702", … })` has the connected account — already delegated to MetaMask's EIP7702StatelessDeleGatorImpl — sign a Delegation to the session key (`signTypedData`, `chainId` inputs on `useDelegationPolicy` in React and Vue); connect-core checks the signature and caveats before attaching it. `createDelegationFrameworkAdapter({ manager, rpc, codec })` is the `eip7702` execution adapter: the session key redeems the delegation from its own address and the chain enforces the caveats; transaction encoding comes from the app (`codec`, e.g. viem). An `eip7702` policy signs only its redemptions (`signPolicyDigest` refuses it). Requires connect-lib 0.4.0: every connect-lib peer and dependency range moves to `^0.4.0` (a `^0.3` range does not admit 0.4.0).
+- 06582bf: Add `usePaymentFetch` (React and Vue) for agentic payments: pass the paying
+  fetch your app built with `createX402Fetch` (`@naculus/payments-x402`) or
+  `createMppFetch` (`@naculus/payments-mpp`), and the hook returns `payFetch` and tracks
+  `isPending`, `error` and `lastPayment` (every completed payment is recorded). appkit-core adds `describePayment`, which reads
+  either protocol's result into one `PaymentRecord` shape. appkit takes no
+  dependency on the payments packages; what may be paid stays with them and
+  the session key's policy.
+
 ## 0.3.0
 
 ### Minor Changes
