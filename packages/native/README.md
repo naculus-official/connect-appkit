@@ -12,7 +12,6 @@ import "@walletconnect/react-native-compat";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { Linking, Platform } from "react-native";
-import { transact } from "@solana-mobile/mobile-wallet-adapter-protocol-kit";
 import { EIP1193Provider, Wallets } from "@mobile-wallet-protocol/client";
 import { Web3ConnectProvider } from "@naculus/connect-appkit-react";
 import {
@@ -32,13 +31,18 @@ const config = {
   sessionStorage: asyncStorageSessionStorage(AsyncStorage),
   walletConnect: nativeWalletConnect(Linking),
   enableSolana: true,
-  solanaWallets: [
-    createMobileWalletAdapterWallet({
-      transact,
-      identity: { name: "My App", uri: "https://myapp.example" },
-      chain: "solana:mainnet",
-    }),
-  ],
+  // Mobile Wallet Adapter is Android-only: importing it on iOS throws at
+  // startup, so require it only on Android.
+  solanaWallets:
+    Platform.OS === "android"
+      ? [
+          createMobileWalletAdapterWallet({
+            transact: require("@solana-mobile/mobile-wallet-adapter-protocol-kit").transact,
+            identity: { name: "My App", uri: "https://myapp.example" },
+            chain: "solana:mainnet",
+          }),
+        ]
+      : [],
   injectedProviders: [
     coinbaseMobileWallet(
       new EIP1193Provider({ metadata: { name: "My App" }, wallet: Wallets.CoinbaseSmartWallet }),
@@ -64,6 +68,14 @@ install only what you use.
 | `createMobileWalletAdapterWallet` | `@solana-mobile/mobile-wallet-adapter-protocol-kit` | Solana Mobile Wallet Adapter (Android) as a Wallet Standard wallet |
 | `coinbaseMobileWallet(provider)` | `@mobile-wallet-protocol/client` | Coinbase Wallet over Mobile Wallet Protocol, connected with `connectInjected("coinbase-mwp")` |
 | `keystoreWalletStorage` | `expo-secure-store` | Embedded wallet record sealed by wallet-engine (AES-256-GCM) under a Keychain / Keystore key (this device, when unlocked) |
+
+**Mobile Wallet Adapter is Android-only.** Its native module does not exist
+on iOS, and `@solana-mobile/mobile-wallet-adapter-protocol-kit` throws as
+soon as it is imported there (`TurboModuleRegistry.getEnforcing(...):
+'SolanaMobileWalletAdapter' could not be found`), before any UI renders.
+Never import it at the top of a file that also runs on iOS: `require` it
+behind `Platform.OS === "android"` as above, or keep it in a `.android.ts`
+file.
 
 **Keep `config` stable** (module scope or `useMemo`): `Web3ConnectProvider`
 rebuilds its client when these objects change identity.
