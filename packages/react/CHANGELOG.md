@@ -1,5 +1,35 @@
 # @naculus/connect-appkit-react
 
+## 0.5.0
+
+### Minor Changes
+
+- 2520d0f: New package `@naculus/connect-native` for React Native: AsyncStorage
+  session persistence, WalletConnect deep links through `Linking`, Solana
+  Mobile Wallet Adapter as a Wallet Standard wallet, Coinbase Mobile Wallet
+  Protocol as an injected wallet, and a Keystore-sealed embedded wallet
+  storage. `Web3ConnectProvider` gains optional `sessionStorage`,
+  `walletConnect`, `solanaWallets` and `injectedProviders` config (web
+  behavior unchanged). Requires the connect-lib release with the React
+  Native hooks.
+- 3e51807: Add `useSolanaSessionKey` (React and Vue) and appkit-core
+  `createSolanaSessionKeyFlow`: create a Solana session key that the
+  connected wallet approves once as the SPL delegate of its token account
+  (then pays x402 / MPP Solana charges without a prompt through
+  `solana: { sessionKey: { manager, id }, rpc }`), list the owner's keys, and
+  revoke one (locally at once, then the wallet's on-chain `Revoke`). A key
+  whose approval is declined or cannot be broadcast is revoked locally; if the
+  broadcast outcome is unknown the error says so, and `revoke(id)` sends the
+  on-chain `Revoke`. Requires the
+  connect-lib release that adds `SolanaSessionKeyManager`.
+
+### Patch Changes
+
+- Updated dependencies [2520d0f]
+- Updated dependencies [3e51807]
+  - @naculus/connect-appkit-core@0.5.0
+  - @naculus/connect-appkit-wc@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes
