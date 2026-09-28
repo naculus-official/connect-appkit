@@ -284,6 +284,33 @@ describe("useTxMonitor (Vue) refresh supersession", () => {
     scope.stop();
   });
 
+  it.each([
+    ["succeeds", true],
+    ["fails", false],
+  ] as const)(
+    "ignores a refresh for a hash that was left again within the same tick when it %s",
+    async (_label, succeeds) => {
+      const monitor = new ControlledMonitor();
+      const original = entry(HASH_A);
+      monitor.entries.set(`1:${HASH_A}`, original);
+      monitor.entries.set(`1:${HASH_B}`, entry(HASH_B, "confirmed"));
+      const hash = ref(HASH_A);
+      const { out, scope } = await mounted(monitor, hash);
+
+      hash.value = HASH_B;
+      const call = out.refresh();
+      hash.value = HASH_A;
+      await settle();
+      if (succeeds) monitor.refreshes[0].resolve(undefined);
+      else monitor.refreshes[0].reject(new Error("B failed"));
+      await call;
+      expect(out.entry.value).toBe(original);
+      expect(out.error.value).toBeNull();
+      expect(out.isLoading.value).toBe(false);
+      scope.stop();
+    },
+  );
+
   it("ignores a pending refresh once the monitor is replaced", async () => {
     const first = new ControlledMonitor();
     first.entries.set(`1:${HASH_A}`, entry(HASH_A));

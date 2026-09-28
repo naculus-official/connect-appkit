@@ -75,6 +75,13 @@ export function useTxMonitor(
   let generation = 0;
   // The inputs the latest refresh was started for.
   let refreshed: readonly unknown[] = [];
+  const currentInputs = (): readonly unknown[] => [
+    toValue(monitor),
+    toValue(hash),
+    toValue(chainId),
+  ];
+  const sameInputs = (a: readonly unknown[], b: readonly unknown[]): boolean =>
+    a.every((value, i) => Object.is(value, b[i]));
 
   const refresh = async (): Promise<void> => {
     const activeMonitor = toValue(monitor);
@@ -82,12 +89,24 @@ export function useTxMonitor(
     const activeChainId = toValue(chainId);
     if (!activeMonitor || !activeHash) return;
 
-    refreshed = [activeMonitor, activeHash, activeChainId];
+    const started = [activeMonitor, activeHash, activeChainId];
+    refreshed = started;
     isLoading.value = true;
     await guard
       .run(
         async (commit) => {
-          await activeMonitor.refreshTx(activeHash, activeChainId ?? undefined);
+          // Inputs can change and change back before the watcher runs, so
+          // a result for inputs no longer current is dropped here too.
+          try {
+            await activeMonitor.refreshTx(
+              activeHash,
+              activeChainId ?? undefined,
+            );
+          } catch (err) {
+            if (!sameInputs(started, currentInputs())) return;
+            throw err;
+          }
+          if (!sameInputs(started, currentInputs())) return;
           const current = activeMonitor.getTxStatus(
             activeHash,
             activeChainId ?? undefined,
@@ -122,8 +141,7 @@ export function useTxMonitor(
       const mine = ++generation;
       // A refresh already started for these inputs (before this watcher
       // ran) is still current; any other one is not.
-      const inputs = [activeMonitor, activeHash, activeChainId];
-      if (!inputs.every((value, i) => Object.is(value, refreshed[i]))) {
+      if (!sameInputs([activeMonitor, activeHash, activeChainId], refreshed)) {
         guard.invalidate();
       }
       if (!activeMonitor || !activeHash || !activeChainId) {
