@@ -3,7 +3,7 @@
 
 import React from "react"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, fireEvent, act, cleanup } from "@testing-library/react"
+import { render, screen, cleanup } from "@testing-library/react"
 
 afterEach(() => cleanup())
 
@@ -19,7 +19,7 @@ vi.mock("@naculus/connect-appkit-react", () => ({
 }))
 
 // Mock ThemeContext
-const mockGenerateCSS = vi.fn()
+const _mockGenerateCSS = vi.fn()
 vi.mock("../contexts/ThemeContext", () => ({
   ThemeProvider: ({ children, theme, defaultDark, priority }: any) => {
     return (
@@ -43,7 +43,7 @@ vi.mock("../contexts/ComponentRegistry", () => ({
 }))
 
 // Mock WalletConnectContext
-const mockConnectWalletConnect = vi.fn()
+const _mockConnectWalletConnect = vi.fn()
 vi.mock("../contexts/WalletConnectContext", () => ({
   WalletConnectProvider: ({ children }: any) => {
     return <div data-testid="wallet-connect-provider">{children}</div>
@@ -275,7 +275,7 @@ describe("Web3ConnectUI", () => {
   // ===== Provider Wrapper Behavior =====
   describe("Provider Wrapper Behavior", () => {
     it("wraps children in correct order (outermost: DetectionContext)", () => {
-      const { container } = renderWeb3ConnectUI()
+      renderWeb3ConnectUI()
 
       // The DetectionContext is the outermost provider
       expect(screen.getByTestId("theme-provider")).toBeTruthy()
@@ -301,7 +301,7 @@ describe("Web3ConnectUI", () => {
   // ===== Edge Cases =====
   describe("Edge Cases", () => {
     it("renders with empty children", () => {
-      const { container } = renderWeb3ConnectUI({}, null as any)
+      renderWeb3ConnectUI({}, null as any)
       // Should not crash
       expect(screen.getByTestId("theme-provider")).toBeTruthy()
     })

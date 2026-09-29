@@ -4,7 +4,6 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Smartphone, RefreshCw, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import type QRCodeType from "qrcode";
 import { DefaultDialog } from "../lib/ui-defaults";
-import { cn } from "../lib/cn";
 import { useComponentRegistry } from "../contexts/ComponentRegistry";
 import { useIsMobile } from "../hooks/useIsMobile";
 

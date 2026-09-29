@@ -39,7 +39,7 @@ export function ChainSelector({
   showLabel = true,
   variant = "dropdown"
 }: ChainSelectorProps) {
-  const { currentChain, availableChains, switchChain, isEvm } = useChain();
+  const { currentChain, availableChains, switchChain } = useChain();
   const { isConnected } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
   const registry = useComponentRegistry();

@@ -4,7 +4,6 @@
 
 import type { TokenListSource } from "@naculus/connect-core";
 import {
-  DEFAULT_SOURCES,
   ETHEREUM_MAINNET_TOKENS,
   POLYGON_TOKENS,
   OPTIMISM_TOKENS,

@@ -5,7 +5,6 @@ import type {
   ExecutionStrategy,
   GetCallsStatusAction,
   SendCallsAction,
-  SendCallsOptions,
   ShowCallsStatusAction,
 } from "./eip5792";
 

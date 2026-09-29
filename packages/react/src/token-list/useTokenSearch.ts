@@ -5,9 +5,9 @@
  * Returns structured results (exact + fuzzy matches).
  */
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TokenListManager } from "@naculus/connect-core";
-import type { TokenSearchResult, TokenListSource, TokenListManagerConfig } from "@naculus/connect-core";
+import type { TokenSearchResult } from "@naculus/connect-core";
 import { getDefaultSources } from "./defaults";
 import { eip155ChainIdToNumber } from "@naculus/connect-appkit-core";
 

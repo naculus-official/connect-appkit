@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { AppkitConnectButton } from "@naculus/connect-appkit-react"
 import { useWalletConnectOptional } from "../contexts/WalletConnectContext"
 import { useEIP6963 } from "../hooks/useEIP6963"

@@ -12,9 +12,7 @@ import {
   logger,
   WalletError,
 } from "@naculus/connect-core";
-import type { PocketConnectorClass as EmbeddedWalletConnectorClass } from "@naculus/connector-embedded";
 import { eip6963Connector } from "@naculus/connector-evm-injected";
-import { issueNonce, parseSiwxMessage } from "@naculus/siwx";
 import type React from "react";
 import {
   createContext,
@@ -29,14 +27,11 @@ import { createClient, type Web3Client } from "../client";
 import { runSiwxFlow } from "../core/siwx-flow";
 import {
   initialWeb3State,
-  toEip155Accounts,
   web3Reducer,
   withRetry,
   withTimeout,
 } from "@naculus/connect-appkit-core";
-import { selectSiwxAccount } from "../hooks/siwx-accounts";
 import type {
-  ConnectionStatus,
   WalletChain,
   Web3Actions,
   Web3ConnectConfig,

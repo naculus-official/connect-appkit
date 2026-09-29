@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
-import React from "react"
 import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import {
@@ -49,7 +48,7 @@ describe("FallbackDialog", () => {
       </FallbackDialog>
     )
     // The overlay is the FallbackOverlay
-    const overlays = document.querySelectorAll('[class*="bg-black/80"]')
+    const _overlays = document.querySelectorAll('[class*="bg-black/80"]')
     // Fire click on the backdrop overlay (first fixed div)
     const backdrop = document.querySelector('[class*="bg-black/80"]')
     expect(backdrop).not.toBeNull()

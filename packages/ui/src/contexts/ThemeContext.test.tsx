@@ -1,13 +1,12 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
-import React from "react"
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, act, cleanup } from "@testing-library/react"
 
 afterEach(() => cleanup())
 import { ThemeProvider, useTheme, useThemeVariable } from "./ThemeContext"
-import { THEME_CONTRACT, type ThemeVariableName } from "../lib/css-variables"
+import { THEME_CONTRACT } from "../lib/css-variables"
 
 // A helper component to test hooks
 function TestConsumer() {

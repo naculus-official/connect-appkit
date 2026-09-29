@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
-import React from "react"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, act, cleanup } from "@testing-library/react"
 
@@ -12,20 +11,20 @@ function PlaceholderButton({ children, onClick, disabled, className, ...rest }: 
   return <button className={className} onClick={onClick} disabled={disabled} data-testid="placeholder-btn" {...rest}>{children}</button>
 }
 
-function PlaceholderDialog({ children, open, onOpenChange }: any) {
+function _PlaceholderDialog({ children, open, onOpenChange }: any) {
   if (!open) return null
   return <div data-testid="placeholder-dialog" role="dialog" aria-modal="true">{children}</div>
 }
 
-function PlaceholderDialogContent({ children }: any) {
+function _PlaceholderDialogContent({ children }: any) {
   return <div data-testid="placeholder-dialog-content">{children}</div>
 }
 
-function PlaceholderDialogHeader({ children }: any) {
+function _PlaceholderDialogHeader({ children }: any) {
   return <div data-testid="placeholder-dialog-header">{children}</div>
 }
 
-function PlaceholderDialogTitle({ children }: any) {
+function _PlaceholderDialogTitle({ children }: any) {
   return <div data-testid="placeholder-dialog-title">{children}</div>
 }
 

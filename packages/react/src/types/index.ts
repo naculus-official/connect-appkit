@@ -1,6 +1,4 @@
 import type {
-  Namespace,
-  SessionNamespace,
   SessionStorage,
   UniversalWalletSession,
 } from "@naculus/connect-core";
@@ -9,7 +7,6 @@ import type {
   NativeWalletConnectOptions,
 } from "../client";
 import type { PocketConfig } from "@naculus/connector-embedded";
-import type { Chain } from "viem";
 
 // Re-exported, not redefined. These are the shapes the framework-neutral
 // half of appkit is built on, so they live in @naculus/connect-appkit-core

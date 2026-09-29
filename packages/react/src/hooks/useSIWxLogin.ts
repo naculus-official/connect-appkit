@@ -16,7 +16,6 @@ import {
   getBlockchainName,
   issueNonce,
   nowISO,
-  type SiwxMessage,
   type SiwxResult,
 } from "@naculus/siwx";
 import { useCallback, useState } from "react";

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { TxMonitorLike, TxStatusEntry, TxStatus } from "./useTxMonitor";
+import type { TxMonitorLike, TxStatusEntry } from "./useTxMonitor";
 import { useTxMonitorProvider } from "./useTxMonitor";
 
 // ── Hook ──────────────────────────────────────────────────────────

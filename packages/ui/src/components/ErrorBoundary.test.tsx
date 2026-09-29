@@ -25,11 +25,11 @@ const BadChild = ({ message = "Test error" }: { message?: string }) => {
   throw new Error(message);
 };
 
-const SilentBadChild = ({ message = "Silent error" }: { message?: string }) => {
+const _SilentBadChild = ({ message = "Silent error" }: { message?: string }) => {
   throw new Error(message);
 };
 
-function ConditionalChild({ shouldThrow }: { shouldThrow: boolean }) {
+function _ConditionalChild({ shouldThrow }: { shouldThrow: boolean }) {
   if (shouldThrow) {
     throw new Error("Controlled error");
   }

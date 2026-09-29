@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { validateDestination, useValidateDestination } from "./useValidateDestination";
 import { renderHook } from "@testing-library/react";
 

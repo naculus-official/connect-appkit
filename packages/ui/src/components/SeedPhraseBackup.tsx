@@ -114,7 +114,6 @@ export function SeedPhraseBackup({
       return { word, key: `${word}-${occurrence}` }
     })
   }, [words])
-  const detectedWordCount = wordCount ?? (words.length === 24 ? 24 : 12)
 
   const handleReveal = useCallback(() => setRevealed(true), [])
 

@@ -22,7 +22,7 @@ import {
   fetchUserOperationReceipt,
   InvalidUserOperationReceiptError,
 } from "@naculus/connect-appkit-core";
-import type { Address, Hex, UserOperationReceipt } from "@naculus/connect-core";
+import type { Hex, UserOperationReceipt } from "@naculus/connect-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type UserOpStatus =

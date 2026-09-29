@@ -42,7 +42,7 @@ vi.mock("../provider/Web3ConnectProvider", () => ({
   Web3ConnectProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-const mockSignMessage = vi.fn();
+const _mockSignMessage = vi.fn();
 const mockGetClient = vi.fn();
 vi.mock("../client", () => ({
   getClient: () => mockGetClient(),

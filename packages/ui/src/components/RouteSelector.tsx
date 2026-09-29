@@ -86,30 +86,12 @@ export interface RouteSelectorProps {
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
-function humanReadableCost(cost: bigint, decimals = 18): string {
-  // Rough estimate: convert wei to ether
-  const divisor = BigInt(10) ** BigInt(decimals);
-  const whole = cost / divisor;
-  const fraction = cost % divisor;
-
-  if (whole === 0n && fraction === 0n) return "$0.00";
-  if (whole === 0n) return `~$${(Number(fraction) / Number(divisor)).toFixed(2)}`;
-
-  const ethValue = Number(whole) + Number(fraction) / Number(divisor);
-  return `~$${ethValue.toFixed(2)}`;
-}
-
 function formatTime(ms: number): string {
   if (ms < 1000) return `<1s`;
   if (ms < 60_000) return `~${Math.round(ms / 1000)}s`;
   const min = Math.floor(ms / 60_000);
   const sec = Math.round((ms % 60_000) / 1000);
   return sec > 0 ? `~${min}m ${sec}s` : `~${min}m`;
-}
-
-function formatSlippage(percent: number): string {
-  const pct = percent < 0.01 ? "<0.01" : percent.toFixed(2);
-  return `${pct}%`;
 }
 
 function formatSymbol(token: Token): string {

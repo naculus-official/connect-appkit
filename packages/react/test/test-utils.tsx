@@ -1,6 +1,5 @@
-import React from "react";
+
 import { renderHook } from "@testing-library/react";
-import type { ReactNode } from "react";
 import type { UniversalWalletSession } from "@naculus/connect-core";
 import type { Web3ContextValue } from "../src/provider/Web3ConnectProvider";
 
@@ -67,7 +66,7 @@ export function renderHookWithMockWeb3<Result, Props>(
     contextValue?: Partial<Web3ContextValue>;
   }
 ) {
-  const mockValue = createMockContextValue(options?.contextValue);
+  const _mockValue = createMockContextValue(options?.contextValue);
 
   // We mock at import time — caller must vi.mock("../src/provider/Web3ConnectProvider")
   // This utility just provides the mock values

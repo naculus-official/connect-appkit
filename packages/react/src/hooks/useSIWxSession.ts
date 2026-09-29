@@ -12,12 +12,11 @@
  */
 
 import { siwxResultToSession } from "@naculus/connect-appkit-core";
-import { LocalStorageAdapter, logger } from "@naculus/connect-core";
-import type { SiwxMessage, SiwxResult, SiwxSession } from "@naculus/siwx";
+import { logger } from "@naculus/connect-core";
+import type { SiwxSession } from "@naculus/siwx";
 import {
   checkSessionExpired,
   createLocalStorageSiwxSessionStorage,
-  SiwxSessionManager,
 } from "@naculus/siwx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWeb3 } from "../provider/Web3ConnectProvider";
@@ -25,8 +24,6 @@ import type { UseSIWxLoginOptions } from "./useSIWxLogin";
 import { useSIWxLogin } from "./useSIWxLogin";
 
 // ── Constants ────────────────────────────────────────────────────
-
-const SIWX_SESSION_KEY = "naculus_siwx_session";
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -94,7 +91,7 @@ export function useSIWxSession(
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const { session: web3Session, chainId: currentChainId } = useWeb3();
+  const { chainId: currentChainId } = useWeb3();
   const login = useSIWxLogin();
   const storageRef = useRef(
     createLocalStorageSiwxSessionStorage(`${storagePrefix}siwx_session`),

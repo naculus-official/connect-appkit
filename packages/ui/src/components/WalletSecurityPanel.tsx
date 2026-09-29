@@ -1,6 +1,5 @@
 "use client"
 
-import React from "react"
 import { AlertTriangle, Info, ShieldAlert, ShieldCheck } from "lucide-react"
 import { useEmbeddedWallet } from "@naculus/connect-appkit-react"
 import type {

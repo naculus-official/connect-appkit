@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Wallet } from "lucide-react";
-import { cn } from "../lib/cn";
 import { useComponentRegistry } from "../contexts/ComponentRegistry";
 
 export interface AccountButtonProps {

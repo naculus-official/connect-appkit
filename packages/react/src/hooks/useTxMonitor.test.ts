@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { describe, it, expect, beforeEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
 import { useTxMonitor, TxMonitorContext } from "./useTxMonitor";
 import type { TxMonitorLike, TxStatusEntry } from "./useTxMonitor";
 import React from "react";

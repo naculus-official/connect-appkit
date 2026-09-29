@@ -3,7 +3,6 @@
 import React, { useState } from "react"
 import { LogIn, Loader2, CheckCircle2, AlertCircle, X, Copy, Check } from "lucide-react"
 import { useComponentRegistry } from "../contexts/ComponentRegistry"
-import { DefaultDialog } from "../lib/ui-defaults"
 import type { SiwxResult } from "@naculus/siwx"
 
 export interface SignInButtonProps {

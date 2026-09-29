@@ -125,7 +125,7 @@ vi.mock("@naculus/siwx", () => {
     checkSessionExpired: mockCheckSessionExpired,
     createLocalStorageSiwxSessionStorage: vi.fn((key) => makeLocalStorageStorage(key)),
     createMemorySiwxSessionStorage: vi.fn(() => {
-      const store = new Map<string, string>();
+      const _store = new Map<string, string>();
       return {
         async get() { return null; },
         async set(session: any) {},

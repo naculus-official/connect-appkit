@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { effectScope, nextTick, ref, shallowRef } from "vue";
+import { effectScope, nextTick, ref } from "vue";
 import { type DelegationCodeReader, useDelegation } from "./useDelegation";
 
 const FIRST = `0x${"1".repeat(40)}`;

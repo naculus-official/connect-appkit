@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
-import React from "react"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, act, cleanup } from "@testing-library/react"
 
@@ -17,7 +16,7 @@ const mockUseEmbeddedWallet = vi.fn()
 const mockUseDisconnect = vi.fn()
 const mockUseWeb3 = vi.fn()
 const mockWeb3ConnectProvider = vi.fn()
-const mockWeb3 = vi.fn()
+const _mockWeb3 = vi.fn()
 
 vi.mock("@naculus/connect-appkit-react", () => ({
   useWallet: () => mockUseWallet(),
@@ -375,7 +374,7 @@ describe("AppKit", () => {
       mockUseEmbeddedWallet.mockReturnValue(mockEmbedded)
 
       // Initially render without backup
-      const { rerender } = render(
+      render(
         <AppKit {...defaultConfig}>
           <div>test</div>
         </AppKit>
