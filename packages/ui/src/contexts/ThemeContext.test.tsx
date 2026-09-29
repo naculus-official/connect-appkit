@@ -60,6 +60,26 @@ describe("ThemeContext", () => {
     expect(getCSSVar("primary")).toBe("#3b82f6")
   })
 
+  it("drops theme values that could inject CSS", () => {
+    render(
+      <ThemeProvider
+        theme={{
+          primary: "red; } body { display: none",
+          background: "\\7b",
+          foreground: "#111111",
+        }}
+      >
+        <TestConsumer />
+      </ThemeProvider>
+    )
+    const css = Array.from(document.querySelectorAll("style"))
+      .map((el) => el.textContent ?? "")
+      .join("\n")
+    expect(css).not.toContain("display: none")
+    expect(css).not.toContain("\\7b")
+    expect(getCSSVar("foreground")).toBe("#111111")
+  })
+
   it("applies dark mode class when defaultDark is true", () => {
     render(
       <ThemeProvider defaultDark={true}>

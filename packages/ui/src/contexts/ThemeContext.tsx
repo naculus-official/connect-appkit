@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useMemo, useEffect, useCallback, useState } from 'react'
+import type React from 'react'
+import { createContext, useContext, useMemo, useEffect, useCallback, useState } from 'react'
 import { THEME_CONTRACT, clearCSSVariableCache, type ThemeVariableName } from '../lib/css-variables'
 
 export interface ThemeOverride {
@@ -47,11 +48,20 @@ export interface ThemeProviderProps {
   priority?: ThemePriority
 }
 
+/**
+ * A theme value becomes the right-hand side of one CSS declaration. One that
+ * could close it (`;`), open or close a block (`{` `}`), start markup (`<`
+ * `>`) or break the line would let a theme supplied from outside — a URL
+ * parameter, a stored user preference — inject arbitrary CSS, which can read
+ * attribute values out of the page. Such values are dropped.
+ */
+const UNSAFE_CSS_VALUE = /[;{}<>\r\n\\]/
+
 function generateCSS(theme: ThemeOverride): string {
   const rules: string[] = []
   for (const [key, value] of Object.entries(theme)) {
     const cssVar = THEME_CONTRACT[key as ThemeVariableName]
-    if (cssVar && value) {
+    if (cssVar && value && !UNSAFE_CSS_VALUE.test(String(value))) {
       rules.push('  ' + cssVar.name + ': ' + value + ';')
     }
   }
@@ -133,7 +143,7 @@ export function ThemeProvider({
   return (
     <ThemeContext.Provider value={value}>
       {cssString ? (
-        <style id={styleId} dangerouslySetInnerHTML={{ __html: cssString }} />
+        <style id={styleId}>{cssString}</style>
       ) : null}
       {children}
     </ThemeContext.Provider>

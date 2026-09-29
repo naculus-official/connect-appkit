@@ -1,7 +1,8 @@
 "use client"
 import { logger } from "@naculus/connect-core";
 
-import React, { useState, useRef, useEffect } from "react";
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
 import { useChain, useWallet } from "@naculus/connect-appkit-react";
 import { cn } from "../lib/cn";
 import { getChainLogo } from "../assets/chains";
@@ -29,6 +30,7 @@ function ChainLogo({ chainId, className }: { chainId: string; className?: string
   return (
     <span
       className={cn("inline-flex items-center justify-center shrink-0", className)}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: svgStr is one of the static SVG strings bundled in assets/chains, never external input
       dangerouslySetInnerHTML={{ __html: svgStr }}
     />
   )

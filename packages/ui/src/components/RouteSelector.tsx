@@ -9,7 +9,7 @@
  * Uses ComponentRegistry for all base UI (Button, Card, Badge, Skeleton, Progress).
  */
 
-import React from "react";
+import type React from "react";
 import {
   ArrowRight,
   CheckCircle2,
@@ -303,6 +303,7 @@ function ChainLogo({ chainId, className }: { chainId: number; className?: string
   return (
     <span
       className={cn("inline-flex items-center justify-center shrink-0", className)}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: svgStr is one of the static SVG strings bundled in assets/chains, never external input
       dangerouslySetInnerHTML={{ __html: svgStr }}
     />
   );
