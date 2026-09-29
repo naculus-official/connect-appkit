@@ -20,7 +20,9 @@
     "typecheck": "tsc --noEmit",
     "api:check": "node scripts/api-surface.mjs --check",
     "api:update": "node scripts/api-surface.mjs",
-    "helpers:check": "node scripts/critical-helpers.mjs"
+    "helpers:check": "node scripts/critical-helpers.mjs",
+    "dup:check": "jscpd --config .jscpd.json packages/*/src",
+    "size:check": "node scripts/size-budget.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
@@ -32,6 +34,7 @@
     "@types/node": "^26.6.3",
     "@vitest/coverage-v8": "^5.0.0",
     "cspell": "^10.3.4",
+    "jscpd": "^5.3.3",
     "jsdom": "^30.0.1",
     "typescript": "^6.0.3",
     "viem": "^2.56.5",
