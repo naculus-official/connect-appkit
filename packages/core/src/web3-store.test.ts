@@ -36,7 +36,20 @@ describe("normalizeEip155ChainId", () => {
     expect(normalizeEip155ChainId(input)).toBe(expected);
   });
 
-  it.each([undefined, null, 137, {}, "", "eip155:abc", "0xzz", "solana:x"])(
+  it.each([
+    undefined,
+    null,
+    137,
+    {},
+    "",
+    "eip155:abc",
+    "0xzz",
+    "solana:x",
+    "eip155:0",
+    "0x0",
+    "0",
+    String(Number.MAX_SAFE_INTEGER + 2),
+  ])(
     "returns undefined for malformed wallet event %p",
     (input) => {
       // A wallet emitting garbage must not corrupt session state.

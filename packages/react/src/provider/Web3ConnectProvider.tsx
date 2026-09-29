@@ -29,7 +29,6 @@ import { createClient, type Web3Client } from "../client";
 import { runSiwxFlow } from "../core/siwx-flow";
 import {
   initialWeb3State,
-  normalizeEip155ChainId,
   toEip155Accounts,
   web3Reducer,
   withRetry,

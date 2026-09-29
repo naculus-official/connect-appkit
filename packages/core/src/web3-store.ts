@@ -66,22 +66,34 @@ export async function withRetry<T>(
 
 // ── CAIP normalisation ─────────────────────────────────────────────────
 
-/** Convert EIP-1193 chainChanged values into the CAIP-2 form used by sessions. */
+/**
+ * Convert EIP-1193 chainChanged values into the CAIP-2 form used by sessions.
+ * Refuses chain 0 and anything above `Number.MAX_SAFE_INTEGER`, as
+ * connect-core's `normalizeEip155ChainId` does; switch to that export once
+ * the connect-lib release that adds it is the minimum supported version.
+ */
 export function normalizeEip155ChainId(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
+  let raw: string;
+  if (value.startsWith("eip155:")) {
+    raw = value.slice("eip155:".length);
+    if (!/^\d+$/.test(raw)) return undefined;
+  } else if (/^0x[0-9a-f]+$/i.test(value) || /^\d+$/.test(value)) {
+    raw = value;
+  } else {
+    return undefined;
+  }
+  let numeric: bigint;
   try {
-    if (value.startsWith("eip155:")) {
-      const reference = value.slice("eip155:".length);
-      if (!/^\d+$/.test(reference)) return undefined;
-      return `eip155:${BigInt(reference).toString(10)}`;
-    }
-    if (/^0x[0-9a-f]+$/i.test(value) || /^\d+$/.test(value)) {
-      return `eip155:${BigInt(value).toString(10)}`;
-    }
+    numeric = BigInt(raw);
   } catch {
     // Ignore malformed wallet events rather than corrupting session state.
+    return undefined;
   }
-  return undefined;
+  if (numeric <= 0n || numeric > BigInt(Number.MAX_SAFE_INTEGER)) {
+    return undefined;
+  }
+  return `eip155:${numeric.toString(10)}`;
 }
 
 export function toEip155Accounts(
