@@ -52,10 +52,8 @@ jobs:
       - name: Bundle size budget
         run: pnpm size:check
 
-      # Only the two rules this repo is clean for; the rest of biome lint
-      # still has pre-existing findings.
-      - name: No unused imports or variables
-        run: pnpm exec biome lint --only=correctness/noUnusedImports --only=correctness/noUnusedVariables
+      - name: Lint
+        run: pnpm lint
 
       - name: Duplication threshold
         run: pnpm dup:check
