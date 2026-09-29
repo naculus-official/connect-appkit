@@ -16,6 +16,7 @@
     "declarationMap": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@naculus/connect-core": ["../connect-lib/packages/core/src"],
       "@naculus/connect-appkit-core": ["packages/core/src"],
