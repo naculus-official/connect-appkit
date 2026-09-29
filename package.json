@@ -17,7 +17,10 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:run": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "api:check": "node scripts/api-surface.mjs --check",
+    "api:update": "node scripts/api-surface.mjs",
+    "helpers:check": "node scripts/critical-helpers.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
