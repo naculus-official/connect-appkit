@@ -86,5 +86,3 @@ export function getLocale(): Locale {
 export function t(key: keyof typeof en): string {
   return locales[currentLocale][key] ?? locales.en[key] ?? key;
 }
-
-export { en, zh };
