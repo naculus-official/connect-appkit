@@ -1,4 +1,4 @@
-import { Component, Prop, State, h, Host, Element, Event, EventEmitter, Listen } from "@stencil/core"
+import { Component, Prop, State, h, Host, Element, Event, type EventEmitter, Listen } from "@stencil/core"
 import { computePosition, offset, flip, shift, arrow as arrowMiddleware } from "@floating-ui/dom"
 
 @Component({

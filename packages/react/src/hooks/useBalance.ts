@@ -153,7 +153,7 @@ export function useBalance(options?: UseBalanceOptions): UseBalanceResult {
   const usdValue = useMemo(() => {
     if (usdPrice === null || formatted === null) return null;
     const numericBalance = parseFloat(formatted);
-    if (isNaN(numericBalance)) return null;
+    if (Number.isNaN(numericBalance)) return null;
     const totalUsd = numericBalance * usdPrice;
     return new Intl.NumberFormat("en-US", {
       style: "currency",

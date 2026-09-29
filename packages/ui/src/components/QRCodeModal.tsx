@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import type React from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { Smartphone, RefreshCw, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import type QRCodeType from "qrcode";
 import { DefaultDialog } from "../lib/ui-defaults";

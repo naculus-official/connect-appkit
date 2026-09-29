@@ -38,7 +38,7 @@ const WORKSPACE_SPEC = "workspace:*";
 const INTERNAL = /^@naculus\/connect-appkit-/;
 const DEP_FIELDS = ["dependencies", "peerDependencies", "optionalDependencies"];
 
-let failures = [];
+const failures = [];
 let checksRun = 0;
 
 function report(label, ok, okDetail, problems = []) {

@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useEffect } from "react"
+import type React from "react"
+import { useEffect } from "react"
 import { cn } from "./cn"
 import { X } from "lucide-react"
 

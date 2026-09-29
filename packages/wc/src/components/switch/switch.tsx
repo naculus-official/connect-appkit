@@ -1,4 +1,4 @@
-import { Component, Prop, h, Host, Event, EventEmitter } from "@stencil/core"
+import { Component, Prop, h, Host, Event, type EventEmitter } from "@stencil/core"
 
 @Component({
   tag: "appkit-switch",

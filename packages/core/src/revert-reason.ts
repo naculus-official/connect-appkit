@@ -23,12 +23,12 @@ const PANIC_SELECTOR = "4e487b71";
  * value rather than being flattened into a generic message.
  */
 const PANIC_REASONS: Record<number, string> = {
-  0x01: "assertion failed",
-  0x11: "arithmetic overflow or underflow",
-  0x12: "division or modulo by zero",
-  0x21: "invalid enum value",
-  0x31: "pop() on an empty array",
-  0x32: "array index out of bounds",
+  1: "assertion failed",
+  17: "arithmetic overflow or underflow",
+  18: "division or modulo by zero",
+  33: "invalid enum value",
+  49: "pop() on an empty array",
+  50: "array index out of bounds",
 };
 
 function hexToUtf8(hex: string): string {

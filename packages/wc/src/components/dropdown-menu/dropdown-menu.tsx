@@ -1,4 +1,4 @@
-import { Component, Prop, h, Host, Element, Event, EventEmitter, Listen, State } from "@stencil/core"
+import { Component, Prop, h, Host, Element, Event, type EventEmitter, Listen, State } from "@stencil/core"
 import { computePosition, offset, flip, shift } from "@floating-ui/dom"
 
 export interface MenuItem {

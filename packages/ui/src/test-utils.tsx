@@ -1,4 +1,4 @@
-import React from "react"
+import type React from "react"
 import { render } from "@testing-library/react"
 import type { ComponentRegistry } from "./contexts/ComponentRegistry"
 import { Web3ComponentProvider } from "./contexts/ComponentRegistry"

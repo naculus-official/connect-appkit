@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useCallback } from "react"
+import type React from "react"
+import { useState, useCallback } from "react"
 import { ArrowLeft, Save, Shield, Users, KeyRound, Fuel, Wrench, Plus, X } from "lucide-react"
 import { cn } from "../lib/cn"
 import { useComponentRegistry } from "../contexts/ComponentRegistry"

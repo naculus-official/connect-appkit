@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useMemo } from 'react'
+import type React from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import { Web3ConnectProvider } from '@naculus/connect-appkit-react'
 import type { Web3ConnectConfig } from '@naculus/connect-appkit-react'
 import { Web3ComponentProvider } from '../contexts/ComponentRegistry'

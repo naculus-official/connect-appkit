@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import type React from "react"
+import { useState } from "react"
 import { LogIn, Loader2, CheckCircle2, AlertCircle, X, Copy, Check } from "lucide-react"
 import { useComponentRegistry } from "../contexts/ComponentRegistry"
 import type { SiwxResult } from "@naculus/siwx"

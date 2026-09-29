@@ -1,4 +1,4 @@
-import { Component, Prop, Watch, h, Host, Element, Event, EventEmitter } from "@stencil/core"
+import { Component, Prop, Watch, h, Host, Element, Event, type EventEmitter } from "@stencil/core"
 
 @Component({
   tag: "appkit-alert-dialog",

@@ -5613,7 +5613,7 @@ class AppkitAccordion {
         };
     }
     render() {
-        return (hAsync(Host, { key: 'df51bc7cf3e3a7637df31f4e81741e0019ad1224' }, hAsync("button", { key: '929988d1190115d07db37cfd3ae31d214492527a', class: "trigger", "aria-expanded": this.open ? "true" : "false", disabled: this.disabled, onClick: this.toggle, onKeyDown: this.handleKeyDown }, hAsync("span", { key: '68805662ade9db3a6a219926fffdc853951307f0' }, this.label), hAsync("svg", { key: 'dd9b9d7c596f6b2a34b9102eef4b8c2f15aab98b', class: { chevron: true, open: this.open }, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { key: 'bba2a47768184b86524bc01f633b6b991fb44b33', points: "6 9 12 15 18 9" }))), hAsync("div", { key: '4cccd703319c74a57ce2eaa032238af580e025fa', class: { content: true, open: this.open } }, hAsync("div", { key: '1f1361e7dd859537120ac49a9a861d00b36a6832', class: "content-inner" }, hAsync("slot", { key: '6cdd9046473f08153db0f32f04e6c9b7d50a5540' })))));
+        return (hAsync(Host, { key: '8046265858052d4462b561667fa151c0604a8cd3' }, hAsync("button", { key: 'e37dd3e2aa524b562c3f7a9730dea114dbc10e48', class: "trigger", "aria-expanded": this.open ? "true" : "false", disabled: this.disabled, onClick: this.toggle, onKeyDown: this.handleKeyDown }, hAsync("span", { key: '4ffaad99ceb941fdc9de7c806822a3ad5b579440' }, this.label), hAsync("svg", { key: 'b1f9614c5691c5f68e88298451509df4dc7b513a', class: { chevron: true, open: this.open }, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { key: 'afb103358429faaa81a7328a0a10810b0d091cc4', points: "6 9 12 15 18 9" }))), hAsync("div", { key: '81ce879534f40e37a11c5ffa08f5ef44e1960877', class: { content: true, open: this.open } }, hAsync("div", { key: '9ae8a8bec30c62306529967e759de48d39db7d3f', class: "content-inner" }, hAsync("slot", { key: 'aaab42d42bee4b776fbe9fd0f49e57d191c3981c' })))));
     }
     static get style() { return accordionCss(); }
     static get cmpMeta() { return {
@@ -5714,10 +5714,10 @@ class AppkitAlertDialog {
         this.dialogEl?.close();
     }
     render() {
-        return (hAsync(Host, { key: 'f22972b40d4dcacf98ce8ff1dee3b4ddb02b6b4f' }, hAsync("dialog", { key: '4ad796bc0ff83fe66280f864c668a41851b01579', ref: (el) => (this.dialogEl = el), onClose: this.handleClose, "aria-labelledby": "alert-title", "aria-describedby": "alert-desc", onClick: (e) => {
+        return (hAsync(Host, { key: 'b8e05c52f1e07a7f2c86ebe69e94cb73bab81651' }, hAsync("dialog", { key: '6add05d934286a1c705936498ea30dce1891d8dc', ref: (el) => (this.dialogEl = el), onClose: this.handleClose, "aria-labelledby": "alert-title", "aria-describedby": "alert-desc", onClick: (e) => {
                 if (e.target === this.dialogEl)
                     this.handleClose();
-            } }, hAsync("div", { key: 'aa505f4a2864aff00ea99edf37c7e31f6468a3f0', class: "title", id: "alert-title" }, this.heading), this.description && hAsync("p", { key: '1fea3b203d0d666c9fc84de05a0ec7485c0a9154', class: "description", id: "alert-desc" }, this.description), hAsync("slot", { key: 'e54f84dcb0ff7cc008f4a0e2ca895144774b7e51' }), hAsync("div", { key: '83f62bae1e059ba52ed3731585ed88634fe44f57', class: "footer" }, hAsync("slot", { key: '3639fa7dc88c34a98db11c1102bcaaaf6504a04d', name: "footer" })))));
+            } }, hAsync("div", { key: 'c2f2ecde3f03124537bfd55817dc0d9e50ba5b5f', class: "title", id: "alert-title" }, this.heading), this.description && hAsync("p", { key: 'f1817f41048318ef4e5ccc05625a6c2e2bdf1d8c', class: "description", id: "alert-desc" }, this.description), hAsync("slot", { key: 'a19964ffb8881444f42389a4c5bd121cfc184776' }), hAsync("div", { key: 'd7733a7e7bc42245f6bffb69e946d365a083d509', class: "footer" }, hAsync("slot", { key: '1f419ae14f5bdb535b8fe68b4bedea19961f56cc', name: "footer" })))));
     }
     get el() { return getElement(this); }
     static get watchers() { return {
@@ -5924,7 +5924,7 @@ class AppkitCheckbox {
         };
     }
     render() {
-        return (hAsync(Host, { key: 'ad981c4ac208f6927cfbe460046702b1705c8ec8' }, hAsync("label", { key: '0113deed05bd21465cf083ff8c50cdf0601482b6', class: "container" }, hAsync("input", { key: '39d4166ed8d3a5962778b08be927d6bb157fe5ca', class: "checkbox", type: "checkbox", checked: this.checked, disabled: this.disabled, name: this.name, value: this.value, onChange: this.handleChange, "aria-label": this.label || undefined }), this.label && hAsync("span", { key: '587637ebfd83c998e8523ea769f593f5a555ef0d', class: "label" }, this.label), !this.label && hAsync("slot", { key: '989fb7f4ca37fbccf38e36311eb38dc3a67cd445' }))));
+        return (hAsync(Host, { key: '80575ce4372d58e4a28efa68fc7444493fb6ca5d' }, hAsync("label", { key: '8b7c87a926c32cb89e21ed87ae4ab0dfb68fa9a5', class: "container" }, hAsync("input", { key: 'e0b6464f7fb6be5149f6dca7466d3de6bcbcd04f', class: "checkbox", type: "checkbox", checked: this.checked, disabled: this.disabled, name: this.name, value: this.value, onChange: this.handleChange, "aria-label": this.label || undefined }), this.label && hAsync("span", { key: '7bca2bb42a084abb6dd8130a991d63d52a5d06a4', class: "label" }, this.label), !this.label && hAsync("slot", { key: '1044520d43c2ece501be1a6290ccee047a86aad4' }))));
     }
     static get style() { return checkboxCss(); }
     static get cmpMeta() { return {
@@ -5956,7 +5956,7 @@ class AppkitCollapsible {
         this.appkitToggle.emit(this.open);
     }
     render() {
-        return (hAsync(Host, { key: '0b2018ab7a51b85521d3993e681f7a00613d0bf7' }, hAsync("button", { key: '1ab929cc9e6b6a32e7ca5cff4c573c4c94b5c96e', class: "trigger", "aria-expanded": this.open ? "true" : "false", onClick: () => this.toggle() }, hAsync("slot", { key: '35bf3c99ab483df95b49ac5f68eebd087d3bcb5b', name: "trigger" })), hAsync("div", { key: 'b3d9be4e633a4e24237de8fef1a0574bba8db31c', class: { content: true, open: this.open } }, hAsync("div", { key: 'dfc8fc732503cfc7449752f53530d117fbef650f', class: "content-inner" }, hAsync("slot", { key: '817df624147e16aaa899121a72a46a7f02503412' })))));
+        return (hAsync(Host, { key: 'ac03525509d037740d1b329fbaf64c68f9ea5376' }, hAsync("button", { key: 'c54334508f220e48ce6ac1c48d076ebcb07b1cba', class: "trigger", "aria-expanded": this.open ? "true" : "false", onClick: () => this.toggle() }, hAsync("slot", { key: 'd0087e70307f942e15047d0e33f346019b397712', name: "trigger" })), hAsync("div", { key: 'b90bd50d1c0ff16124bc492eae4cdcd5ca3a26e5', class: { content: true, open: this.open } }, hAsync("div", { key: 'a72c34f58eb51e98e71f6e571d77d13f81185d7e', class: "content-inner" }, hAsync("slot", { key: '6459da1f316f5015853df74059c035a597ad2ff0' })))));
     }
     static get style() { return collapsibleCss(); }
     static get cmpMeta() { return {
@@ -6206,10 +6206,10 @@ class AppkitDialog {
         this.dialogEl?.close();
     }
     render() {
-        return (hAsync(Host, { key: '77dc7009c0d92c062e6c17f95cf3299e66e706b7' }, hAsync("dialog", { key: '70a38da843837c26e20ba0c6a4fb28ca7e60412a', ref: (el) => (this.dialogEl = el), onClose: this.handleClose, onClick: (e) => {
+        return (hAsync(Host, { key: '4de720540ad50cc5a6411159891dadbfc959b609' }, hAsync("dialog", { key: '0afc9f83f07be489921af7e912362505c8fac28f', ref: (el) => (this.dialogEl = el), onClose: this.handleClose, onClick: (e) => {
                 if (e.target === this.dialogEl)
                     this.handleClose();
-            } }, hAsync("div", { key: '9cba803e9410418675995e0dc7001b47bbd1ef27', class: "header" }, hAsync("h2", { key: '36ecbbcc1149126d40523aa8aaa74cbac7ad5262', class: "title" }, this.heading), hAsync("button", { key: 'c4e4390c6cf2812cc9062aa258ade1d9aa3c8767', class: "close", onClick: this.handleClose, "aria-label": "Close" }, "\u2715")), hAsync("div", { key: '0348a8e76f7c2b2ea8806e20b57203778bbd36e2', class: "content" }, hAsync("slot", { key: '0e0c67a6371d6d61d357550f7a3217cbeafc7d49' })))));
+            } }, hAsync("div", { key: 'bf5575338c030e4b3ea12a59bd595ea4f6e278c8', class: "header" }, hAsync("h2", { key: '2f1a48a8cf6fdce056b72fd5f8d175843138acdf', class: "title" }, this.heading), hAsync("button", { key: '5dc40fad4ea3d4fdb51e3b5d17b27f3e169463f5', class: "close", onClick: this.handleClose, "aria-label": "Close" }, "\u2715")), hAsync("div", { key: 'e1ab4507acf70e926d23fa62baead0d71353d11d', class: "content" }, hAsync("slot", { key: '574b7c63c4780f19ad28da05fbe05541991bec12' })))));
     }
     get el() { return getElement(this); }
     static get watchers() { return {
@@ -7734,7 +7734,7 @@ class AppkitDropdownMenu {
         return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     }
     render() {
-        return (hAsync(Host, { key: 'b3c187ca6bcce7f9ceef84b415c14ad9d9f73ec1' }, hAsync("span", { key: '9ad8d1810b75d08a2c5f076a3b805134d74869e0', ref: el => (this.triggerEl = el), onClick: () => this.toggle(), onKeyDown: (e) => this.handleKeyDown(e), "aria-haspopup": "true", "aria-expanded": this.open ? "true" : "false" }, hAsync("slot", { key: 'bfaf89fa72bf6d47f0c19fb7fd7427abc9ed4e09', name: "trigger" })), hAsync("div", { key: 'ed00e0d9738ca8f2b642d1916a5ffd106a8a0a32', class: { menu: true, open: this.open }, ref: el => (this.menuEl = el), role: "menu" }, this.items.map((item, i) => {
+        return (hAsync(Host, { key: '423c34be4341dc7f005470c8c185659d45b4f892' }, hAsync("span", { key: '35777338f05b07447ea8253253df77ca3d46d8e0', ref: el => (this.triggerEl = el), onClick: () => this.toggle(), onKeyDown: (e) => this.handleKeyDown(e), "aria-haspopup": "true", "aria-expanded": this.open ? "true" : "false" }, hAsync("slot", { key: 'f189716e815624e7915685ba2de4824f77ac4d3a', name: "trigger" })), hAsync("div", { key: '6edb42daa759e2c18eea9b420e942f073d59c413', class: { menu: true, open: this.open }, ref: el => (this.menuEl = el), role: "menu" }, this.items.map((item, i) => {
             if (item.separator)
                 return hAsync("div", { key: `s-${i}`, class: "separator", role: "separator" });
             return (hAsync("button", { key: item.id, class: { item: true, focused: i === this.focusIdx, destructive: !!item.destructive }, role: "menuitem", disabled: item.disabled, onMouseEnter: () => (this.focusIdx = i), onClick: () => this.select(item.id) }, item.label));
@@ -7783,7 +7783,7 @@ class AppkitInput {
         };
     }
     render() {
-        return (hAsync(Host, { key: '5a37df346d5392af4d7b9ce425d975ef6c141683' }, hAsync("input", { key: 'f0677481dc26bc6d12daf3fb390a9c06020b3bd0', class: "input", type: this.type, placeholder: this.placeholder, value: this.value, disabled: this.disabled, maxlength: this.maxLength, "aria-invalid": this.invalid ? "true" : undefined, name: this.name, autocomplete: this.autocomplete, onInput: this.handleInput })));
+        return (hAsync(Host, { key: '6c0647f2c350e9edbe3b7a1850b86d68e3f91c36' }, hAsync("input", { key: 'f199ea92c460823cdb12eecd2fdf86452a1aac40', class: "input", type: this.type, placeholder: this.placeholder, value: this.value, disabled: this.disabled, maxlength: this.maxLength, "aria-invalid": this.invalid ? "true" : undefined, name: this.name, autocomplete: this.autocomplete, onInput: this.handleInput })));
     }
     static get style() { return inputCss(); }
     static get cmpMeta() { return {
@@ -7870,7 +7870,7 @@ class AppkitPopover {
         return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     }
     render() {
-        return (hAsync(Host, { key: '55978cc599dfb2d9a263f1e00d217e3b7e227890' }, hAsync("span", { key: '37ef922ba9a788ffc80f276765ef12aa4062d19c', ref: el => (this.triggerEl = el), onClick: this.toggle, "aria-haspopup": "true", "aria-expanded": this.isOpen ? "true" : "false" }, hAsync("slot", { key: '755fc494f383e0dcafecd538e7018a3885b7fb19', name: "trigger" })), hAsync("div", { key: 'bae0737e68ec0648fa973f972a048b95b48138e7', class: { popover: true, open: this.isOpen }, ref: el => (this.popoverEl = el), role: "dialog" }, hAsync("div", { key: '51f4cfb981ed34ec6ad8ad08f06f687d7b4a6d83', class: "arrow", ref: el => (this.arrowEl = el) }), hAsync("slot", { key: '0daadb64dd6e43a0e7cf76230ee7bd48ece5a278' }))));
+        return (hAsync(Host, { key: '21b05fe2ff46f307b0610eebebce9e86f0cf188c' }, hAsync("span", { key: 'ebf96eb6fd739610e226c2add6fbfecd31e33266', ref: el => (this.triggerEl = el), onClick: this.toggle, "aria-haspopup": "true", "aria-expanded": this.isOpen ? "true" : "false" }, hAsync("slot", { key: '8756bb625e40575f16ee482010cdface04bcefdd', name: "trigger" })), hAsync("div", { key: 'f6a624f2f6b2c33fbd0a23bfa729767a44030d9b', class: { popover: true, open: this.isOpen }, ref: el => (this.popoverEl = el), role: "dialog" }, hAsync("div", { key: '9d5e84aaaf2a26e548e7bc21dd0760726edf2070', class: "arrow", ref: el => (this.arrowEl = el) }), hAsync("slot", { key: '026ba2e67e55809984d4de7f39ec86076cff6531' }))));
     }
     get el() { return getElement(this); }
     static get style() { return popoverCss(); }
@@ -8029,7 +8029,7 @@ class AppkitSelect {
         }
     }
     render() {
-        return (hAsync(Host, { key: '230642d7ccfb5b6768b685add9d69e7e3c14717c' }, hAsync("button", { key: '480932dcbfd21e724b70eddb4a5630abe2b6810e', class: "trigger", disabled: this.disabled, "aria-haspopup": "listbox", "aria-expanded": this.open ? "true" : "false", onClick: () => { this.open = !this.open; this.focusIdx = 0; }, onKeyDown: (e) => this.handleKeyDown(e), role: "combobox" }, hAsync("span", { key: '69d7be6b68919be95ec91a03722e1ef67daa3c89', class: { placeholder: !this.value } }, this.options.find(o => o.value === this.value)?.icon && (hAsync("span", { key: 'fe9fccea231a4ee911fd35e368c0aceada0dbb94', class: "option-icon" }, this.options.find(o => o.value === this.value)?.icon)), this.label || this.placeholder), hAsync("svg", { key: '950d674c8fc071855f9f11dcad672eecf4c761e1', class: "chevron", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { key: 'f45891ce7804f085236a0c4d4932f72ad6fe67e1', points: "6 9 12 15 18 9" }))), hAsync("div", { key: 'e3b9b65091b0e4cb924fdd34b0b0e13b6078bd4a', class: { options: true, open: this.open }, role: "listbox" }, this.options.map((opt, i) => (hAsync("button", { class: { option: true, selected: opt.value === this.value, focused: i === this.focusIdx }, role: "option", "aria-selected": opt.value === this.value ? "true" : "false", disabled: opt.disabled, onClick: () => this.select(opt.value), onMouseEnter: () => (this.focusIdx = i) }, opt.icon && hAsync("span", { class: "option-icon" }, opt.icon), opt.label, hAsync("svg", { class: "check", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { points: "20 6 9 17 4 12" }))))))));
+        return (hAsync(Host, { key: '2c30c0bfdc9f656547c8afc4a707deba5c60975f' }, hAsync("button", { key: 'ed39a50f43272609bfb50ce753b160b69012de50', class: "trigger", disabled: this.disabled, "aria-haspopup": "listbox", "aria-expanded": this.open ? "true" : "false", onClick: () => { this.open = !this.open; this.focusIdx = 0; }, onKeyDown: (e) => this.handleKeyDown(e), role: "combobox" }, hAsync("span", { key: '839c29db058dee5e077733df0197ed4a74f5f139', class: { placeholder: !this.value } }, this.options.find(o => o.value === this.value)?.icon && (hAsync("span", { key: '0ff4835a4a141101e4d71670065203f4899564d6', class: "option-icon" }, this.options.find(o => o.value === this.value)?.icon)), this.label || this.placeholder), hAsync("svg", { key: '17daa260c90c80e9fec095442d391b9062d3e7dc', class: "chevron", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { key: 'd212f70828badafb5fff003643df207e537bacfe', points: "6 9 12 15 18 9" }))), hAsync("div", { key: 'e889450391efbc2992e329cfa338e8dcbeae9666', class: { options: true, open: this.open }, role: "listbox" }, this.options.map((opt, i) => (hAsync("button", { class: { option: true, selected: opt.value === this.value, focused: i === this.focusIdx }, role: "option", "aria-selected": opt.value === this.value ? "true" : "false", disabled: opt.disabled, onClick: () => this.select(opt.value), onMouseEnter: () => (this.focusIdx = i) }, opt.icon && hAsync("span", { class: "option-icon" }, opt.icon), opt.label, hAsync("svg", { class: "check", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, hAsync("polyline", { points: "20 6 9 17 4 12" }))))))));
     }
     get el() { return getElement(this); }
     static get style() { return selectCss(); }
@@ -8112,7 +8112,7 @@ class AppkitSwitch {
         };
     }
     render() {
-        return (hAsync(Host, { key: '69ad9b4443ecfab09d878588e9c5a85ca9bb3c1a' }, hAsync("label", { key: 'd64128f6aebc14d8a4263eb420479162897476ae', class: "container" }, hAsync("input", { key: '7bf828c0ad948e91607b97ced0ef2cbbd2bf641c', class: "switch", type: "checkbox", role: "switch", checked: this.checked, disabled: this.disabled, onChange: this.handleChange, "aria-label": this.label || undefined, "aria-checked": this.checked }), this.label && hAsync("span", { key: '94a211f794cb9157738d9c5cfc3bdad61e410aef', class: "label" }, this.label))));
+        return (hAsync(Host, { key: 'f60d1ce986810b085ea56d1fe9d6c7a81786c227' }, hAsync("label", { key: '1e2996c5baf11d3d852a15a30a3ec91b138c7616', class: "container" }, hAsync("input", { key: '820ddc8f4a3394845f0f3a5d06ff98118349a712', class: "switch", type: "checkbox", role: "switch", checked: this.checked, disabled: this.disabled, onChange: this.handleChange, "aria-label": this.label || undefined, "aria-checked": this.checked }), this.label && hAsync("span", { key: 'c8c4e24266b2f3ccd058010c31eb61a13ae8099a', class: "label" }, this.label))));
     }
     static get style() { return switchCss(); }
     static get cmpMeta() { return {
@@ -8194,7 +8194,7 @@ class AppkitTabs {
     }
     render() {
         const active = this.activeTab;
-        return (hAsync(Host, { key: '394c298c863e1b66ce5b26fe8fbfdc199fbd2820', role: "tablist", "aria-orientation": "horizontal" }, hAsync("div", { key: 'b515b4b9c24fc31b7ca538505fb0eda3db5c3d95', class: "tablist" }, this.tabs.map((tab, i) => (hAsync("button", { class: { tab: true, selected: tab.id === active }, role: "tab", "aria-selected": tab.id === active ? "true" : "false", "aria-controls": `panel-${tab.id}`, disabled: tab.disabled, tabIndex: tab.id === active ? 0 : -1, onClick: () => this.selectTab(tab.id), onKeyDown: (e) => this.handleKeyDown(e, i) }, tab.label)))), hAsync("div", { key: 'b663ec989de82a2afe8a075d77eba11d03a673e8', class: "panel", role: "tabpanel", id: `panel-${active}`, "aria-labelledby": active }, hAsync("slot", { key: '19ea9c44234b0874e39c7302b9e81c2ef7912ca3', name: active }), hAsync("div", { key: 'e5021f4badf4eed82c54d7faef25ae7c24b7cac9', style: { display: "none" } }, hAsync("slot", { key: '145cbe82a4053dcac45ee9309f6dbc222763ec8a' })))));
+        return (hAsync(Host, { key: '981b9734576177489d92b8bb12d262c5336124e8', role: "tablist", "aria-orientation": "horizontal" }, hAsync("div", { key: 'fc0d3fa826f65eb795e8db2dd8a8a4b1d2b6935b', class: "tablist" }, this.tabs.map((tab, i) => (hAsync("button", { class: { tab: true, selected: tab.id === active }, role: "tab", "aria-selected": tab.id === active ? "true" : "false", "aria-controls": `panel-${tab.id}`, disabled: tab.disabled, tabIndex: tab.id === active ? 0 : -1, onClick: () => this.selectTab(tab.id), onKeyDown: (e) => this.handleKeyDown(e, i) }, tab.label)))), hAsync("div", { key: '851bc00b7045818673b6af7ce6fa4c6936efd784', class: "panel", role: "tabpanel", id: `panel-${active}`, "aria-labelledby": active }, hAsync("slot", { key: '5707953a8d38c47ccfe30fa8068f82e0a4098eac', name: active }), hAsync("div", { key: '70d3f0a6a8c86db9d8fb9d3f6a16aec17a1a87fc', style: { display: "none" } }, hAsync("slot", { key: '0c710573e2e98b366bda574c199ba3c873c22fce' })))));
     }
     static get style() { return tabsCss(); }
     static get cmpMeta() { return {
@@ -8243,7 +8243,7 @@ class AppkitToggleGroup {
         this.appkitChange.emit(this.selected);
     }
     render() {
-        return (hAsync(Host, { key: '9a616dbd5c414449b56746c478725fd28aefb34e', role: "group" }, this.items.map(item => (hAsync("button", { key: item.id, class: { item: true, pressed: this.selected.includes(item.id) }, role: "checkbox", "aria-checked": this.selected.includes(item.id) ? "true" : "false", disabled: item.disabled, onClick: () => this.toggle(item.id) }, item.label)))));
+        return (hAsync(Host, { key: '782274756e6aede166ec7e5cb5c06a03b9df201a', role: "group" }, this.items.map(item => (hAsync("button", { key: item.id, class: { item: true, pressed: this.selected.includes(item.id) }, role: "checkbox", "aria-checked": this.selected.includes(item.id) ? "true" : "false", disabled: item.disabled, onClick: () => this.toggle(item.id) }, item.label)))));
     }
     static get style() { return toggleGroupCss(); }
     static get cmpMeta() { return {

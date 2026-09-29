@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import type React from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Eye, EyeOff, KeyRound, ShieldAlert } from "lucide-react"
 import { usePassphraseGate } from "@naculus/connect-appkit-react"
 import type { PassphraseRequest } from "@naculus/connect-appkit-react"

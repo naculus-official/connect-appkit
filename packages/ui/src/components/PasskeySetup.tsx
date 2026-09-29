@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useCallback, useState } from "react"
+import type React from "react"
+import { useCallback, useState } from "react"
 import { Fingerprint, Loader2, ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react"
 import { useEmbeddedWallet, useWeb3 } from "@naculus/connect-appkit-react"
 import { cn } from "../lib/cn"

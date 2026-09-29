@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import React from "react";
+import type React from "react";
 
 // Minimal button component for tests (replaces the removed DefaultButton fallback)
 function TestButton({ children, className, onClick, disabled, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }) {

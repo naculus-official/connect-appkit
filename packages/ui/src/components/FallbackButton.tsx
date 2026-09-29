@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import type React from "react"
 import { cn } from "../lib/cn"
 
 export interface FallbackButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

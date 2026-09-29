@@ -1,4 +1,4 @@
-import { Component, Prop, State, h, Host, Event, EventEmitter } from "@stencil/core"
+import { Component, Prop, State, h, Host, Event, type EventEmitter } from "@stencil/core"
 
 export interface Tab {
   id: string

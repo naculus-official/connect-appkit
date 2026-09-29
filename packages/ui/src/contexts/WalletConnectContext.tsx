@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from "react";
+import type React from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useWeb3 } from "@naculus/connect-appkit-react";
 
 export type QRStatus = "idle" | "loading" | "ready" | "error" | "cancelled";

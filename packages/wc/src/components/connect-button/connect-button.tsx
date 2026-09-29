@@ -1,4 +1,4 @@
-import { Component, Prop, State, h, Host, Element, Event, EventEmitter } from "@stencil/core"
+import { Component, Prop, State, h, Host, Element, Event, type EventEmitter } from "@stencil/core"
 
 interface TokenBalance { symbol: string; formatted: string | null; name?: string }
 interface DiscoveredWallet { id: string; name: string; rdns?: string; icon?: string }
