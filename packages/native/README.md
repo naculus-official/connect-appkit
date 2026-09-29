@@ -83,6 +83,11 @@ rebuilds its client when these objects change identity.
 **Randomness:** `crypto.getRandomValues` must exist —
 `@walletconnect/react-native-compat` installs `react-native-get-random-values`;
 import it first. The embedded wallet's key generation fails closed without it.
+Coinbase MWP (`@mobile-wallet-protocol/client`) also calls
+`crypto.randomUUID`, which Hermes does not provide; without it connecting the
+Smart Wallet fails with "undefined is not a function". Install a v4 UUID
+polyfill built on `crypto.getRandomValues` before the app loads (the Expo
+example's `crypto-random-uuid.ts` is one).
 
 **Clusters:** the MWA wallet's `chain` must match `solanaDefaultChain`; a
 mismatch fails on send rather than paying on another cluster.
