@@ -69,6 +69,29 @@ describe("useUserOpStatus", () => {
     expect(result.current.error).toBeNull();
   });
 
+  it("auto-starts when the hash arrives after the first render", async () => {
+    // The usual flow: the hash is only known once the operation was sent.
+    respondWith(async () => ({ result: receipt(true) }));
+    const { result, rerender } = renderHook(
+      ({ hash }: { hash: `0x${string}` | null }) =>
+        useUserOpStatus({ bundlerUrl, userOpHash: hash }),
+      { initialProps: { hash: null as `0x${string}` | null } },
+    );
+    expect(result.current.status).toBe("idle");
+    rerender({ hash: HASH });
+    await waitFor(() => expect(result.current.status).toBe("confirmed"));
+    expect(result.current.userOpHash).toBe(HASH);
+  });
+
+  it("does not auto-start with autoStart: false", () => {
+    respondWith(async () => ({ result: receipt(true) }));
+    const { result } = renderHook(() =>
+      useUserOpStatus({ bundlerUrl, userOpHash: HASH, autoStart: false }),
+    );
+    expect(result.current.status).toBe("idle");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("reports a failed operation", async () => {
     respondWith(async () => ({ result: receipt(false) }));
     const { result } = renderHook(() => useUserOpStatus({ bundlerUrl }));

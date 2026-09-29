@@ -67,6 +67,7 @@ export function ConnectButtonAdapter({
   }, [wcCtx])
 
   // Sync WC context to WC props
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the three wcCtx.state fields it reads; the context object identity changes more often
   useEffect(() => {
     if (!wcCtx) return
     const { qrStatus, qrUri: ctxUri, error: ctxErr } = wcCtx.state

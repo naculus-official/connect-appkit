@@ -93,6 +93,7 @@ export function ThemeProvider({
   const [isDark, setIsDark] = useState(defaultDark)
 
   // Clear CSS variable cache when theme changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: customTheme is the trigger: the CSS variable cache must be cleared when the theme changes
   useEffect(() => {
     clearCSSVariableCache()
   }, [customTheme])

@@ -32,7 +32,7 @@ export function useViemClient(): {
       transport: http(viemChain.rpcUrls.default.http[0]),
       chain: viemChain,
     });
-  }, [currentChain, viemChain]);
+  }, [viemChain]);
 
   const walletClient = useMemo<WalletClient | null>(() => {
     if (!isConnected || !evmAccount || !viemChain) return null;
@@ -44,7 +44,7 @@ export function useViemClient(): {
       chain: viemChain,
       account: address as `0x${string}`
     });
-  }, [isConnected, evmAccount, currentChain, viemChain]);
+  }, [isConnected, evmAccount, viemChain]);
 
   return {
     publicClient,

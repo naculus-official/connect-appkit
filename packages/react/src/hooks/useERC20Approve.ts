@@ -114,6 +114,7 @@ export function useERC20Approve(
   // Returns what it read. Callers that need the value cannot get it from
   // `allowanceRaw` right after awaiting: that binding is the one captured at
   // render, and a setState does not rewrite it.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: chainId keeps the callback per chain, so the refetch effect keyed on it runs when only the chain changes
   const fetchAllowance = useCallback(async (): Promise<bigint | null> => {
     if (!isCurrent()) return null;
     const generation = ++allowanceGenerationRef.current;
@@ -293,6 +294,7 @@ export function useERC20Approve(
     return doApprove(MAX_UINT256);
   }, [doApprove]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the token fields it reads (address, chainId, decimals); the token object identity changes every render
   const checkAllowance = useCallback(
     async (required: string): Promise<boolean> => {
       if (!isCurrent() || !isConnected || !ownerAddress || !publicClient)

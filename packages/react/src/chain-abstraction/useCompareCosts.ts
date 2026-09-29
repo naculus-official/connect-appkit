@@ -39,6 +39,7 @@ export function useCompareCosts(
   // Keyed on the values, not the array/object identity — see compareCostsKey.
   const inputKey = compareCostsKey(input);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on inputKey (the inputs by value), not on the array/object identities that change every render; see compareCostsKey
   const fetchComparisons = useCallback(async () => {
     if (!chains || chains.length === 0) {
       setComparisons([]);
@@ -67,7 +68,6 @@ export function useCompareCosts(
         setLoading(false);
       }
     }
-    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on inputKey by value; see the comment above.
   }, [inputKey, compareCostsFn]);
 
   useEffect(() => {

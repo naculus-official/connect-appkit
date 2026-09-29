@@ -71,6 +71,7 @@ export function QRCodeModal({
     });
   }, [open, uri]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: timeoutMs restarts the countdown when the timeout changes
   useEffect(() => {
     if (!open || status !== "pending") {
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }

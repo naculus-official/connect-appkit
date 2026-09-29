@@ -191,7 +191,6 @@ export function useExecuteCalls(
     [
       atomic,
       current,
-      paymasterService,
       walletPaymasterAvailable,
       userOperation,
       userOperationSponsored,

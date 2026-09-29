@@ -50,6 +50,7 @@ export function useSolanaTransaction(): UseSolanaTransactionReturn {
     return activeClient;
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: requireSession reads client and session, which are the dependencies
   const signTransaction = useCallback(
     async (transaction: Uint8Array | string) => {
       setIsSigning(true);
@@ -71,6 +72,7 @@ export function useSolanaTransaction(): UseSolanaTransactionReturn {
     [client, session],
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: requireSession reads client and session, which are the dependencies
   const sendTransaction = useCallback(
     async (transaction: Uint8Array | string) => {
       setIsSending(true);

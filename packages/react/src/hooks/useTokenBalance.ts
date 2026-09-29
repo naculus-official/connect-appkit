@@ -43,6 +43,17 @@ export interface TokenBalanceResult {
   formatted: string | null;
 }
 
+// ERC-20 ABI fragment for balanceOf
+const erc20Abi = [
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "balance", type: "uint256" }],
+  },
+] as const;
+
 export function useTokenBalance(options: UseTokenBalanceOptions) {
   const { evmAccount, isConnected } = useAccount();
   const { chainId, chains } = useWeb3();
@@ -87,17 +98,8 @@ export function useTokenBalance(options: UseTokenBalanceOptions) {
     setClient(publicClient);
   }, [currentChain, viemChain]);
 
-  // ERC-20 ABI fragment for balanceOf
-  const erc20Abi = [
-    {
-      name: "balanceOf",
-      type: "function",
-      stateMutability: "view",
-      inputs: [{ name: "owner", type: "address" }],
-      outputs: [{ name: "balance", type: "uint256" }],
-    },
-  ] as const;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on tokensKey (the token list by value), not on the array identity that changes every render
   const fetchTokenBalances = useCallback(async () => {
     if (!evmAccount || !client || tokens.length === 0) {
       setTokenBalances([]);
@@ -166,6 +168,7 @@ export function useTokenBalance(options: UseTokenBalanceOptions) {
   }, [evmAccount, client, tokensKey]);
 
   // Initial fetch
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on tokensKey (the token list by value), not on the array identity that changes every render
   useEffect(() => {
     if (isConnected && evmAccount && tokens.length > 0) {
       fetchTokenBalances();
@@ -173,6 +176,7 @@ export function useTokenBalance(options: UseTokenBalanceOptions) {
   }, [isConnected, evmAccount, tokensKey, fetchTokenBalances]);
 
   // Auto-refresh interval
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on tokensKey (the token list by value), not on the array identity that changes every render
   useEffect(() => {
     if (refreshInterval && refreshInterval > 0 && isConnected && evmAccount && tokens.length > 0) {
       intervalRef.current = setInterval(fetchTokenBalances, refreshInterval);

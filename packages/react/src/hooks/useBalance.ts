@@ -91,7 +91,7 @@ export function useBalance(options?: UseBalanceOptions): UseBalanceResult {
       // viem PublicClient doesn't have a close method, but we clear the reference
       // to prevent stale state from being used in fetchBalance
     };
-  }, [currentChain]);
+  }, [currentChain, viemChain]);
 
   const fetchBalance = useCallback(async () => {
     if (!evmAccount || !client) {

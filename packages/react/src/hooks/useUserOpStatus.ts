@@ -244,14 +244,14 @@ export function useUserOpStatus(
     setElapsedMs(0);
   }, [clearTimers]);
 
-  // Auto-start if userOpHash provided on mount
+  // Auto-start whenever a userOpHash is provided: at mount, or later when
+  // the hash arrives after sending (the usual case). This ran only on mount,
+  // so a hash passed after the first render was never tracked.
+  const autoHash = options?.userOpHash ?? null;
+  const autoStart = options?.autoStart !== false;
   useEffect(() => {
-    if (options?.userOpHash && options?.autoStart !== false) {
-      start(options.userOpHash);
-    }
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (autoHash && autoStart) start(autoHash);
+  }, [autoHash, autoStart, start]);
 
   // Cleanup on unmount
   useEffect(() => {

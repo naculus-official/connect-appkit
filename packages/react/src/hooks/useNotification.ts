@@ -83,6 +83,7 @@ export function useNotification(options?: {
 
   // ── Load persisted settings on mount ──────────────────────────────
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loads persisted settings once, on mount; later storage changes are written, not re-read
   useEffect(() => {
     const storage = options?.storage ?? createNotificationSettingsStorage();
     loadNotificationSettings(storage).then((saved) => {
@@ -90,11 +91,11 @@ export function useNotification(options?: {
         setSettingsState(saved);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Sync notifications with channel ──────────────────────────────
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: channel comes from a ref and never changes; wired once on mount
   useEffect(() => {
     // Set up callback to reactively update state when new notifications arrive
     channel.onNotification = (item) => {
@@ -110,7 +111,6 @@ export function useNotification(options?: {
       // Cleanup: deregister callback on unmount
       channel.onNotification = undefined;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Computed ─────────────────────────────────────────────────────
@@ -182,6 +182,7 @@ export function useNotification(options?: {
     [updateSettings],
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mutedChainSettings reads only settings.mutedChains, and updateSettings merges into the latest state
   const muteChain = useCallback(
     (chainId: string) => {
       updateSettings(mutedChainSettings(settings, chainId, true));
@@ -189,6 +190,7 @@ export function useNotification(options?: {
     [settings.mutedChains, updateSettings],
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mutedChainSettings reads only settings.mutedChains, and updateSettings merges into the latest state
   const unmuteChain = useCallback(
     (chainId: string) => {
       updateSettings(mutedChainSettings(settings, chainId, false));

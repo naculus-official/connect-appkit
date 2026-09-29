@@ -50,6 +50,7 @@ export function useERC20Allowance(
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const generationRef = useRef(0);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: chainId keeps the callback per chain, so the refetch effect keyed on it runs when only the chain changes
   const fetchAllowance = useCallback(async () => {
     if (!isCurrent()) return;
     const generation = ++generationRef.current;

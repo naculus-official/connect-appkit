@@ -693,6 +693,7 @@ export function Web3ConnectProvider({
       switchChain,
       startPairing,
       completePairing,
+      cancelPairing,
       connectInjected,
       clearError,
       chains,
