@@ -14,12 +14,6 @@ export function base58Encode(bytes: Uint8Array): string {
   return "1".repeat(zeros) + out;
 }
 
-export function base64Encode(bytes: Uint8Array): string {
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
 export function base64Decode(value: string): Uint8Array {
   return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
 }
