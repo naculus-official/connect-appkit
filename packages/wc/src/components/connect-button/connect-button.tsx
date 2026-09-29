@@ -171,6 +171,7 @@ export class AppkitConnectButton {
             ) : null}
           </appkit-button>
           {this.dropdownOpen && (
+            // biome-ignore lint/a11y/useSemanticElements: role=region on the styled panel; a <section> would change the component's CSS hooks
             <div class="dropdown" role="region" aria-label="Wallet details" ref={(el: any) => this.setupDropdownClose(el)}>
               <div class="dd-status"><span class="dot" /> Connected</div>
               <div class="dd-addr-row">

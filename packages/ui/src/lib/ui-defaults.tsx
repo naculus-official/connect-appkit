@@ -138,7 +138,7 @@ export function DefaultDialog({
               color: "inherit",
             }}
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" data-testid="x-icon" /></svg>
+            <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" data-testid="x-icon" /></svg>
           </button>
         )}
         {children}

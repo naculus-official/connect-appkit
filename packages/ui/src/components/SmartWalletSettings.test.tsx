@@ -21,6 +21,7 @@ function TestInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
 }
 
 function TestLabel({ children, className, ...rest }: React.LabelHTMLAttributes<HTMLLabelElement>) {
+  // biome-ignore lint/a11y/noLabelWithoutControl: test stand-in for a registry Label; the control is passed via htmlFor
   return <label className={className} {...rest}>{children}</label>
 }
 

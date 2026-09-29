@@ -33,6 +33,7 @@ export function WalletPicker({
     return wrapper(
       <div className="flex flex-col gap-3">
         {Array.from({ length: 3 }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: three static loading placeholders, never reordered
           <div key={i} className="flex items-center gap-3 p-3 rounded-lg animate-pulse">
             <div className="h-10 w-10 rounded-full bg-muted" />
             <div className="h-4 w-32 rounded bg-muted" />

@@ -86,7 +86,7 @@ export class AppkitSelect {
             )}
             {this.label || this.placeholder}
           </span>
-          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg aria-hidden="true" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
@@ -102,7 +102,7 @@ export class AppkitSelect {
             >
               {opt.icon && <span class="option-icon">{opt.icon}</span>}
               {opt.label}
-              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg aria-hidden="true" class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </button>

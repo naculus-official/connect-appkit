@@ -413,6 +413,7 @@ export function RouteSelector({
       <div className="flex flex-col gap-2" data-testid="route-selector-routes">
         {routes.map((route, idx) => (
           <RouteCard
+            // biome-ignore lint/suspicious/noArrayIndexKey: quotes can repeat chain pair and cost; the index disambiguates, and the list is replaced as a whole
             key={`${route.fromChain}-${route.toChain}-${route.gasCosts.totalUsd}-${idx}`}
             route={route}
             onSelect={() => onRouteSelected?.(route)}

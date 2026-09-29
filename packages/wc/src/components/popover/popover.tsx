@@ -85,6 +85,9 @@ export class AppkitPopover {
   render() {
     return (
       <Host>
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper around the slotted trigger button, whose click and key events bubble here */}
+        {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: known gap — aria-haspopup/expanded belong on the slotted trigger button, where a screen reader reads them */}
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: the slotted trigger button handles the keyboard; its click bubbles here */}
         <span ref={el => (this.triggerEl = el as HTMLElement)} onClick={this.toggle} aria-haspopup="true" aria-expanded={this.isOpen ? "true" : "false"}>
           <slot name="trigger" />
         </span>

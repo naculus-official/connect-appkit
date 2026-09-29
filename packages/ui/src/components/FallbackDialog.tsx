@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useEffect } from "react"
 import { cn } from "../lib/cn"
 import { X } from "lucide-react"
 
@@ -10,7 +11,9 @@ export interface FallbackOverlayProps {
 
 export function FallbackOverlay({ onClick }: FallbackOverlayProps) {
   return (
+    // Presentational backdrop (mouse path); keyboard users close with Escape.
     <div
+      aria-hidden="true"
       onClick={onClick}
       className={cn(
         "fixed inset-0 z-50 bg-black/80 w3c-overlay",
@@ -33,6 +36,17 @@ export function FallbackDialog({
   onClose,
   className = "",
 }: FallbackDialogProps) {
+  // Escape closes a modal dialog (WAI-ARIA dialog pattern); without it a
+  // keyboard user whose dialog hides its close button cannot leave.
+  useEffect(() => {
+    if (!isOpen || !onClose) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (

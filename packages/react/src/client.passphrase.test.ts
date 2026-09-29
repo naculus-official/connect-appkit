@@ -100,7 +100,7 @@ describe("createClient — passkey unlock", () => {
     const cfg = await configPassedToEngine();
     expect(cfg?.prfUnlock).toBeDefined();
 
-    const derive = (cfg?.prfUnlock as { derive: (s: Uint8Array) => Promise<unknown> })
+    const derive = (cfg!.prfUnlock as { derive: (s: Uint8Array) => Promise<unknown> })
       .derive;
     await expect(derive(new Uint8Array(32))).resolves.toEqual(
       new Uint8Array(32).fill(3),
@@ -146,7 +146,7 @@ describe("createClient — passkey unlock", () => {
       passphrasePrompt: true,
     });
     const cfg = await configPassedToEngine();
-    const derive = (cfg?.prfUnlock as { derive: (s: Uint8Array) => Promise<unknown> })
+    const derive = (cfg!.prfUnlock as { derive: (s: Uint8Array) => Promise<unknown> })
       .derive;
     await expect(derive(new Uint8Array(32))).resolves.toBeNull();
   });

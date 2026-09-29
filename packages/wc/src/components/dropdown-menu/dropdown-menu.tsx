@@ -82,6 +82,8 @@ export class AppkitDropdownMenu {
   render() {
     return (
       <Host>
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper around the slotted trigger button, whose click and key events bubble here */}
+        {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: known gap — aria-haspopup/expanded belong on the slotted trigger button, where a screen reader reads them */}
         <span
           ref={el => (this.triggerEl = el as HTMLElement)}
           onClick={() => this.toggle()}
@@ -97,6 +99,7 @@ export class AppkitDropdownMenu {
           role="menu"
         >
           {this.items.map((item, i) => {
+            // biome-ignore lint/a11y/useSemanticElements: role=separator on a styled div; an <hr> brings its own borders and margins
             if (item.separator) return <div key={`s-${i}`} class="separator" role="separator" />
             return (
               <button type="button"

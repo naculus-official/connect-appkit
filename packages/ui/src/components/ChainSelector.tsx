@@ -117,7 +117,7 @@ export function ChainSelector({
       <RegistryButton onClick={() => setIsOpen(!isOpen)}>
         {currentChain && <ChainLogo chainId={currentChain.caip2} className="h-4 w-4" />}
         {chainName}
-        <svg
+        <svg aria-hidden="true"
           className={cn("h-3 w-3 transition-transform", isOpen && "rotate-180")}
           fill="none" viewBox="0 0 24 24" stroke="currentColor"
         >
@@ -157,7 +157,7 @@ export function ChainSelector({
                   <span className="text-xs text-muted-foreground">{chain.token}</span>
                 )}
                 {isActive && (
-                  <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg aria-hidden="true" className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 )}

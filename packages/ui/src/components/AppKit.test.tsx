@@ -419,6 +419,7 @@ describe("AppKit", () => {
   describe("useAppKit Hook", () => {
     function TestConsumer() {
       try {
+        // biome-ignore lint/correctness/useHookAtTopLevel: deliberate — the test captures the error useAppKit throws outside its provider
         const ctx = useAppKit()
         return <div data-testid="hook-result" data-connected={ctx.isConnected} data-has-wallets={ctx.hasWallets}>OK</div>
       } catch (e) {

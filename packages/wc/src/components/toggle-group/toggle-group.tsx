@@ -41,6 +41,7 @@ export class AppkitToggleGroup {
     return (
       <Host role="group">
         {this.items.map(item => (
+          // biome-ignore lint/a11y/useSemanticElements: ARIA toggle-button pattern (button with role=checkbox and aria-checked)
           <button type="button"
             key={item.id}
             class={{ item: true, pressed: this.selected.includes(item.id) }}

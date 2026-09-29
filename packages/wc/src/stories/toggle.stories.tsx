@@ -6,6 +6,7 @@ const ToggleDemo = () => {
   const [checked, setChecked] = useState(false)
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: 200 }}>
+      {/* biome-ignore lint/a11y/noLabelWithoutControl: story heading, not a form label */}
       <label style={{ fontWeight: 600 }}>Toggle Demo</label>
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
         <AppkitCheckbox checked={checked} onChange={(e: any) => setChecked(e.target?.checked ?? !checked)} />

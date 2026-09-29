@@ -48,6 +48,7 @@ export class AppkitDialog {
   render() {
     return (
       <Host>
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: the click closes on the backdrop; the native <dialog> closes on Escape itself */}
         <dialog
           ref={(el) => (this.dialogEl = el as HTMLDialogElement)}
           onClose={this.handleClose}

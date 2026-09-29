@@ -146,6 +146,7 @@ export function TokenSelector({
           boxSizing: "border-box",
           marginBottom: "12px",
         }}
+        // biome-ignore lint/a11y/noAutofocus: focus moves into the search field of the selector the user just opened
         autoFocus
       />
 

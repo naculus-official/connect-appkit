@@ -38,7 +38,7 @@ export class AppkitAccordion {
           onKeyDown={this.handleKeyDown}
         >
           <span>{this.label}</span>
-          <svg class={{ chevron: true, open: this.open }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg aria-hidden="true" class={{ chevron: true, open: this.open }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>

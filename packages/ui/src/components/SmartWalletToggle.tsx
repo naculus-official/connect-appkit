@@ -57,8 +57,8 @@ export function SmartWalletToggle({
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {[[Fuel, "Gas Sponsorship", "Enabled"] as const, [RefreshCw, "Recovery", "Enabled"] as const].map(([Icon, label, val], i) => (
-            <div key={i} className="rounded-lg bg-muted/50 p-3">
+          {[[Fuel, "Gas Sponsorship", "Enabled"] as const, [RefreshCw, "Recovery", "Enabled"] as const].map(([Icon, label, val]) => (
+            <div key={label} className="rounded-lg bg-muted/50 p-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {React.createElement(Icon as never, { size: 14 })}
                 <span>{label}</span>

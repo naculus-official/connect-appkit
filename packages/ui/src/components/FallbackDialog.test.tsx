@@ -20,6 +20,26 @@ describe("FallbackDialog", () => {
     expect(container.innerHTML).toBe("")
   })
 
+  it("closes on Escape while open, and not after closing", () => {
+    const onClose = vi.fn()
+    const { rerender } = render(
+      <FallbackDialog isOpen={true} onClose={onClose}>
+        <p>Content</p>
+      </FallbackDialog>
+    )
+    fireEvent.keyDown(document, { key: "Escape" })
+    expect(onClose).toHaveBeenCalledTimes(1)
+    fireEvent.keyDown(document, { key: "Enter" })
+    expect(onClose).toHaveBeenCalledTimes(1)
+    rerender(
+      <FallbackDialog isOpen={false} onClose={onClose}>
+        <p>Content</p>
+      </FallbackDialog>
+    )
+    fireEvent.keyDown(document, { key: "Escape" })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
   it("renders content when isOpen is true", () => {
     render(
       <FallbackDialog isOpen={true}>

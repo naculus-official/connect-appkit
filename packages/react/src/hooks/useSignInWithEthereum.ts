@@ -21,7 +21,7 @@ function useEip155SessionGuard(): (chainId?: string) => void {
         `Ethereum SIWx requires an eip155 chain, received ${requestedChainId}`,
       );
     }
-    const evmNamespace = session.namespaces["eip155"];
+    const evmNamespace = session.namespaces.eip155;
     if (!evmNamespace || evmNamespace.accounts.length === 0) {
       throw new WalletError(
         "namespace_mismatch",
