@@ -49,7 +49,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@stencil/core": "^4.45.0",
+    "@stencil/core": "^4.45.1",
     "@stencil/react-output-target": "^1.6.2",
     "@stencil/vue-output-target": "^0.14.3",
     "typescript": "^6.0.3"
