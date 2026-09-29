@@ -34,7 +34,7 @@ export class AppkitAccountButton {
     if (!this.address) {
       return (
         <Host>
-          <button class="button" disabled={this.disabled}>
+          <button type="button" class="button" disabled={this.disabled}>
             <slot name="icon" />
             <slot>Connect Wallet</slot>
           </button>
@@ -44,7 +44,7 @@ export class AppkitAccountButton {
 
     return (
       <Host>
-        <button class="button" disabled={this.disabled}>
+        <button type="button" class="button" disabled={this.disabled}>
           <slot name="avatar">
             <div class="dot" aria-hidden="true" />
           </slot>

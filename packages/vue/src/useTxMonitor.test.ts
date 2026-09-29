@@ -47,7 +47,7 @@ class Monitor implements TxMonitorLike {
     this.listeners.set(event, listeners);
     return this;
   }
-  off(event: string, listener: Function): this {
+  off(event: string, listener: (...args: any[]) => void): this {
     this.listeners.get(event)?.delete(listener as (next: TxStatusEntry) => void);
     return this;
   }

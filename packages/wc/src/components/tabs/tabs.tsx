@@ -76,7 +76,7 @@ export class AppkitTabs {
       <Host role="tablist" aria-orientation="horizontal">
         <div class="tablist">
           {this.tabs.map((tab, i) => (
-            <button
+            <button type="button"
               class={{ tab: true, selected: tab.id === active }}
               role="tab"
               aria-selected={tab.id === active ? "true" : "false"}

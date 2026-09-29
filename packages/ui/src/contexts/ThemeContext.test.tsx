@@ -15,10 +15,10 @@ function TestConsumer() {
     <div>
       <div data-testid="is-dark">{String(isDark)}</div>
       <div data-testid="theme-length">{Object.keys(theme).length}</div>
-      <button data-testid="set-theme" onClick={() => setTheme({ primary: "#ff0000" })}>
+      <button type="button" data-testid="set-theme" onClick={() => setTheme({ primary: "#ff0000" })}>
         Set Theme
       </button>
-      <button data-testid="toggle-dark" onClick={toggleDarkMode}>
+      <button type="button" data-testid="toggle-dark" onClick={toggleDarkMode}>
         Toggle Dark
       </button>
     </div>

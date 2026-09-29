@@ -57,7 +57,7 @@ export class AppkitDialog {
         >
           <div class="header">
             <h2 class="title">{this.heading}</h2>
-            <button class="close" onClick={this.handleClose} aria-label="Close">
+            <button type="button" class="close" onClick={this.handleClose} aria-label="Close">
               ✕
             </button>
           </div>

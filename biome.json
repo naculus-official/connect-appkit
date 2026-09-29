@@ -10,7 +10,9 @@
       "**",
       "!**/wc-generated",
       "!packages/wc/hydrate",
-      "!packages/wc/src/components.d.ts"
+      "!packages/wc/src/components.d.ts",
+      "!packages/wc/loader",
+      "!**/*.svg"
     ]
   },
   "formatter": {

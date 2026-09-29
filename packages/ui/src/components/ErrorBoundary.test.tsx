@@ -75,7 +75,7 @@ describe("ErrorBoundary", () => {
     const customFallback = vi.fn(({ error, reset }: { error: Error; reset: () => void }) => (
       <div data-testid="custom-fallback">
         <p>Custom: {error.message}</p>
-        <button onClick={reset} data-testid="custom-reset">
+        <button type="button" onClick={reset} data-testid="custom-reset">
           Reset
         </button>
       </div>

@@ -4,7 +4,7 @@ import type { Preview } from "@storybook/react";
 import "../packages/ui/src/styles/tokens.css";
 
 // Stencil runtime: provide h() for WC component JSX runtime
-(window as any).h = (window as any).h || function(tag: string, props: any, ...children: any[]) {
+(window as any).h = (window as any).h || ((tag: string, props: any, ...children: any[]) => {
   const el = typeof tag === "function" ? new tag() : document.createElement(tag);
   if (props) {
     Object.entries(props).forEach(([k, v]) => {
@@ -19,7 +19,7 @@ import "../packages/ui/src/styles/tokens.css";
     el.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
   });
   return el;
-};
+});
 
 const preview: Preview = {
   parameters: {

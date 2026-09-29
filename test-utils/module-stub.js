@@ -2,10 +2,10 @@
 module.exports = {};
 module.exports.default = {};
 // Common exports used in tests and client code
-module.exports.createWalletConnectConnector = function() { return null; };
-module.exports.createEIP6963Connector = function() { return null; };
-module.exports.createEmbeddedConnector = function() { return null; };
-module.exports.createPasskeyConnector = function() { return null; };
-module.exports.createSolanaConnector = function() { return null; };
-module.exports.createCoinbaseConnector = function() { return null; };
-module.exports.createWagmiConnector = function() { return null; };
+module.exports.createWalletConnectConnector = () => null;
+module.exports.createEIP6963Connector = () => null;
+module.exports.createEmbeddedConnector = () => null;
+module.exports.createPasskeyConnector = () => null;
+module.exports.createSolanaConnector = () => null;
+module.exports.createCoinbaseConnector = () => null;
+module.exports.createWagmiConnector = () => null;

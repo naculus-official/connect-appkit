@@ -41,7 +41,7 @@ export class AppkitToggleGroup {
     return (
       <Host role="group">
         {this.items.map(item => (
-          <button
+          <button type="button"
             key={item.id}
             class={{ item: true, pressed: this.selected.includes(item.id) }}
             role="checkbox"

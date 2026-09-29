@@ -18,7 +18,7 @@ export class AppkitCollapsible {
   render() {
     return (
       <Host>
-        <button class="trigger" aria-expanded={this.open ? "true" : "false"} onClick={() => this.toggle()}>
+        <button type="button" class="trigger" aria-expanded={this.open ? "true" : "false"} onClick={() => this.toggle()}>
           <slot name="trigger" />
         </button>
         <div class={{ content: true, open: this.open }}>

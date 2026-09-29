@@ -99,7 +99,7 @@ export class AppkitDropdownMenu {
           {this.items.map((item, i) => {
             if (item.separator) return <div key={`s-${i}`} class="separator" role="separator" />
             return (
-              <button
+              <button type="button"
                 key={item.id}
                 class={{ item: true, focused: i === this.focusIdx, destructive: !!item.destructive }}
                 role="menuitem"

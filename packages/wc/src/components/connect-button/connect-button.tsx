@@ -260,12 +260,12 @@ export class AppkitConnectButton {
                     ))
                   )}
                   <div class="divider"><span>WalletConnect</span></div>
-                  <button class="wc-btn" onClick={() => this.goToWC()}>
+                  <button type="button" class="wc-btn" onClick={() => this.goToWC()}>
                     <span class="wc-name">WalletConnect</span>
                     <span class="wc-desc">Scan QR with any wallet</span>
                   </button>
                   {this.isMobile && this.mobileWalletName && (
-                    <button
+                    <button type="button"
                       class="wc-btn"
                       onClick={() => this.appkitMobileDeepLink.emit()}
                     >
@@ -273,7 +273,7 @@ export class AppkitConnectButton {
                       <span class="wc-desc">Continue in your mobile wallet</span>
                     </button>
                   )}
-                  <button class="wc-btn" onClick={() => this.closeModal()}>
+                  <button type="button" class="wc-btn" onClick={() => this.closeModal()}>
                     Close
                   </button>
                 </div>

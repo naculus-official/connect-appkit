@@ -40,7 +40,7 @@ export interface TxMonitorLike {
   on(event: "statusChange", listener: (entry: TxStatusEntry) => void): this;
   on(event: "confirmed", listener: (entry: TxStatusEntry) => void): this;
   on(event: "failed", listener: (entry: TxStatusEntry) => void): this;
-  off(event: string, listener: Function): this;
+  off(event: string, listener: (entry: TxStatusEntry) => void): this;
 }
 
 export interface UseTxMonitorReturn {

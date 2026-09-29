@@ -30,7 +30,7 @@ export class AppkitAccordion {
   render() {
     return (
       <Host>
-        <button
+        <button type="button"
           class="trigger"
           aria-expanded={this.open ? "true" : "false"}
           disabled={this.disabled}

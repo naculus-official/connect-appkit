@@ -160,7 +160,7 @@ export function QRCodeModal({
 
         <div className="flex flex-col gap-2">
           {showDeepLink && uri && status === "pending" && !isExpired && (
-            <button
+            <button type="button"
               onClick={handleDeepLink}
               className="inline-flex items-center justify-center gap-2 w-full rounded-lg border border-input bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
@@ -178,7 +178,7 @@ export function QRCodeModal({
                 <RefreshCw size={16} /> Generate New QR Code
               </Button>
             ) : (
-              <button
+              <button type="button"
                 onClick={onRetry}
                 className="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition-all duration-200 cursor-pointer border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
@@ -196,7 +196,7 @@ export function QRCodeModal({
               Cancel
             </Button>
           ) : (
-            <button
+            <button type="button"
               onClick={onClose}
               className="inline-flex items-center justify-center w-full rounded-lg border border-input bg-transparent px-4 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >

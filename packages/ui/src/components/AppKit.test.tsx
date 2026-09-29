@@ -35,7 +35,7 @@ vi.mock("@naculus/connect-appkit-react", () => ({
       {!props.connected && (
         <>
           <span>Connect Wallet</span>
-          <button
+          <button type="button"
             data-testid="mock-injected-wallet"
             onClick={() => props.onAppkitConnect?.({ detail: { kind: "injected", walletId: "io.test.wallet" } })}
           >
@@ -83,16 +83,16 @@ vi.mock("./SeedPhraseBackup", () => ({
   SeedPhraseBackup: ({ seedPhrase, onConfirm, onSkip, onExportPrivateKey, open, onOpenChange }: any) => {
     return (
       <div data-testid="seed-phrase-backup" data-seed-phrase={seedPhrase} data-open={open}>
-        <button data-testid="mock-seed-confirm" onClick={onConfirm}>
+        <button type="button" data-testid="mock-seed-confirm" onClick={onConfirm}>
           Mock Seed Confirm
         </button>
-        <button data-testid="mock-seed-skip" onClick={onSkip}>
+        <button type="button" data-testid="mock-seed-skip" onClick={onSkip}>
           Mock Seed Skip
         </button>
-        <button data-testid="mock-export-key" onClick={() => onExportPrivateKey?.()}>
+        <button type="button" data-testid="mock-export-key" onClick={() => onExportPrivateKey?.()}>
           Mock Export Key
         </button>
-        <button data-testid="mock-seed-close" onClick={() => onOpenChange?.(false)}>
+        <button type="button" data-testid="mock-seed-close" onClick={() => onOpenChange?.(false)}>
           Mock Seed Close
         </button>
       </div>

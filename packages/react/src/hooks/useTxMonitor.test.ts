@@ -7,7 +7,7 @@ import React from "react";
 
 class MockMonitor implements TxMonitorLike {
   private entries = new Map<string, TxStatusEntry>();
-  private listeners = new Map<string, Set<Function>>();
+  private listeners = new Map<string, Set<(...args: any[]) => void>>();
 
   setEntry(hash: string, chainId: number, entry: TxStatusEntry): void {
     const key = `${chainId}:${hash}`;
@@ -52,14 +52,14 @@ class MockMonitor implements TxMonitorLike {
     // no-op
   }
 
-  on(event: string, listener: Function): this {
+  on(event: string, listener: (...args: any[]) => void): this {
     const set = this.listeners.get(event) ?? new Set();
     set.add(listener);
     this.listeners.set(event, set);
     return this;
   }
 
-  off(event: string, listener: Function): this {
+  off(event: string, listener: (...args: any[]) => void): this {
     const set = this.listeners.get(event);
     if (set) set.delete(listener);
     return this;

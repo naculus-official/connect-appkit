@@ -3,9 +3,9 @@
 
 // jsdom: HTMLDialogElement missing .close / .showModal
 if (typeof HTMLDialogElement !== "undefined" && !("close" in HTMLDialogElement.prototype)) {
-  HTMLDialogElement.prototype.close = function () {}
-  HTMLDialogElement.prototype.showModal = function () {}
-  HTMLDialogElement.prototype.show = function () {}
+  HTMLDialogElement.prototype.close = () => {}
+  HTMLDialogElement.prototype.showModal = () => {}
+  HTMLDialogElement.prototype.show = () => {}
 }
 
 import React from "react"

@@ -35,19 +35,19 @@ vi.mock("@naculus/connect-appkit-react", () => ({
         <span data-testid="wc-connected">{String(props.connected)}</span>
         <span data-testid="wc-address">{props.address || "none"}</span>
         <span data-testid="wc-connecting">{String(props.connecting)}</span>
-        <button
+        <button type="button"
           data-testid="wc-fire-connect"
           onClick={() => props.onAppkitConnect?.({ detail: { kind: "injected", walletId: "meta" } })}
         />
-        <button
+        <button type="button"
           data-testid="wc-fire-connect-wc"
           onClick={() => props.onAppkitConnect?.({ detail: { kind: "walletconnect" } })}
         />
-        <button
+        <button type="button"
           data-testid="wc-fire-disconnect"
           onClick={() => props.onAppkitDisconnect?.()}
         />
-        <button
+        <button type="button"
           data-testid="wc-fire-start-pairing"
           onClick={() => props.onAppkitStartPairing?.()}
         />

@@ -71,7 +71,7 @@ export class AppkitSelect {
   render() {
     return (
       <Host>
-        <button
+        <button type="button"
           class="trigger"
           disabled={this.disabled}
           aria-haspopup="listbox"
@@ -92,7 +92,7 @@ export class AppkitSelect {
         </button>
         <div class={{ options: true, open: this.open }} role="listbox">
           {this.options.map((opt, i) => (
-            <button
+            <button type="button"
               class={{ option: true, selected: opt.value === this.value, focused: i === this.focusIdx }}
               role="option"
               aria-selected={opt.value === this.value ? "true" : "false"}

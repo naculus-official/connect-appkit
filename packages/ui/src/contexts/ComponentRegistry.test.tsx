@@ -31,7 +31,7 @@ function TestConsumer() {
 }
 
 function CustomButton({ children }: { children: React.ReactNode }) {
-  return <button data-testid="custom-button">{children}</button>
+  return <button type="button" data-testid="custom-button">{children}</button>
 }
 
 function CustomDialog({ children }: { children: React.ReactNode }) {

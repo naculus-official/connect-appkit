@@ -6,7 +6,7 @@ import type { TxMonitorLike, TxStatusEntry } from "./useTxMonitor";
 
 class MockMonitor implements TxMonitorLike {
   private entries: TxStatusEntry[] = [];
-  private listeners = new Map<string, Set<Function>>();
+  private listeners = new Map<string, Set<(...args: any[]) => void>>();
 
   setEntries(entries: TxStatusEntry[]): void {
     this.entries = entries;
@@ -23,13 +23,13 @@ class MockMonitor implements TxMonitorLike {
   }
   async refreshTx(): Promise<void> {}
 
-  on(event: string, listener: Function): this {
+  on(event: string, listener: (...args: any[]) => void): this {
     const set = this.listeners.get(event) ?? new Set();
     set.add(listener);
     this.listeners.set(event, set);
     return this;
   }
-  off(event: string, listener: Function): this {
+  off(event: string, listener: (...args: any[]) => void): this {
     const set = this.listeners.get(event);
     if (set) set.delete(listener);
     return this;

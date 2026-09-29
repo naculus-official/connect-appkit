@@ -113,7 +113,7 @@ export function TokenSelector({
         <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>
           Select Token
         </h3>
-        <button
+        <button type="button"
           onClick={onClose}
           style={{
             background: "none",
@@ -184,7 +184,7 @@ export function TokenSelector({
           </div>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
             {popularTokens.map((token) => (
-              <button
+              <button type="button"
                 key={`${token.chainId}:${token.address}`}
                 onClick={() => handleSelect(token)}
                 style={{
@@ -248,7 +248,7 @@ export function TokenSelector({
         }}
       >
         {displayTokens.map((token) => (
-          <button
+          <button type="button"
             key={`${token.chainId}:${token.address}`}
             onClick={() => handleSelect(token)}
             style={{
