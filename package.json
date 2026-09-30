@@ -36,6 +36,7 @@
     "cspell": "^10.3.4",
     "jscpd": "^5.3.3",
     "jsdom": "^30.0.1",
+    "storybook": "^10.6.0",
     "typescript": "^6.0.3",
     "viem": "^2.56.9",
     "vitest": "^5.0.0",
