@@ -181,6 +181,8 @@
   useLookupAddress
   type UseLookupAddressOptions
   type UseLookupAddressResult
+  useMppSession
+  type UseMppSessionReturn
   useNotification
   usePassphraseGate
   type UsePassphraseGateReturn

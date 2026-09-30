@@ -66,6 +66,14 @@
   isSiwxNotBeforeValid
   isVerifiablePolicy
   loadNotificationSettings
+  type MppSessionChannel
+  type MppSessionFetch
+  type MppSessionFetchResult
+  type MppSessionForceCloseResult
+  type MppSessionMeter
+  type MppSessionReceipt
+  type MppSessionRequest
+  type MppSessionRequestInit
   mutedChainSettings
   normalizeCapabilities
   normalizeEip155ChainId
@@ -83,7 +91,11 @@
   type PolicyExecutionSubmission
   type PolicySignatureVerifier
   type PreparedPolicyExecution
+  readCurrentMppSessionChannel
   readDecimals
+  readMppRecoveryChannelId
+  readMppSessionChannel
+  readMppSessionReceipt
   readSolanaRoles
   type RedemptionCodec
   type RedemptionRpc

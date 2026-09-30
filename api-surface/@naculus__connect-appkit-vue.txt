@@ -125,6 +125,8 @@
   type UseLastTxReturn
   useLookupAddress
   type UseLookupAddressReturn
+  useMppSession
+  type UseMppSessionReturn
   useNotification
   type UseNotificationOptions
   type UseNotificationReturn
