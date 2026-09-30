@@ -37,8 +37,10 @@ import {
   loadNotificationSettings,
   mutedChainSettings,
   saveNotificationSettings,
+  replayNotificationSettings,
   updateNotificationSettings,
   type NotificationSettingsStorage,
+  type NotificationSettingsUpdate,
 } from "@naculus/connect-appkit-core";
 import {
   InAppChannel,
@@ -83,14 +85,27 @@ export function useNotification(options?: {
 
   // ── Load persisted settings on mount ──────────────────────────────
 
+  // Changes made before the persisted settings load are queued and replayed
+  // on top of them (replayNotificationSettings); null once loaded.
+  const pendingRef = useRef<NotificationSettingsUpdate[] | null>([]);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: loads persisted settings once, on mount; later storage changes are written, not re-read
   useEffect(() => {
     const storage = options?.storage ?? createNotificationSettingsStorage();
-    loadNotificationSettings(storage).then((saved) => {
-      if (saved) {
-        setSettingsState(saved);
+    const settle = (saved: NotificationSettings | null) => {
+      const pending = pendingRef.current ?? [];
+      pendingRef.current = null;
+      if (pending.length === 0) {
+        if (saved) setSettingsState(saved);
+        return;
       }
-    });
+      setSettingsState(() => {
+        const next = replayNotificationSettings(saved, pending);
+        saveNotificationSettings(storage, next);
+        return next;
+      });
+    };
+    loadNotificationSettings(storage).then(settle, () => settle(null));
   }, []);
 
   // ── Sync notifications with channel ──────────────────────────────
@@ -168,7 +183,8 @@ export function useNotification(options?: {
   // mute B) would otherwise both start from the same list, and the second
   // would drop the first.
   const applySettings = useCallback(
-    (compute: (prev: NotificationSettings) => Partial<NotificationSettings>) => {
+    (compute: NotificationSettingsUpdate) => {
+      pendingRef.current?.push(compute);
       setSettingsState((prev) => {
         const next = updateNotificationSettings(prev, compute(prev));
         const storage = options?.storage ?? createNotificationSettingsStorage();

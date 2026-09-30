@@ -101,6 +101,50 @@ describe("useNotification", () => {
     scope.stop();
   });
 
+  it("keeps changes made before the persisted settings finish loading", async () => {
+    let resolveLoad!: (value: unknown) => void;
+    const setItem = vi.fn();
+    const storage = {
+      getItem: <T>() =>
+        new Promise<T | null>((resolve) => {
+          resolveLoad = resolve as (value: unknown) => void;
+        }),
+      setItem: async <T>(key: string, value: T) => {
+        setItem(key, value);
+      },
+      removeItem: async () => {},
+    };
+    const scope = effectScope();
+    const state = scope.run(() =>
+      useNotification({
+        channel: makeChannel() as unknown as InAppChannel,
+        storage,
+      }),
+    );
+    if (!state) throw new Error("Missing notification state");
+    state.muteChain("eip155:1");
+    resolveLoad({
+      telegram: true,
+      webpush: false,
+      inapp: true,
+      frequency: "all",
+      mutedChains: ["eip155:5"],
+      mutedTypes: [],
+    });
+    await vi.waitFor(() =>
+      expect(state.settings.value.mutedChains).toEqual([
+        "eip155:5",
+        "eip155:1",
+      ]),
+    );
+    expect(state.settings.value.telegram).toBe(true);
+    expect(setItem).toHaveBeenLastCalledWith(
+      "naculus_notif_react_settings",
+      expect.objectContaining({ mutedChains: ["eip155:5", "eip155:1"] }),
+    );
+    scope.stop();
+  });
+
   it("loads and persists settings without changing the React storage key", async () => {
     const saved = {
       telegram: true,

@@ -6,6 +6,7 @@ import {
   loadNotificationSettings,
   mutedChainSettings,
   NOTIFICATION_SETTINGS_KEY,
+  replayNotificationSettings,
   saveNotificationSettings,
   type NotificationSettingsStorage,
   updateNotificationSettings,
@@ -53,5 +54,36 @@ describe("notification settings", () => {
         false,
       ),
     ).toEqual({ mutedChains: ["eip155:137"] });
+  });
+});
+
+describe("replayNotificationSettings", () => {
+  const persisted: NotificationSettings = {
+    ...DEFAULT_NOTIFICATION_SETTINGS,
+    telegram: true,
+    mutedChains: ["eip155:5"],
+  };
+
+  it("replays changes in order on top of the persisted settings", () => {
+    const next = replayNotificationSettings(persisted, [
+      (s) => mutedChainSettings(s, "eip155:1", true),
+      (s) => mutedChainSettings(s, "eip155:5", false),
+      () => ({ inapp: false }),
+    ]);
+    expect(next.mutedChains).toEqual(["eip155:1"]);
+    expect(next.telegram).toBe(true);
+    expect(next.inapp).toBe(false);
+  });
+
+  it("starts from the defaults when nothing was persisted", () => {
+    expect(
+      replayNotificationSettings(null, [
+        (s) => mutedChainSettings(s, "eip155:1", true),
+      ]),
+    ).toEqual({ ...DEFAULT_NOTIFICATION_SETTINGS, mutedChains: ["eip155:1"] });
+  });
+
+  it("returns the persisted settings unchanged without updates", () => {
+    expect(replayNotificationSettings(persisted, [])).toBe(persisted);
   });
 });

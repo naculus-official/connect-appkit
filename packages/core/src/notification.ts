@@ -83,6 +83,28 @@ export function updateNotificationSettings(
   return { ...current, ...update };
 }
 
+/** One settings change, computed from the settings it applies to. */
+export type NotificationSettingsUpdate = (
+  current: NotificationSettings,
+) => Partial<NotificationSettings>;
+
+/**
+ * The settings once the persisted ones finish loading: every change made
+ * before the load resolved, replayed in order on top of what was persisted
+ * (or the defaults when nothing was). Without this the late load overwrote
+ * those changes, e.g. a chain muted during the first render came back.
+ */
+export function replayNotificationSettings(
+  persisted: NotificationSettings | null,
+  updates: readonly NotificationSettingsUpdate[],
+): NotificationSettings {
+  let settings = persisted ?? DEFAULT_NOTIFICATION_SETTINGS;
+  for (const update of updates) {
+    settings = updateNotificationSettings(settings, update(settings));
+  }
+  return settings;
+}
+
 export function channelsUpdate(
   channels: string[],
 ): Partial<NotificationSettings> {

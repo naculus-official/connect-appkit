@@ -7,8 +7,10 @@ import {
   loadNotificationSettings,
   mutedChainSettings,
   saveNotificationSettings,
+  replayNotificationSettings,
   updateNotificationSettings,
   type NotificationSettingsStorage,
+  type NotificationSettingsUpdate,
 } from "@naculus/connect-appkit-core";
 import {
   InAppChannel,
@@ -53,9 +55,21 @@ export function useNotification(
   );
   let disposed = false;
 
-  void loadNotificationSettings(storage).then((saved) => {
-    if (!disposed && saved) settings.value = saved;
-  });
+  // Changes made before the persisted settings load are queued and replayed
+  // on top of them (replayNotificationSettings); null once loaded.
+  let pending: NotificationSettingsUpdate[] | null = [];
+  const settle = (saved: NotificationSettings | null): void => {
+    const queued = pending ?? [];
+    pending = null;
+    if (disposed) return;
+    if (queued.length === 0) {
+      if (saved) settings.value = saved;
+      return;
+    }
+    settings.value = replayNotificationSettings(saved, queued);
+    saveNotificationSettings(storage, settings.value);
+  };
+  void loadNotificationSettings(storage).then(settle, () => settle(null));
   channel.onNotification = (item) => {
     if (!disposed) notifications.value = [...notifications.value, item];
   };
@@ -67,10 +81,16 @@ export function useNotification(
     channel.onNotification = undefined;
   });
 
-  const updateSettings = (update: Partial<NotificationSettings>): void => {
-    settings.value = updateNotificationSettings(settings.value, update);
+  const applySettings = (compute: NotificationSettingsUpdate): void => {
+    pending?.push(compute);
+    settings.value = updateNotificationSettings(
+      settings.value,
+      compute(settings.value),
+    );
     saveNotificationSettings(storage, settings.value);
   };
+  const updateSettings = (update: Partial<NotificationSettings>): void =>
+    applySettings(() => update);
 
   return {
     notifications,
@@ -102,8 +122,8 @@ export function useNotification(
     updateSettings,
     setChannels: (channels) => updateSettings(channelsUpdate(channels)),
     muteChain: (chainId) =>
-      updateSettings(mutedChainSettings(settings.value, chainId, true)),
+      applySettings((current) => mutedChainSettings(current, chainId, true)),
     unmuteChain: (chainId) =>
-      updateSettings(mutedChainSettings(settings.value, chainId, false)),
+      applySettings((current) => mutedChainSettings(current, chainId, false)),
   };
 }

@@ -71,6 +71,7 @@
   normalizeEip155ChainId
   NOTIFICATION_SETTINGS_KEY
   type NotificationSettingsStorage
+  type NotificationSettingsUpdate
   parseUserOperationReceipt
   type PaymentFetch
   type PaymentFetchResult
@@ -87,6 +88,7 @@
   type RedemptionCodec
   type RedemptionRpc
   type RedemptionTransaction
+  replayNotificationSettings
   resetSharedSessionKeyManager
   resolveChain
   resolveContextSimulationEndpoint
