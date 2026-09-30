@@ -76,6 +76,31 @@ describe("useNotification", () => {
     expect(channel.onNotification).toBeUndefined();
   });
 
+  it("keeps every chain across rapid consecutive and interleaved mute/unmute calls", async () => {
+    const storage = {
+      getItem: async <T>() => null as T | null,
+      setItem: async () => {},
+      removeItem: async () => {},
+    };
+    const scope = effectScope();
+    const state = scope.run(() =>
+      useNotification({
+        channel: makeChannel() as unknown as InAppChannel,
+        storage,
+      }),
+    );
+    if (!state) throw new Error("Missing notification state");
+    state.muteChain("eip155:1");
+    state.muteChain("eip155:8453");
+    state.unmuteChain("eip155:1");
+    state.muteChain("eip155:10");
+    expect(state.settings.value.mutedChains).toEqual([
+      "eip155:8453",
+      "eip155:10",
+    ]);
+    scope.stop();
+  });
+
   it("loads and persists settings without changing the React storage key", async () => {
     const saved = {
       telegram: true,

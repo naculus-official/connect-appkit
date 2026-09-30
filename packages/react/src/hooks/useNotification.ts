@@ -163,16 +163,25 @@ export function useNotification(options?: {
 
   // ── Settings ──────────────────────────────────────────────────────
 
-  const updateSettings = useCallback(
-    (update: Partial<NotificationSettings>) => {
+  // Every change is computed from the latest state inside the updater, never
+  // from the `settings` captured at render: two calls in one tick (mute A,
+  // mute B) would otherwise both start from the same list, and the second
+  // would drop the first.
+  const applySettings = useCallback(
+    (compute: (prev: NotificationSettings) => Partial<NotificationSettings>) => {
       setSettingsState((prev) => {
-        const next = updateNotificationSettings(prev, update);
+        const next = updateNotificationSettings(prev, compute(prev));
         const storage = options?.storage ?? createNotificationSettingsStorage();
         saveNotificationSettings(storage, next);
         return next;
       });
     },
     [options?.storage],
+  );
+
+  const updateSettings = useCallback(
+    (update: Partial<NotificationSettings>) => applySettings(() => update),
+    [applySettings],
   );
 
   const setChannels = useCallback(
@@ -182,20 +191,18 @@ export function useNotification(options?: {
     [updateSettings],
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: mutedChainSettings reads only settings.mutedChains, and updateSettings merges into the latest state
   const muteChain = useCallback(
     (chainId: string) => {
-      updateSettings(mutedChainSettings(settings, chainId, true));
+      applySettings((prev) => mutedChainSettings(prev, chainId, true));
     },
-    [settings.mutedChains, updateSettings],
+    [applySettings],
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: mutedChainSettings reads only settings.mutedChains, and updateSettings merges into the latest state
   const unmuteChain = useCallback(
     (chainId: string) => {
-      updateSettings(mutedChainSettings(settings, chainId, false));
+      applySettings((prev) => mutedChainSettings(prev, chainId, false));
     },
-    [settings.mutedChains, updateSettings],
+    [applySettings],
   );
 
   // ── Return ───────────────────────────────────────────────────────
