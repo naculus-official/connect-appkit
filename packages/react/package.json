@@ -37,7 +37,7 @@
     "@naculus/siwx": "^0.5.0",
     "@naculus/wallet-engine": "^0.5.0",
     "@stencil/react-output-target": "^1.6.2",
-    "viem": "^2.56.5"
+    "viem": "^2.56.9"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
