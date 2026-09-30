@@ -20,8 +20,33 @@ export class AppkitPopover {
   private triggerEl?: HTMLElement
   private popoverEl?: HTMLElement
   private arrowEl?: HTMLElement
+  /** The element slotted as `trigger`, which carries the ARIA state. */
+  private slottedTrigger?: HTMLElement
 
   get isOpen() { return this.open || this.internalOpen }
+
+  componentDidRender() { this.syncTrigger() }
+
+  disconnectedCallback() { this.releaseTrigger() }
+
+  /**
+   * aria-haspopup / aria-expanded must sit on the element a screen reader
+   * announces — the slotted trigger button — not on the role-less wrapper.
+   */
+  private syncTrigger = () => {
+    // Not querySelector(":scope > …"): the SSR hydrate DOM does not support :scope.
+    const trigger = Array.from(this.el.children).find(c => c.getAttribute("slot") === "trigger") as HTMLElement | undefined
+    if (trigger !== this.slottedTrigger) this.releaseTrigger()
+    this.slottedTrigger = trigger
+    trigger?.setAttribute("aria-haspopup", "dialog")
+    trigger?.setAttribute("aria-expanded", String(this.isOpen))
+  }
+
+  private releaseTrigger() {
+    this.slottedTrigger?.removeAttribute("aria-haspopup")
+    this.slottedTrigger?.removeAttribute("aria-expanded")
+    this.slottedTrigger = undefined
+  }
 
   @Listen("click", { target: "document" })
   onDocumentClick(e: MouseEvent) {
@@ -35,8 +60,12 @@ export class AppkitPopover {
   @Listen("keydown", { target: "document" })
   onKeyDown(e: KeyboardEvent) {
     if (e.key === "Escape" && this.isOpen) {
+      // Return focus only when it was ours (or nowhere); an Escape pressed
+      // elsewhere on the page must not pull focus back to the trigger.
+      const active = document.activeElement
+      const returnFocus = !active || active === document.body || this.el.contains(active)
       this.close()
-      this.triggerEl?.focus()
+      if (returnFocus) this.slottedTrigger?.focus()
     }
   }
 
@@ -86,10 +115,9 @@ export class AppkitPopover {
     return (
       <Host>
         {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper around the slotted trigger button, whose click and key events bubble here */}
-        {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: known gap — aria-haspopup/expanded belong on the slotted trigger button, where a screen reader reads them */}
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: the slotted trigger button handles the keyboard; its click bubbles here */}
-        <span ref={el => (this.triggerEl = el as HTMLElement)} onClick={this.toggle} aria-haspopup="true" aria-expanded={this.isOpen ? "true" : "false"}>
-          <slot name="trigger" />
+        <span ref={el => (this.triggerEl = el as HTMLElement)} onClick={this.toggle}>
+          <slot name="trigger" onSlotchange={this.syncTrigger} />
         </span>
         <div
           class={{ popover: true, open: this.isOpen }}

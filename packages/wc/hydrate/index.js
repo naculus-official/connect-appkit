@@ -7682,6 +7682,58 @@ class AppkitDropdownMenu {
         this.itemsJson = "[]";
         this.open = false;
         this.focusIdx = -1;
+        this.itemEls = [];
+        /**
+         * aria-haspopup / aria-expanded must sit on the element a screen reader
+         * announces — the slotted trigger button — not on the role-less wrapper.
+         */
+        this.syncTrigger = () => {
+            // Not querySelector(":scope > …"): the SSR hydrate DOM does not support :scope.
+            const trigger = Array.from(this.el.children).find(c => c.getAttribute("slot") === "trigger");
+            if (trigger !== this.slottedTrigger)
+                this.releaseTrigger();
+            this.slottedTrigger = trigger;
+            trigger?.setAttribute("aria-haspopup", "menu");
+            trigger?.setAttribute("aria-expanded", String(this.open));
+        };
+        /** Keys reach the host from both the slotted trigger and the menu items. */
+        this.handleKeyDown = (e) => {
+            const inMenu = !!this.menuEl && e.composedPath().includes(this.menuEl);
+            if (!this.open) {
+                // Enter / Space are left to the trigger button, whose click toggles the menu.
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                    e.preventDefault();
+                    void this.show(e.key === "ArrowDown" ? "first" : "last");
+                }
+                return;
+            }
+            if (e.key === "Escape") {
+                e.preventDefault();
+                this.close(true);
+                return;
+            }
+            if (e.key === "Tab") {
+                this.close();
+                return;
+            }
+            const enabled = this.enabledIndexes();
+            if (enabled.length === 0)
+                return;
+            const pos = enabled.indexOf(this.focusIdx);
+            let next;
+            if (e.key === "ArrowDown")
+                next = pos < 0 ? enabled[0] : enabled[Math.min(pos + 1, enabled.length - 1)];
+            else if (e.key === "ArrowUp")
+                next = pos < 0 ? enabled[enabled.length - 1] : enabled[Math.max(pos - 1, 0)];
+            else if (e.key === "Home" && inMenu)
+                next = enabled[0];
+            else if (e.key === "End" && inMenu)
+                next = enabled[enabled.length - 1];
+            if (next === undefined)
+                return;
+            e.preventDefault();
+            this.focusItem(next);
+        };
     }
     get items() {
         try {
@@ -7694,16 +7746,25 @@ class AppkitDropdownMenu {
     onDocClick(e) {
         if (!this.open)
             return;
+        // Close without moving focus: the click has already put it where the user wants it.
         if (!this.el.contains(e.target))
-            this.open = false;
+            this.close();
     }
+    releaseTrigger() {
+        this.slottedTrigger?.removeAttribute("aria-haspopup");
+        this.slottedTrigger?.removeAttribute("aria-expanded");
+        this.slottedTrigger = undefined;
+    }
+    componentDidRender() { this.syncTrigger(); }
+    disconnectedCallback() { this.releaseTrigger(); }
     async toggle() {
-        if (this.open) {
-            this.open = false;
-            return;
-        }
+        if (this.open)
+            this.close();
+        else
+            await this.show("first");
+    }
+    async show(initial) {
         this.open = true;
-        this.focusIdx = 0;
         await this.waitForRender();
         if (this.menuEl && this.triggerEl) {
             const { x, y } = await computePosition(this.triggerEl, this.menuEl, {
@@ -7713,41 +7774,43 @@ class AppkitDropdownMenu {
             this.menuEl.style.left = `${x}px`;
             this.menuEl.style.top = `${y}px`;
         }
+        if (!this.open)
+            return;
+        const enabled = this.enabledIndexes();
+        this.focusItem(initial === "first" ? enabled[0] : enabled[enabled.length - 1]);
+    }
+    close(returnFocus = false) {
+        this.open = false;
+        this.focusIdx = -1;
+        if (returnFocus)
+            this.slottedTrigger?.focus();
     }
     select(id) {
-        this.open = false;
+        this.close(true);
         this.appkitSelect.emit(id);
     }
-    handleKeyDown(e) {
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            this.focusIdx = Math.min(this.focusIdx + 1, this.items.length - 1);
-        }
-        if (e.key === "ArrowUp") {
-            e.preventDefault();
-            this.focusIdx = Math.max(this.focusIdx - 1, 0);
-        }
-        if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            if (this.focusIdx >= 0) {
-                const item = this.items[this.focusIdx];
-                if (item && !item.disabled && !item.separator)
-                    this.select(item.id);
-            }
-        }
-        if (e.key === "Escape") {
-            this.open = false;
-        }
+    /** Indexes of the items that can take focus: not separators, not disabled. */
+    enabledIndexes() {
+        return this.items.flatMap((item, i) => (item.separator || item.disabled ? [] : [i]));
+    }
+    focusItem(i) {
+        if (i === undefined)
+            return;
+        this.focusIdx = i;
+        this.itemEls[i]?.focus();
     }
     waitForRender() {
         return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     }
     render() {
-        return (hAsync(Host, { key: '423c34be4341dc7f005470c8c185659d45b4f892' }, hAsync("span", { key: '11e0d46f1ce8c32797bd0668d38ab2badb934445', ref: el => (this.triggerEl = el), onClick: () => this.toggle(), onKeyDown: (e) => this.handleKeyDown(e), "aria-haspopup": "true", "aria-expanded": this.open ? "true" : "false" }, hAsync("slot", { key: 'f2053dd7a18a317e85a63958e4a9e24b39eeebf2', name: "trigger" })), hAsync("div", { key: '5af34b6ae701ecef5b7ac2dd587fb6ba05a59f98', class: { menu: true, open: this.open }, ref: el => (this.menuEl = el), role: "menu" }, this.items.map((item, i) => {
+        return (hAsync(Host, { key: '8a1df64dcd5df6ce46f12ae82f98cc94a6e2e8fc', onKeyDown: this.handleKeyDown }, hAsync("span", { key: 'f9c502d0580e598eba9f24d44dae1280c7449afc', ref: el => (this.triggerEl = el), onClick: () => this.toggle() }, hAsync("slot", { key: 'bf9c1ba56933841b98e6426e8dee8b1fcb901be4', name: "trigger", onSlotchange: this.syncTrigger })), hAsync("div", { key: '1083af2624f9c72e7067f929d2aef5024b34a51a', class: { menu: true, open: this.open }, ref: el => (this.menuEl = el), role: "menu" }, this.items.map((item, i) => {
             // biome-ignore lint/a11y/useSemanticElements: role=separator on a styled div; an <hr> brings its own borders and margins
             if (item.separator)
                 return hAsync("div", { key: `s-${i}`, class: "separator", role: "separator" });
-            return (hAsync("button", { type: "button", key: item.id, class: { item: true, focused: i === this.focusIdx, destructive: !!item.destructive }, role: "menuitem", disabled: item.disabled, onMouseEnter: () => (this.focusIdx = i), onClick: () => this.select(item.id) }, item.label));
+            return (hAsync("button", { type: "button", key: item.id, ref: el => (this.itemEls[i] = el), class: { item: true, focused: i === this.focusIdx, destructive: !!item.destructive }, role: "menuitem", tabIndex: -1, disabled: item.disabled, onMouseEnter: () => {
+                    if (!item.disabled)
+                        this.focusItem(i);
+                }, onClick: () => this.select(item.id) }, item.label));
         }))));
     }
     get el() { return getElement(this); }
@@ -7824,6 +7887,19 @@ class AppkitPopover {
         this.open = false;
         this.placement = "bottom";
         this.internalOpen = false;
+        /**
+         * aria-haspopup / aria-expanded must sit on the element a screen reader
+         * announces — the slotted trigger button — not on the role-less wrapper.
+         */
+        this.syncTrigger = () => {
+            // Not querySelector(":scope > …"): the SSR hydrate DOM does not support :scope.
+            const trigger = Array.from(this.el.children).find(c => c.getAttribute("slot") === "trigger");
+            if (trigger !== this.slottedTrigger)
+                this.releaseTrigger();
+            this.slottedTrigger = trigger;
+            trigger?.setAttribute("aria-haspopup", "dialog");
+            trigger?.setAttribute("aria-expanded", String(this.isOpen));
+        };
         this.toggle = async () => {
             if (this.isOpen) {
                 this.close();
@@ -7862,6 +7938,13 @@ class AppkitPopover {
         };
     }
     get isOpen() { return this.open || this.internalOpen; }
+    componentDidRender() { this.syncTrigger(); }
+    disconnectedCallback() { this.releaseTrigger(); }
+    releaseTrigger() {
+        this.slottedTrigger?.removeAttribute("aria-haspopup");
+        this.slottedTrigger?.removeAttribute("aria-expanded");
+        this.slottedTrigger = undefined;
+    }
     onDocumentClick(e) {
         if (!this.isOpen)
             return;
@@ -7872,15 +7955,20 @@ class AppkitPopover {
     }
     onKeyDown(e) {
         if (e.key === "Escape" && this.isOpen) {
+            // Return focus only when it was ours (or nowhere); an Escape pressed
+            // elsewhere on the page must not pull focus back to the trigger.
+            const active = document.activeElement;
+            const returnFocus = !active || active === document.body || this.el.contains(active);
             this.close();
-            this.triggerEl?.focus();
+            if (returnFocus)
+                this.slottedTrigger?.focus();
         }
     }
     waitForRender() {
         return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     }
     render() {
-        return (hAsync(Host, { key: '21b05fe2ff46f307b0610eebebce9e86f0cf188c' }, hAsync("span", { key: '3feec0e4692056d8d0ca159dfc360d1b44a6675c', ref: el => (this.triggerEl = el), onClick: this.toggle, "aria-haspopup": "true", "aria-expanded": this.isOpen ? "true" : "false" }, hAsync("slot", { key: '5adc9d7aa42b468d5efa36e750b079c0c05c058f', name: "trigger" })), hAsync("div", { key: 'a1f54eea7624f8106aa4b3a057b2e944c9d5110c', class: { popover: true, open: this.isOpen }, ref: el => (this.popoverEl = el), role: "dialog" }, hAsync("div", { key: '3837805e79eabe02ec44fd88c9e367c21e82a614', class: "arrow", ref: el => (this.arrowEl = el) }), hAsync("slot", { key: '67c25a0cff0f4b8b3a47307676d0833095d1b9eb' }))));
+        return (hAsync(Host, { key: 'c920f5b7c56e426006556c6cb7387359ebd3e61f' }, hAsync("span", { key: 'a9da6311fce9b6f2ad026456f121528662f71d34', ref: el => (this.triggerEl = el), onClick: this.toggle }, hAsync("slot", { key: '3bf4706ad5347add50592cacbe5a3ccd3b8defd6', name: "trigger", onSlotchange: this.syncTrigger })), hAsync("div", { key: '4b7782d233d200f4dc87f42f7bc481f1667a5af1', class: { popover: true, open: this.isOpen }, ref: el => (this.popoverEl = el), role: "dialog" }, hAsync("div", { key: 'eb90337fffadd4d97c2f7f20ad9851bbcca3bb66', class: "arrow", ref: el => (this.arrowEl = el) }), hAsync("slot", { key: '66b60212f4dda643e56cbe51cb5b6423b3ef4c9e' }))));
     }
     get el() { return getElement(this); }
     static get style() { return popoverCss(); }
