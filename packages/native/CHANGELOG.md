@@ -1,5 +1,23 @@
 # @naculus/connect-native
 
+## 0.6.0
+
+### Minor Changes
+
+- 1d13406: Requires connect-lib 0.6.0: every connect-lib dependency and peer range moves
+  to `^0.6.0` (a `^0.5` range does not admit 0.6.0).
+
+### Patch Changes
+
+- daa8e45: README: load Solana Mobile Wallet Adapter only on Android. The previous
+  example imported `@solana-mobile/mobile-wallet-adapter-protocol-kit` at the
+  top of `App.tsx`, which throws on iOS at startup (the native module does not
+  exist there) and leaves a blank screen. The package itself never imports it.
+- Updated dependencies [1d13406]
+- Updated dependencies [48c1f45]
+- Updated dependencies [7c079ed]
+  - @naculus/connect-appkit-react@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes

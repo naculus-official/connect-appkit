@@ -1,5 +1,18 @@
 # @naculus/connect-appkit-core
 
+## 0.6.0
+
+### Minor Changes
+
+- 1d13406: Requires connect-lib 0.6.0: every connect-lib dependency and peer range moves
+  to `^0.6.0` (a `^0.5` range does not admit 0.6.0).
+
+### Patch Changes
+
+- 0b83786: `normalizeEip155ChainId` refuses chain 0 and chain IDs above
+  `Number.MAX_SAFE_INTEGER`; it accepted `0x0` / `eip155:0` before, which is not
+  an EIP-155 chain. Matches connect-core's reader of the same name.
+
 ## 0.5.0
 
 ### Minor Changes

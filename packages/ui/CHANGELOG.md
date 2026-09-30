@@ -1,5 +1,32 @@
 # @naculus/connect-appkit-ui
 
+## 0.6.0
+
+### Minor Changes
+
+- 1d13406: Requires connect-lib 0.6.0: every connect-lib dependency and peer range moves
+  to `^0.6.0` (a `^0.5` range does not admit 0.6.0).
+
+### Patch Changes
+
+- 81c339b: Nine dependencies consumers installed for nothing are gone: seven
+  `@radix-ui/*` packages and `class-variance-authority` were imported nowhere,
+  and `qrcode` is bundled into the package (it is now a dev dependency). No
+  behavior change.
+- 2f8ccd2: Decorative icons in the UI and Web Components (chevrons, checks, chain marks)
+  carry `aria-hidden`, so screen readers skip them.
+- 3d5e39f: `ThemeProvider` drops theme values containing `;`, `{`, `}`, `<`, `>`, a
+  backslash or a line break instead of writing them into its `<style>` element,
+  and renders that element's text as a child rather than through
+  `dangerouslySetInnerHTML`. A theme taken from outside the app (a URL parameter,
+  a stored preference) could otherwise inject arbitrary CSS.
+- Updated dependencies [0b83786]
+- Updated dependencies [1d13406]
+- Updated dependencies [48c1f45]
+- Updated dependencies [7c079ed]
+  - @naculus/connect-appkit-core@0.6.0
+  - @naculus/connect-appkit-react@0.6.0
+
 ## 0.5.0
 
 ### Patch Changes

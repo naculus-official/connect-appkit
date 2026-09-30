@@ -1,5 +1,12 @@
 # @naculus/connect-appkit-wc
 
+## 0.6.0
+
+### Minor Changes
+
+- 1d13406: Requires connect-lib 0.6.0: every connect-lib dependency and peer range moves
+  to `^0.6.0` (a `^0.5` range does not admit 0.6.0).
+
 ## 0.5.0
 
 No changes in this release.

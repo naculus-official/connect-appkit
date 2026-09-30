@@ -1,5 +1,27 @@
 # @naculus/connect-appkit-react
 
+## 0.6.0
+
+### Minor Changes
+
+- 1d13406: Requires connect-lib 0.6.0: every connect-lib dependency and peer range moves
+  to `^0.6.0` (a `^0.5` range does not admit 0.6.0).
+
+### Patch Changes
+
+- 48c1f45: `useNotification`: `muteChain` / `unmuteChain` compute the muted list from
+  the latest state. Several calls in one tick (mute A, mute B) started from the
+  same captured list, so the later call dropped the earlier chain. The Vue
+  composable was not affected (its settings ref updates synchronously).
+- 7c079ed: `useUserOpStatus` auto-starts tracking whenever `userOpHash` is provided,
+  including when it arrives after the first render (the usual case: the hash is
+  known only once the operation is sent). It used to check only on mount, so a
+  later hash was never tracked. `autoStart: false` still disables it.
+- Updated dependencies [0b83786]
+- Updated dependencies [1d13406]
+  - @naculus/connect-appkit-core@0.6.0
+  - @naculus/connect-appkit-wc@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes
