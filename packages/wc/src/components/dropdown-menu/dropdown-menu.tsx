@@ -28,6 +28,9 @@ export class AppkitDropdownMenu {
 
   private triggerEl?: HTMLElement
   private menuEl?: HTMLElement
+  /** The element slotted as `trigger`, which carries the ARIA state. */
+  private slottedTrigger?: HTMLElement
+  private itemEls: Array<HTMLButtonElement | undefined> = []
 
   private get items(): MenuItem[] {
     try { return JSON.parse(this.itemsJson) } catch { return [] }
@@ -36,16 +39,40 @@ export class AppkitDropdownMenu {
   @Listen("click", { target: "document" })
   onDocClick(e: MouseEvent) {
     if (!this.open) return
-    if (!this.el.contains(e.target as Node)) this.open = false
+    // Close without moving focus: the click has already put it where the user wants it.
+    if (!this.el.contains(e.target as Node)) this.close()
   }
 
+  private releaseTrigger() {
+    this.slottedTrigger?.removeAttribute("aria-haspopup")
+    this.slottedTrigger?.removeAttribute("aria-expanded")
+    this.slottedTrigger = undefined
+  }
+
+  /**
+   * aria-haspopup / aria-expanded must sit on the element a screen reader
+   * announces — the slotted trigger button — not on the role-less wrapper.
+   */
+  private syncTrigger = () => {
+    // Not querySelector(":scope > …"): the SSR hydrate DOM does not support :scope.
+    const trigger = Array.from(this.el.children).find(c => c.getAttribute("slot") === "trigger") as HTMLElement | undefined
+    if (trigger !== this.slottedTrigger) this.releaseTrigger()
+    this.slottedTrigger = trigger
+    trigger?.setAttribute("aria-haspopup", "menu")
+    trigger?.setAttribute("aria-expanded", String(this.open))
+  }
+
+  componentDidRender() { this.syncTrigger() }
+
+  disconnectedCallback() { this.releaseTrigger() }
+
   private async toggle() {
-    if (this.open) {
-      this.open = false
-      return
-    }
+    if (this.open) this.close()
+    else await this.show("first")
+  }
+
+  private async show(initial: "first" | "last") {
     this.open = true
-    this.focusIdx = 0
     await this.waitForRender()
     if (this.menuEl && this.triggerEl) {
       const { x, y } = await computePosition(this.triggerEl, this.menuEl, {
@@ -55,24 +82,61 @@ export class AppkitDropdownMenu {
       this.menuEl.style.left = `${x}px`
       this.menuEl.style.top = `${y}px`
     }
+    if (!this.open) return
+    const enabled = this.enabledIndexes()
+    this.focusItem(initial === "first" ? enabled[0] : enabled[enabled.length - 1])
+  }
+
+  private close(returnFocus = false) {
+    this.open = false
+    this.focusIdx = -1
+    if (returnFocus) this.slottedTrigger?.focus()
   }
 
   private select(id: string) {
-    this.open = false
+    this.close(true)
     this.appkitSelect.emit(id)
   }
 
-  private handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "ArrowDown") { e.preventDefault(); this.focusIdx = Math.min(this.focusIdx + 1, this.items.length - 1) }
-    if (e.key === "ArrowUp") { e.preventDefault(); this.focusIdx = Math.max(this.focusIdx - 1, 0) }
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault()
-      if (this.focusIdx >= 0) {
-        const item = this.items[this.focusIdx]
-        if (item && !item.disabled && !item.separator) this.select(item.id)
+  /** Indexes of the items that can take focus: not separators, not disabled. */
+  private enabledIndexes() {
+    return this.items.flatMap((item, i) => (item.separator || item.disabled ? [] : [i]))
+  }
+
+  private focusItem(i: number | undefined) {
+    if (i === undefined) return
+    this.focusIdx = i
+    this.itemEls[i]?.focus()
+  }
+
+  /** Keys reach the host from both the slotted trigger and the menu items. */
+  private handleKeyDown = (e: KeyboardEvent) => {
+    const inMenu = !!this.menuEl && e.composedPath().includes(this.menuEl)
+    if (!this.open) {
+      // Enter / Space are left to the trigger button, whose click toggles the menu.
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault()
+        void this.show(e.key === "ArrowDown" ? "first" : "last")
       }
+      return
     }
-    if (e.key === "Escape") { this.open = false }
+    if (e.key === "Escape") {
+      e.preventDefault()
+      this.close(true)
+      return
+    }
+    if (e.key === "Tab") { this.close(); return }
+    const enabled = this.enabledIndexes()
+    if (enabled.length === 0) return
+    const pos = enabled.indexOf(this.focusIdx)
+    let next: number | undefined
+    if (e.key === "ArrowDown") next = pos < 0 ? enabled[0] : enabled[Math.min(pos + 1, enabled.length - 1)]
+    else if (e.key === "ArrowUp") next = pos < 0 ? enabled[enabled.length - 1] : enabled[Math.max(pos - 1, 0)]
+    else if (e.key === "Home" && inMenu) next = enabled[0]
+    else if (e.key === "End" && inMenu) next = enabled[enabled.length - 1]
+    if (next === undefined) return
+    e.preventDefault()
+    this.focusItem(next)
   }
 
   private waitForRender() {
@@ -81,17 +145,11 @@ export class AppkitDropdownMenu {
 
   render() {
     return (
-      <Host>
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper around the slotted trigger button, whose click and key events bubble here */}
-        {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: known gap — aria-haspopup/expanded belong on the slotted trigger button, where a screen reader reads them */}
-        <span
-          ref={el => (this.triggerEl = el as HTMLElement)}
-          onClick={() => this.toggle()}
-          onKeyDown={(e) => this.handleKeyDown(e)}
-          aria-haspopup="true"
-          aria-expanded={this.open ? "true" : "false"}
-        >
-          <slot name="trigger" />
+      <Host onKeyDown={this.handleKeyDown}>
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper around the slotted trigger button, whose click events bubble here */}
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: the slotted trigger button handles the keyboard; its click bubbles here */}
+        <span ref={el => (this.triggerEl = el as HTMLElement)} onClick={() => this.toggle()}>
+          <slot name="trigger" onSlotchange={this.syncTrigger} />
         </span>
         <div
           class={{ menu: true, open: this.open }}
@@ -104,10 +162,12 @@ export class AppkitDropdownMenu {
             return (
               <button type="button"
                 key={item.id}
+                ref={el => (this.itemEls[i] = el as HTMLButtonElement | undefined)}
                 class={{ item: true, focused: i === this.focusIdx, destructive: !!item.destructive }}
                 role="menuitem"
+                tabIndex={-1}
                 disabled={item.disabled}
-                onMouseEnter={() => (this.focusIdx = i)}
+                onMouseEnter={() => { if (!item.disabled) this.focusItem(i) }}
                 onClick={() => this.select(item.id)}
               >
                 {item.label}
