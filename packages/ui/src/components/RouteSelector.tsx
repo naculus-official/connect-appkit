@@ -22,6 +22,7 @@ import {
 import { cn } from "../lib/cn";
 import { getChainLogo } from "../assets/chains";
 import { useComponentRegistry } from "../contexts/ComponentRegistry";
+import { NativeButton, type RegistryButton } from "../lib/registry-fallbacks";
 import type { Token } from "@naculus/connect-core";
 
 /**
@@ -120,9 +121,7 @@ interface RouteCardProps {
 
 function RouteCard({ route, onSelect }: RouteCardProps) {
   const registry = useComponentRegistry();
-  const Button = registry.Button as React.ComponentType<
-    React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }
-  >;
+  const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton;
   const Badge = registry.Badge as React.ComponentType<
     React.HTMLAttributes<HTMLSpanElement> & { variant?: string }
   >;
@@ -237,9 +236,7 @@ function EmptyState() {
 
 function ErrorState({ error, onRetry }: { error: string; onRetry?: () => void }) {
   const registry = useComponentRegistry();
-  const Button = registry.Button as React.ComponentType<
-    React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }
-  >;
+  const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton;
 
   return (
     <div
@@ -328,9 +325,7 @@ export function RouteSelector({
   const Card = registry.Card as React.ComponentType<
     React.HTMLAttributes<HTMLDivElement>
   >;
-  const Button = registry.Button as React.ComponentType<
-    React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }
-  >;
+  const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton;
 
   // ── Determine state ──────────────────────────────────────────────
 

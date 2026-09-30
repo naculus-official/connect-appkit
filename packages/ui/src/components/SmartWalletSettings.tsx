@@ -5,6 +5,7 @@ import { useState, useCallback } from "react"
 import { ArrowLeft, Save, Shield, Users, KeyRound, Fuel, Wrench, Plus, X } from "lucide-react"
 import { cn } from "../lib/cn"
 import { useComponentRegistry } from "../contexts/ComponentRegistry"
+import { NativeButton, NativeCard, NativeInput, NativeSeparator } from "../lib/registry-fallbacks"
 
 export type AccountType = "simple" | "multi-sig" | "social-recovery"
 export type PaymasterType = "self" | "sponsor" | "erc20" | "custom"
@@ -61,10 +62,10 @@ type ShadcnInput = React.ComponentType<React.InputHTMLAttributes<HTMLInputElemen
 
 export function SmartWalletSettings({ currentConfig, onSave, onBack }: SmartWalletSettingsProps) {
   const registry = useComponentRegistry()
-  const Button = registry.Button as ShadcnButton
-  const Input = registry.Input as ShadcnInput
-  const Card = registry.Card as React.ComponentType<React.HTMLAttributes<HTMLDivElement>>
-  const Separator = registry.Separator as React.ComponentType<React.HTMLAttributes<HTMLDivElement>>
+  const Button = (registry.Button as ShadcnButton | undefined) ?? NativeButton
+  const Input = (registry.Input as ShadcnInput | undefined) ?? NativeInput
+  const Card = (registry.Card as React.ComponentType<React.HTMLAttributes<HTMLDivElement>> | undefined) ?? NativeCard
+  const Separator = (registry.Separator as React.ComponentType<React.HTMLAttributes<HTMLDivElement>> | undefined) ?? NativeSeparator
 
   const [config, setConfig] = useState<SmartWalletConfig>({ ...defaultConfig(), ...currentConfig })
   const [newGuardian, setNewGuardian] = useState("")

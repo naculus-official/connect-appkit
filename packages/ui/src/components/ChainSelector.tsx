@@ -1,12 +1,12 @@
 "use client"
 import { logger } from "@naculus/connect-core";
 
-import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { useChain, useWallet } from "@naculus/connect-appkit-react";
 import { cn } from "../lib/cn";
 import { getChainLogo } from "../assets/chains";
 import { useComponentRegistry } from "../contexts/ComponentRegistry";
+import { NativeButton, type RegistryButton as RegistryButtonType } from "../lib/registry-fallbacks";
 
 export interface ChainSelectorProps {
   className?: string;
@@ -45,7 +45,7 @@ export function ChainSelector({
   const { isConnected } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
   const registry = useComponentRegistry();
-  const RegistryButton = registry.Button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }>;
+  const RegistryButton = (registry.Button as RegistryButtonType | undefined) ?? NativeButton;
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

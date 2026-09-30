@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { LogIn, Loader2, CheckCircle2, AlertCircle, X, Copy, Check } from "lucide-react"
 import { useComponentRegistry } from "../contexts/ComponentRegistry"
+import { NativeButton, type RegistryButton } from "../lib/registry-fallbacks"
 import type { SiwxResult } from "@naculus/siwx"
 
 export interface SignInButtonProps {
@@ -31,7 +32,7 @@ export function SignInButton({
   const [copiedSign, setCopiedSign] = useState(false)
   const [copyFailed, setCopyFailed] = useState(false)
   const registry = useComponentRegistry()
-  const Button = registry.Button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }>
+  const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton
   const Dialog = registry.Dialog as React.ComponentType<{ open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }> | undefined
   const DialogContent = registry.DialogContent as React.ComponentType<{ children: React.ReactNode }> | undefined
   const DialogHeader = registry.DialogHeader as React.ComponentType<{ children: React.ReactNode }> | undefined
@@ -154,7 +155,7 @@ function SignInDetails({
   copyFailed?: boolean
 }) {
   const registry = useComponentRegistry()
-  const Button = registry.Button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }>
+  const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton
   if (!result) {
     return (
       <div style={{ textAlign: "center", padding: "1rem 0" }}>

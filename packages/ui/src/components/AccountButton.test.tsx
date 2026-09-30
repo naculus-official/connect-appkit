@@ -14,17 +14,28 @@ function TestButton({ children, className, onClick, disabled, ...rest }: React.B
 
 const TEST_ADDRESS = "eip155:1:0x1234567890123456789012345678901234567890"
 
+const registryState = vi.hoisted(() => ({ current: {} as { Button?: typeof TestButton } }))
+
 vi.mock("../contexts/ComponentRegistry", () => ({
-  useComponentRegistry: () => ({ Button: TestButton }),
+  useComponentRegistry: () => registryState.current,
 }))
 
 describe("AccountButton", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    registryState.current = { Button: TestButton }
   })
 
   afterEach(() => {
     cleanup()
+  })
+
+  it("renders a native button with an empty registry", () => {
+    registryState.current = {}
+    render(<AccountButton />)
+    const button = screen.getByRole("button", { name: "Connect Wallet" })
+    expect(button.getAttribute("type")).toBe("button")
+    expect(button.className).toContain("bg-primary")
   })
 
   it("renders account button with truncated address", () => {

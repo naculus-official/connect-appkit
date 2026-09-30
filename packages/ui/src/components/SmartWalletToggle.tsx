@@ -3,6 +3,7 @@
 import React from "react"
 import { Shield, ShieldCheck, LoaderCircle, Settings, ChevronRight, AlertCircle, RotateCcw, CheckCircle2, Fuel, Zap, RefreshCw } from "lucide-react"
 import { useComponentRegistry } from "../contexts/ComponentRegistry"
+import { NativeBadge, NativeButton, NativeCard } from "../lib/registry-fallbacks"
 
 export interface SmartWalletToggleProps {
   isDeployed?: boolean
@@ -26,9 +27,9 @@ export function SmartWalletToggle({
   error = null, onUpgrade, onShowSettings, onRetry,
 }: SmartWalletToggleProps) {
   const registry = useComponentRegistry()
-  const Button = registry.Button as ShadcnButton
-  const Card = registry.Card as React.ComponentType<React.HTMLAttributes<HTMLDivElement>>
-  const Badge = registry.Badge as React.ComponentType<React.HTMLAttributes<HTMLDivElement> & { variant?: string }>
+  const Button = (registry.Button as ShadcnButton | undefined) ?? NativeButton
+  const Card = (registry.Card as React.ComponentType<React.HTMLAttributes<HTMLDivElement>> | undefined) ?? NativeCard
+  const Badge = (registry.Badge as React.ComponentType<React.HTMLAttributes<HTMLDivElement> & { variant?: string }> | undefined) ?? NativeBadge
 
   const settingsBtn = onShowSettings ? (
     <Button variant="outline" className="w-full" onClick={onShowSettings}>

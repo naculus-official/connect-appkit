@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useCallback, useMemo } from "react"
 import { AlertTriangle, Check, Copy, Download, Eye, EyeOff, SkipForward, ArrowLeft, ArrowRight, Shield, X } from "lucide-react"
 import { useComponentRegistry } from "../contexts/ComponentRegistry"
+import { NativeButton, type RegistryButton } from "../lib/registry-fallbacks"
 import { DefaultDialog } from "../lib/ui-defaults"
 import { cn } from "../lib/cn"
 
@@ -89,7 +90,7 @@ export function SeedPhraseBackup({
   onOpenChange,
 }: SeedPhraseBackupProps) {
   const registry = useComponentRegistry()
-  const Button = registry.Button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }>
+  const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton
   const Dialog = registry.Dialog as React.ComponentType<{ open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }> | undefined
   const DialogContent = registry.DialogContent as React.ComponentType<{ children: React.ReactNode }> | undefined
   const DialogHeader = registry.DialogHeader as React.ComponentType<{ children: React.ReactNode }> | undefined

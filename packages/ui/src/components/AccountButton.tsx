@@ -3,6 +3,7 @@
 import type React from "react";
 import { Wallet } from "lucide-react";
 import { useComponentRegistry } from "../contexts/ComponentRegistry";
+import { NativeButton, type RegistryButton } from "../lib/registry-fallbacks";
 
 export interface AccountButtonProps {
   className?: string;
@@ -32,7 +33,7 @@ export function AccountButton({
   onConnect,
 }: AccountButtonProps) {
   const registry = useComponentRegistry();
-  const Button = registry.Button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }>;
+  const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton;
 
   if (!externalAddress) {
     return (
