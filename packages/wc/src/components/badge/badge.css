@@ -47,8 +47,8 @@
 }
 
 .badge.variant-destructive {
-  background-color: hsl(var(--destructive) / 0.1);
-  color: hsl(var(--destructive));
+  background-color: color-mix(in srgb, hsl(var(--destructive)) 85%, black);
+  color: hsl(var(--destructive-foreground));
 }
 
 .badge.variant-outline {
