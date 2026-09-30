@@ -2,7 +2,7 @@
 
 var stream = require('stream');
 
-const modeResolutionChain = [];
+const modeResolver = [];
 
 // captured here, at true module scope, before hydrateFactory shadows the
 // AbortController identifier for component code below.
@@ -199,7 +199,7 @@ const NAMESPACE = 'connect-appkit';
 const BUILD = /* connect-appkit */ { hotModuleReplacement: false, hydratedSelectorName: "hydrated", slotRelocation: true, state: true, updatable: true};
 
 /*
- Stencil Hydrate Platform v4.45.0 | MIT Licensed | https://stenciljs.com
+ Stencil Hydrate Platform v4.45.1 | MIT Licensed | https://stenciljs.com
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -1705,6 +1705,8 @@ var scopeCss = (cssText, scopeId2, commentOriginalSelector) => {
   });
   cssText = expandPartSelectors(cssText);
   return cssText;
+};
+var setMode = (handler) => {
 };
 
 // src/runtime/normalize-watchers.ts
@@ -5166,6 +5168,9 @@ function hydrateApp(win2, opts, results, afterHydrate, resolve, abortController)
     };
     tmrId = globalThis.setTimeout(timeoutExceeded, opts.timeout);
     plt.$resourcesUrl$ = new URL(opts.resourcesUrl || "./", win2.document.baseURI).href;
+    if (Array.isArray(opts.modes)) {
+      opts.modes.forEach((mode) => setMode());
+    }
     patchChild2(win2.document.body);
     waitLoop2().then(hydratedComplete).catch(hydratedError);
   } catch (e) {
@@ -14781,7 +14786,7 @@ var NAMESPACE = (
 );
 
 /*
- Stencil Hydrate Runner v4.45.0 | MIT Licensed | https://stenciljs.com
+ Stencil Hydrate Runner v4.45.1 | MIT Licensed | https://stenciljs.com
  */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -29335,9 +29340,6 @@ var _cssColonHostContextRe = new RegExp("(" + _polyfillHostContext + _parenSuffi
 var _cssColonSlottedRe = new RegExp("(" + _polyfillSlotted + _parenSuffix, "gim");
 var _polyfillHostNoCombinator = _polyfillHost + "-no-combinator";
 
-// src/runtime/mode.ts
-var setMode = (handler) => modeResolutionChain.push(handler);
-
 // src/utils/local-value.ts
 var LocalValue = class _LocalValue {
   type;
@@ -31414,6 +31416,37 @@ var relocateMetaCharset = (doc) => {
 };
 
 // src/compiler/style/css-parser/parse-css.ts
+var splitSelectorList = (selectors) => {
+  const parts = [];
+  let depth = 0;
+  let quote = null;
+  let start = 0;
+  for (let i = 0; i < selectors.length; i++) {
+    const ch = selectors[i];
+    if (quote) {
+      if (ch === "\\") {
+        i++;
+      } else if (ch === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+    } else if (ch === "\\") {
+      i++;
+    } else if (ch === "(") {
+      depth++;
+    } else if (ch === ")") {
+      depth = Math.max(0, depth - 1);
+    } else if (ch === "," && depth === 0) {
+      parts.push(selectors.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(selectors.slice(start));
+  return parts.map((s) => s.trim());
+};
 var parseCss = (css, filePath) => {
   let lineno = 1;
   let column = 1;
@@ -31535,11 +31568,8 @@ var parseCss = (css, filePath) => {
   const selector = () => {
     const m = match2(/^([^{]+)/);
     if (!m) return null;
-    return trim(m[0]).replace(/\/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*\/+/g, "").replace(/"(?:\\"|[^"])*"|'(?:\\'|[^'])*'/g, function(m2) {
-      return m2.replace(/,/g, "\u200C");
-    }).split(/\s*(?![^(]*\)),\s*/).map(function(s) {
-      return s.replace(/\u200C/g, ",");
-    });
+    const cleaned = trim(m[0]).replace(/\/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*\/+/g, "");
+    return splitSelectorList(cleaned);
   };
   const declaration = () => {
     const pos = position();
@@ -32713,10 +32743,6 @@ async function render2(win2, opts, results) {
   try {
     await Promise.resolve(beforeHydrateFn(win2.document));
     return new Promise((resolve) => {
-      if (Array.isArray(opts.modes)) {
-        modeResolutionChain.length = 0;
-        opts.modes.forEach((mode) => setMode(mode));
-      }
       return hydrateFactory(win2, opts, results, afterHydrate, resolve);
     });
   } catch (e) {
