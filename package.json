@@ -4,7 +4,7 @@
   "packageManager": "pnpm@11.1.2",
   "scripts": {
     "build": "pnpm -r build",
-    "build-storybook": "storybook build",
+    "build-storybook": "pnpm --filter @naculus/connect-appkit-ui build && storybook build",
     "clean": "pnpm -r clean",
     "lint": "biome lint",
     "publish:local": "pnpm -r publish --no-git-checks --registry http://localhost:4873",
@@ -13,7 +13,7 @@
     "release:preflight": "node scripts/release-preflight.mjs",
     "spell-check": "cspell lint \"**/*.{ts,tsx,md}\"",
     "spell-fix": "cspell lint --fix \"**/*.{ts,tsx,md}\"",
-    "storybook": "storybook dev -p 61000",
+    "storybook": "pnpm --filter @naculus/connect-appkit-ui build && storybook dev -p 61000",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:run": "vitest run",

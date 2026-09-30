@@ -19,6 +19,25 @@ npm install @naculus/connect-appkit-ui
 pnpm add @naculus/connect-appkit-ui
 ```
 
+## Component styles
+
+Import the complete token, base, and component stylesheet once:
+
+```ts
+import "@naculus/connect-appkit-ui/styles"
+```
+
+No Tailwind setup is required in the consuming app. Add the `dark` class to an
+ancestor of the UI to use the dark theme.
+
+The components assume a page reset (Tailwind preflight, as shadcn components
+do). An app that already uses Tailwind has one. Otherwise also import the
+opt-in reset, which changes element defaults for the whole page:
+
+```ts
+import "@naculus/connect-appkit-ui/styles/preflight"
+```
+
 ## License
 
 MIT

@@ -5,6 +5,7 @@ prefer-workspace-packages: true
 shamefullyHoist: true
 minimumReleaseAge: 0
 allowBuilds:
+  '@parcel/watcher': false
   '@swc/core': true
   bufferutil: true
   esbuild: true
