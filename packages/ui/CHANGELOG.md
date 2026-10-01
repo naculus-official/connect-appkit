@@ -1,5 +1,20 @@
 # @naculus/connect-appkit-ui
 
+## 0.7.0
+
+### Minor Changes
+
+- 5a4b17f: The React components now ship their styles. `import "@naculus/connect-appkit-ui/styles"` loads tokens, the small reset and the compiled component utilities; no Tailwind setup is needed in the app. The component CSS writes values into each class and defines no `:root` variables, so it does not override an app's own Tailwind theme. Apps without a page reset of their own can also import the opt-in `@naculus/connect-appkit-ui/styles/preflight`. Components that read a base control from the registry (AccountButton, ChainSelector, ErrorBoundary, RouteSelector, SeedPhraseBackup, SignInButton, SmartWalletSettings, SmartWalletToggle) fall back to a native control instead of crashing when none is registered.
+
+### Patch Changes
+
+- Depend on and accept connect-lib 0.7.0 (`^0.7.0` dependency and peer ranges). A `^0.6.0` range does not admit 0.7.0, so 0.6.x ranges would have pulled a second copy of connect-core or failed peer resolution next to connect-lib 0.7.0.
+- Updated dependencies
+- Updated dependencies [9a3b14d]
+- Updated dependencies [36f0aa5]
+  - @naculus/connect-appkit-core@0.7.0
+  - @naculus/connect-appkit-react@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes

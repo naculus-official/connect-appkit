@@ -1,6 +1,6 @@
 {
   "name": "@naculus/connect-native",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -22,9 +22,9 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@naculus/connect-core": "^0.6.0",
-    "@naculus/connect-appkit-react": "^0.6.0",
-    "@naculus/wallet-engine": "^0.6.0",
+    "@naculus/connect-core": "^0.7.0",
+    "@naculus/connect-appkit-react": "^0.7.0",
+    "@naculus/wallet-engine": "^0.7.0",
     "react-native": "*",
     "@react-native-async-storage/async-storage": "*",
     "@walletconnect/react-native-compat": "*",
@@ -33,8 +33,8 @@
     "expo-secure-store": "*"
   },
   "devDependencies": {
-    "@naculus/connect-core": "^0.6.0",
-    "@naculus/wallet-engine": "^0.6.0",
+    "@naculus/connect-core": "^0.7.0",
+    "@naculus/wallet-engine": "^0.7.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "@naculus/connect-appkit-react": "workspace:*"

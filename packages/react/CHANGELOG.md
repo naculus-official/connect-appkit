@@ -1,5 +1,30 @@
 # @naculus/connect-appkit-react
 
+## 0.7.0
+
+### Minor Changes
+
+- 9a3b14d: Add React and Vue `useMppSession` state shells for caller-built MPP session
+  fetches, including metering, channel and receipt state, cooperative and forced
+  close actions, and recovery state for a post-send channel-open failure.
+
+### Patch Changes
+
+- Depend on and accept connect-lib 0.7.0 (`^0.7.0` dependency and peer ranges). A `^0.6.0` range does not admit 0.7.0, so 0.6.x ranges would have pulled a second copy of connect-core or failed peer resolution next to connect-lib 0.7.0.
+- 36f0aa5: Notification settings changed before the persisted settings finish loading
+  are no longer lost: the late load used to overwrite them (a chain muted during
+  the first render came back). Such changes are now replayed, in order, on top
+  of what was persisted. appkit-core adds `replayNotificationSettings` and the
+  `NotificationSettingsUpdate` type, used by both the React hook and the Vue
+  composable.
+- Updated dependencies
+- Updated dependencies [9a3b14d]
+- Updated dependencies [36f0aa5]
+- Updated dependencies [bf0c026]
+- Updated dependencies [5204dcb]
+  - @naculus/connect-appkit-core@0.7.0
+  - @naculus/connect-appkit-wc@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes

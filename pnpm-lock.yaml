@@ -82,8 +82,8 @@ importers:
   packages/core:
     devDependencies:
       '@naculus/connect-core':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@microsoft/api-extractor@7.59.1(@types/node@26.6.3))(jiti@2.7.0)(postcss@8.5.28)(typescript@6.0.3)(yaml@2.9.1)
@@ -116,11 +116,11 @@ importers:
         specifier: workspace:*
         version: link:../react
       '@naculus/connect-core':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       '@naculus/wallet-engine':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@microsoft/api-extractor@7.59.1(@types/node@26.6.3))(jiti@2.7.0)(postcss@8.5.28)(typescript@6.0.3)(yaml@2.9.1)
@@ -137,29 +137,29 @@ importers:
         specifier: workspace:*
         version: link:../wc
       '@naculus/connect-core':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       '@naculus/connector-embedded':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       '@naculus/connector-evm-injected':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       '@naculus/connector-passkeys':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       '@naculus/connector-solana':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       '@naculus/connector-walletconnect':
-        specifier: ^0.6.0
-        version: 0.6.0(typescript@6.0.3)(zod@3.25.76)
+        specifier: ^0.7.0
+        version: 0.7.0(typescript@6.0.3)(zod@3.25.76)
       '@naculus/siwx':
-        specifier: ^0.6.0
-        version: 0.6.0(typescript@6.0.3)(zod@3.25.76)
+        specifier: ^0.7.0
+        version: 0.7.0(typescript@6.0.3)(zod@3.25.76)
       '@naculus/wallet-engine':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       '@stencil/react-output-target':
         specifier: ^1.6.2
         version: 1.6.2(@stencil/core@4.45.1)(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -196,8 +196,8 @@ importers:
   packages/ui:
     dependencies:
       '@naculus/siwx':
-        specifier: ^0.6.0
-        version: 0.6.0(typescript@6.0.3)(zod@3.25.76)
+        specifier: ^0.7.0
+        version: 0.7.0(typescript@6.0.3)(zod@3.25.76)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -215,8 +215,8 @@ importers:
         specifier: workspace:*
         version: link:../react
       '@naculus/connect-core':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       '@tailwindcss/cli':
         specifier: ^4.3.3
         version: 4.3.3
@@ -267,8 +267,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@naculus/connect-core':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.7.0
+        version: 0.7.0
       vitest:
         specifier: ^5.0.0
         version: 5.0.0(@types/node@26.6.3)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1(@noble/hashes@2.4.0))(vite@7.3.6(@types/node@26.6.3)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.1))
@@ -1670,26 +1670,26 @@ packages:
     resolution: {integrity: sha512-47XIizs9XZXvuJgoaJUIE2lFoID8ugvc0jzSHP+Ptfk8nTbnR8g788wv48N03Kx0UkAv559HWRQ3yzOgzlRNUA==}
     engines: {node: '>= 18'}
 
-  '@naculus/connect-core@0.6.0':
-    resolution: {integrity: sha512-O9Ch9fA+dvjGWgvmPEca121XBjJUWz1hfrO46LPDp6Tf0JhBrCtT3dXISuaPzuSTYX5oluJ6lAbPz/Pq3dj1Yw==}
+  '@naculus/connect-core@0.7.0':
+    resolution: {integrity: sha512-Df0G16SAoxepHCuobdiL3pJUZa7s+Jpo7HuMC+2sHgO0h06QJG3ULVsHZgXYFOD3kj5rr+Fg+vmAHRiuYA6U7Q==}
 
-  '@naculus/connector-embedded@0.6.0':
-    resolution: {integrity: sha512-KNK3rYPo26f/Hz3ADH4WG6W1PLAi4O9mnUqma4WMTIb6Hvbuvssxugy+YpTOYoQ0ZnPe1wLGbF46+oklWu9N4w==}
+  '@naculus/connector-embedded@0.7.0':
+    resolution: {integrity: sha512-wFnK8bN0PxXHjGl+GqCppFkZZtH520DnLKURXD5eWiGRjoj91RemV/UxzL6exOkD1rreYl451+Z1lP3ocZmDvA==}
 
-  '@naculus/connector-evm-injected@0.6.0':
-    resolution: {integrity: sha512-oKLlRYLxXbpbiyzyBoWotWqHtyt9VypQLdQ7jIZDGV0TYXDoZwsdGksOdhu+x0MlmeC2pqpyl1Ffa3c5uRWFmw==}
+  '@naculus/connector-evm-injected@0.7.0':
+    resolution: {integrity: sha512-0iS03oYJlgpvIwXMbCi2TcjHzL0XLscgWmnGXtgnqn5TjxnGh1hG9Hbcj6BwwT7LQjTag/CdSZaHrb94149nkA==}
 
-  '@naculus/connector-passkeys@0.6.0':
-    resolution: {integrity: sha512-ny9JRHl33xyYPqONWCI7HRupTW/9goQpXqFXRfqFX6s/oxymTdOLC/nPYVvrzS647SMI22BLj3JITw3G0STYKg==}
+  '@naculus/connector-passkeys@0.7.0':
+    resolution: {integrity: sha512-fAg204rDZAUY1lUxJ+WbxifapXPrHIDJFfK2rZbVjhnlU6ZAK2254clSBuZUiUkXvafijpDP1DohkGHVRYZKqQ==}
 
-  '@naculus/connector-solana@0.6.0':
-    resolution: {integrity: sha512-0Hj16C2NZ+e/RJ0gq8+YE0VoPFTmNrgf56GI4ReZvX0MhTyxtvC6xZiNq9fgpLxP7CjaJtton1E3+ZJd+OtigA==}
+  '@naculus/connector-solana@0.7.0':
+    resolution: {integrity: sha512-gR1OXEBrSrB9gQ49+tB4K0iBhtHsVYcdPowHBB5TIpsrK5GIyYLXhUwbIaTlkgehCA9IvWH+Yot1aX28zYyuwA==}
 
-  '@naculus/connector-walletconnect@0.6.0':
-    resolution: {integrity: sha512-mF6L7DM/mqC+DNFqwQyTZKxK6xWGS98zb7ny4JXPuFRzQ+WV4VIeXBI51dCByGUWZaI7wIJ60g4hUe35Y2dNGA==}
+  '@naculus/connector-walletconnect@0.7.0':
+    resolution: {integrity: sha512-sCe5AmYKr2w6OSt1IQAteKq4DgidBad/LY4RRYEJhlEtHX470m7+3iDzCiCfOTOtw451f94//2bXGipYhWt8ew==}
 
-  '@naculus/siwx@0.6.0':
-    resolution: {integrity: sha512-LWYBXW9WLF4dPFG7ouqQmVALa0M462VS/K3a1Y+MRBn/DCtTIS/RpOnOZqTl1lrNKMvVr+A62xYR8WLZAw+HjA==}
+  '@naculus/siwx@0.7.0':
+    resolution: {integrity: sha512-e+Izs2+DjPf3uqsLAvHa6f9yLYsBlYH7Qxu+EDRzoBzCQaYyh9A/YcbhmlV0hh3kZ/C4cU7m9gZtTG0lxkogrA==}
     peerDependencies:
       '@cosmjs/amino': '*'
       '@polkadot/util-crypto': '*'
@@ -1702,8 +1702,8 @@ packages:
       starknet:
         optional: true
 
-  '@naculus/wallet-engine@0.6.0':
-    resolution: {integrity: sha512-VVaKwlp2gyp6pomje00gQkbDtwjAXH8+ultxZZcP4DX0qeukxoYGi5XY93quIf9ZP/8CtLqd6nVd2hBby3/1FQ==}
+  '@naculus/wallet-engine@0.7.0':
+    resolution: {integrity: sha512-N5jVJr7a8KCGVgu6s3hb04uofl3TR6UVHymYZVGt+aTGO9U4hlYRJPsQ+X6dOXw2mpZ90r1IzJG5Z0reLDYJww==}
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     resolution: {integrity: sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==}
@@ -8407,35 +8407,35 @@ snapshots:
 
   '@msgpack/msgpack@3.1.3': {}
 
-  '@naculus/connect-core@0.6.0':
+  '@naculus/connect-core@0.7.0':
     dependencies:
       '@noble/ciphers': 2.4.0
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
       '@scure/base': 2.4.0
 
-  '@naculus/connector-embedded@0.6.0':
+  '@naculus/connector-embedded@0.7.0':
     dependencies:
-      '@naculus/connect-core': 0.6.0
-      '@naculus/wallet-engine': 0.6.0
+      '@naculus/connect-core': 0.7.0
+      '@naculus/wallet-engine': 0.7.0
 
-  '@naculus/connector-evm-injected@0.6.0':
+  '@naculus/connector-evm-injected@0.7.0':
     dependencies:
-      '@naculus/connect-core': 0.6.0
+      '@naculus/connect-core': 0.7.0
 
-  '@naculus/connector-passkeys@0.6.0':
+  '@naculus/connector-passkeys@0.7.0':
     dependencies:
-      '@naculus/connect-core': 0.6.0
+      '@naculus/connect-core': 0.7.0
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
 
-  '@naculus/connector-solana@0.6.0':
+  '@naculus/connector-solana@0.7.0':
     dependencies:
-      '@naculus/connect-core': 0.6.0
+      '@naculus/connect-core': 0.7.0
 
-  '@naculus/connector-walletconnect@0.6.0(typescript@6.0.3)(zod@3.25.76)':
+  '@naculus/connector-walletconnect@0.7.0(typescript@6.0.3)(zod@3.25.76)':
     dependencies:
-      '@naculus/connect-core': 0.6.0
+      '@naculus/connect-core': 0.7.0
       '@scure/base': 2.4.0
       '@walletconnect/sign-client': 2.25.0(typescript@6.0.3)(zod@3.25.76)
       '@walletconnect/types': 2.25.0
@@ -8464,7 +8464,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@naculus/siwx@0.6.0(typescript@6.0.3)(zod@3.25.76)':
+  '@naculus/siwx@0.7.0(typescript@6.0.3)(zod@3.25.76)':
     dependencies:
       '@noble/hashes': 2.4.0
       bs58: 6.0.0
@@ -8477,9 +8477,9 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@naculus/wallet-engine@0.6.0':
+  '@naculus/wallet-engine@0.7.0':
     dependencies:
-      '@naculus/connect-core': 0.6.0
+      '@naculus/connect-core': 0.7.0
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
       '@scure/base': 2.4.0

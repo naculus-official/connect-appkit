@@ -1,5 +1,15 @@
 # @naculus/connect-native
 
+## 0.7.0
+
+### Patch Changes
+
+- Depend on and accept connect-lib 0.7.0 (`^0.7.0` dependency and peer ranges). A `^0.6.0` range does not admit 0.7.0, so 0.6.x ranges would have pulled a second copy of connect-core or failed peer resolution next to connect-lib 0.7.0.
+- Updated dependencies
+- Updated dependencies [9a3b14d]
+- Updated dependencies [36f0aa5]
+  - @naculus/connect-appkit-react@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes
