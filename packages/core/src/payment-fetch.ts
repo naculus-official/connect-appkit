@@ -1,3 +1,5 @@
+import type { SettlementVerification } from "@naculus/connect-core";
+
 /**
  * Agentic payments (x402 / MPP) for the appkit shells.
  *
@@ -25,6 +27,19 @@ export type PaymentFetch = (
   init?: RequestInit,
 ) => Promise<PaymentFetchResult>;
 
+export type PaymentVerificationStatus =
+  | "unverified"
+  | "pending"
+  | "verified"
+  | "mismatch"
+  | "failed"
+  | "unavailable";
+
+export interface PaymentVerification {
+  status: PaymentVerificationStatus;
+  reason?: string;
+}
+
 /** One payment, in the terms a UI shows. Amounts are token base units. */
 export interface PaymentRecord {
   protocol: "x402" | "mpp" | "unknown";
@@ -41,6 +56,31 @@ export interface PaymentRecord {
    * other fields are what the client signed.
    */
   reference: string | null;
+  /** A server-reported reference remains unverified until this is verified. */
+  verification: PaymentVerification;
+}
+
+export const DEFAULT_VERIFY_RETRY = { attempts: 5, delayMs: 4_000 } as const;
+
+export interface VerifyRetryOptions {
+  attempts: number;
+  delayMs: number;
+}
+
+/** Apply a verifier result without mutating the payment record. */
+export function applySettlementVerification(
+  payment: PaymentRecord,
+  result: SettlementVerification,
+): PaymentRecord {
+  return {
+    ...payment,
+    verification: {
+      status: result.status,
+      ...("reason" in result && result.reason !== undefined
+        ? { reason: result.reason }
+        : {}),
+    },
+  };
 }
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -92,6 +132,7 @@ export function describePayment(
         settlement?.success === true && settlement.network === paid.network
           ? text(settlement.transaction)
           : null,
+      verification: { status: "unverified" },
     };
   }
 
@@ -117,6 +158,7 @@ export function describePayment(
       payTo: text(request.recipient),
       amount: text(request.amount),
       reference: text(record(result.receipt)?.reference),
+      verification: { status: "unverified" },
     };
   }
 
@@ -128,5 +170,6 @@ export function describePayment(
     payTo: null,
     amount: null,
     reference: null,
+    verification: { status: "unverified" },
   };
 }

@@ -115,4 +115,66 @@ describe("usePaymentFetch", () => {
     act(() => result.current.reset());
     expect(result.current.lastPayment).toBeNull();
   });
+
+  it("verifies asynchronously and retries pending until verified", async () => {
+    vi.useFakeTimers();
+    const pay = vi.fn().mockResolvedValue(paid());
+    const verify = vi
+      .fn()
+      .mockResolvedValueOnce({ status: "pending" })
+      .mockResolvedValueOnce({ status: "verified" });
+    const { result } = renderHook(() =>
+      usePaymentFetch(pay, {
+        verify,
+        verifyRetry: { attempts: 3, delayMs: 10 },
+      }),
+    );
+    await act(async () => {
+      await result.current.payFetch(URL_);
+    });
+    expect(result.current.lastPayment?.verification.status).toBe("pending");
+    await act(async () => vi.advanceTimersByTimeAsync(10));
+    expect(result.current.lastPayment).toMatchObject({
+      verification: { status: "verified" },
+    });
+    expect(verify).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+
+  it("stops verification retries on mismatch", async () => {
+    const verify = vi.fn().mockResolvedValue({
+      status: "mismatch",
+      reason: "wrong recipient",
+    });
+    const { result } = renderHook(() =>
+      usePaymentFetch(vi.fn().mockResolvedValue(paid()), { verify }),
+    );
+    await act(async () => {
+      await result.current.payFetch(URL_);
+      await Promise.resolve();
+    });
+    expect(result.current.lastPayment?.verification).toEqual({
+      status: "mismatch",
+      reason: "wrong recipient",
+    });
+    expect(verify).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not publish a retry after unmount", async () => {
+    vi.useFakeTimers();
+    const verify = vi.fn().mockResolvedValue({ status: "pending" });
+    const { result, unmount } = renderHook(() =>
+      usePaymentFetch(vi.fn().mockResolvedValue(paid()), {
+        verify,
+        verifyRetry: { attempts: 3, delayMs: 10 },
+      }),
+    );
+    await act(async () => {
+      await result.current.payFetch(URL_);
+    });
+    unmount();
+    await vi.advanceTimersByTimeAsync(20);
+    expect(verify).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
 });

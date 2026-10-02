@@ -1,8 +1,13 @@
 import {
+  applySettlementVerification,
+  DEFAULT_VERIFY_RETRY,
   describePayment,
   type PaymentFetch,
+  type PaymentFetchResult,
   type PaymentRecord,
+  type VerifyRetryOptions,
 } from "@naculus/connect-appkit-core";
+import type { SettlementVerification } from "@naculus/connect-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UsePaymentFetchReturn {
@@ -19,13 +24,21 @@ export interface UsePaymentFetchReturn {
   reset: () => void;
 }
 
+export interface UsePaymentFetchOptions {
+  verify?: (result: PaymentFetchResult) => Promise<SettlementVerification>;
+  verifyRetry?: VerifyRetryOptions;
+}
+
 /**
  * State around a caller-owned paying fetch — `createX402Fetch`
  * (`@naculus/payments-x402`) or `createMppFetch` (`@naculus/payments-mpp`),
  * built with the session key and limits the app chooses. What may be paid is
  * decided there and by the session key's policy, not here.
  */
-export function usePaymentFetch(pay: PaymentFetch): UsePaymentFetchReturn {
+export function usePaymentFetch(
+  pay: PaymentFetch,
+  options: UsePaymentFetchOptions = {},
+): UsePaymentFetchReturn {
   const [inFlight, setInFlight] = useState(0);
   const [lastPayment, setLastPayment] = useState<PaymentRecord | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -35,11 +48,15 @@ export function usePaymentFetch(pay: PaymentFetch): UsePaymentFetchReturn {
   const epochRef = useRef(0);
   const payRef = useRef(pay);
   payRef.current = pay;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  const verificationRef = useRef(0);
 
   useEffect(() => {
     return () => {
       generationRef.current += 1;
       epochRef.current += 1;
+      verificationRef.current += 1;
     };
   }, []);
 
@@ -50,8 +67,55 @@ export function usePaymentFetch(pay: PaymentFetch): UsePaymentFetchReturn {
     setError(null);
     try {
       const result = await payRef.current(input, init);
-      const payment = describePayment(input, result);
-      if (payment && epoch === epochRef.current) setLastPayment(payment);
+      let payment = describePayment(input, result);
+      if (payment && epoch === epochRef.current) {
+        const verify = optionsRef.current.verify;
+        if (!verify) {
+          setLastPayment(payment);
+        } else {
+          payment = applySettlementVerification(payment, { status: "pending" });
+          setLastPayment(payment);
+          const verification = ++verificationRef.current;
+          const retry = optionsRef.current.verifyRetry ?? DEFAULT_VERIFY_RETRY;
+          void Promise.resolve().then(async () => {
+            let outcome: SettlementVerification = { status: "pending" };
+            for (let attempt = 0; attempt < retry.attempts; attempt += 1) {
+              if (attempt > 0) {
+                await new Promise((resolve) =>
+                  setTimeout(resolve, retry.delayMs),
+                );
+              }
+              if (
+                epoch !== epochRef.current ||
+                verification !== verificationRef.current
+              )
+                return;
+              try {
+                outcome = await verify(result);
+              } catch (cause) {
+                outcome = {
+                  status: "unavailable",
+                  reason:
+                    cause instanceof Error
+                      ? cause.message
+                      : "Settlement verification failed",
+                };
+              }
+              if (outcome.status !== "pending") break;
+            }
+            if (
+              epoch === epochRef.current &&
+              verification === verificationRef.current
+            ) {
+              setLastPayment((current) =>
+                current
+                  ? applySettlementVerification(current, outcome)
+                  : current,
+              );
+            }
+          });
+        }
+      }
       return result;
     } catch (cause) {
       const normalized =
@@ -66,6 +130,7 @@ export function usePaymentFetch(pay: PaymentFetch): UsePaymentFetchReturn {
   const reset = useCallback(() => {
     generationRef.current += 1;
     epochRef.current += 1;
+    verificationRef.current += 1;
     setLastPayment(null);
     setError(null);
   }, []);

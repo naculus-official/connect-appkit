@@ -3,9 +3,17 @@
   __resetResolverForTests
   addInAppNotification
   type AddressValidationLevel
+  applySettlementVerification
   assertHexSignature
+  type AssetId
   type AtomicSupport
   atomicSupportFor
+  type AuthorizationAmountView
+  type AuthorizationAssetMetadata
+  type AuthorizationDescription
+  type AuthorizationExpiryView
+  type AuthorizationGrantView
+  type AuthorizationRecipientView
   bareEvmAddress
   buildDelegationPolicyMessage
   buildSmartAccountConfig
@@ -32,6 +40,7 @@
   type DecimalsCache
   decodeRevertReason
   DEFAULT_NOTIFICATION_SETTINGS
+  DEFAULT_VERIFY_RETRY
   defaultSiwxDomain
   defaultSiwxUri
   type DelegationFrameworkAdapterOptions
@@ -39,6 +48,8 @@
   type DelegationPolicyFlow
   type DelegationPolicyPreview
   type DelegationTypedData
+  describeAuthorization
+  type DescribeAuthorizationOptions
   describeChain
   describePayment
   type DestinationIssue
@@ -52,6 +63,7 @@
   type ExecuteRouteError
   type ExecuteRouteOptions
   type ExecuteRouteResult
+  explainSpend
   fetchUserOperationReceipt
   getResolver
   type GetRouteQuotes
@@ -84,6 +96,8 @@
   type PaymentFetch
   type PaymentFetchResult
   type PaymentRecord
+  type PaymentVerification
+  type PaymentVerificationStatus
   type PolicyExecutionAdapter
   type PolicyExecutionCheck
   type PolicyExecutionPreview
@@ -136,6 +150,7 @@
   type SolanaSessionKeyFlowDeps
   type SolanaSigner
   type SolanaWalletFeatures
+  type SpendExplanation
   toChainSwitchError
   toEip155Accounts
   toExecuteRouteError
@@ -147,6 +162,7 @@
   updateNotificationSettings
   validateDestination
   validateRouteRecipient
+  type VerifyRetryOptions
   type ViemChainShape
   type WalletChain
   type Web3Action

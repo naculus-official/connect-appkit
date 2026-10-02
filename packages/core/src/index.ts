@@ -84,6 +84,7 @@ export * from "./delegation-framework-adapter";
 export * from "./delegation-policy";
 
 // ── Agentic payments (x402 / MPP) ─────────────────────────────────
+export * from "./authorization";
 export * from "./payment-fetch";
 export * from "./mpp-session";
 export * from "./solana-session-key";

@@ -81,6 +81,9 @@
   type UseAccountReturn
   useAccounts
   type UseAccountsReturn
+  useAuthorizations
+  type UseAuthorizationsOptions
+  type UseAuthorizationsReturn
   useBalance
   type UseBalanceOptions
   type UseBalanceReturn
@@ -133,6 +136,7 @@
   usePassphraseGate
   type UsePassphraseGateReturn
   usePaymentFetch
+  type UsePaymentFetchOptions
   type UsePaymentFetchReturn
   useResolveName
   type UseResolveNameReturn

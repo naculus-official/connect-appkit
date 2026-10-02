@@ -84,6 +84,16 @@ if (
 // your caller-owned session policy.
 ```
 
+### Authorization and verified receipts
+
+`useAuthorizations({ managers })` lists the caller-owned EVM, Solana, and MPP
+authorizations and refreshes after `revoke(entry)`. Inspect the returned
+`onChainRevocationRequired` flag before declaring a Solana delegation revoked.
+
+`usePaymentFetch(pay, { verify })` exposes a paid response immediately and
+verifies its settlement in the background. Pending verification retries five
+times at four-second intervals by default; pass `verifyRetry` to change that.
+
 ## License
 
 MIT

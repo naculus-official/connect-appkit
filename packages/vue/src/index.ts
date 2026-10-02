@@ -31,6 +31,11 @@ export {
 
 // ── Composables ───────────────────────────────────────────────────
 export { useAccounts } from "./useAccounts";
+export { useAuthorizations } from "./useAuthorizations";
+export type {
+  UseAuthorizationsOptions,
+  UseAuthorizationsReturn,
+} from "./useAuthorizations";
 export { useNotification } from "./useNotification";
 export { useSimulateTransfer } from "./useSimulateTransfer";
 export type {
@@ -220,7 +225,10 @@ export type {
 } from "./useDelegate";
 export { useDelegation } from "./useDelegation";
 export { usePaymentFetch } from "./usePaymentFetch";
-export type { UsePaymentFetchReturn } from "./usePaymentFetch";
+export type {
+  UsePaymentFetchOptions,
+  UsePaymentFetchReturn,
+} from "./usePaymentFetch";
 export { useMppSession } from "./useMppSession";
 export type { UseMppSessionReturn } from "./useMppSession";
 export { useSolanaSessionKey } from "./useSolanaSessionKey";

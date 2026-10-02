@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { describePayment, type PaymentFetchResult } from "./payment-fetch";
+import {
+  applySettlementVerification,
+  DEFAULT_VERIFY_RETRY,
+  describePayment,
+  type PaymentFetchResult,
+} from "./payment-fetch";
 
 const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const PAYEE = "0x209693Bc6afc0C5328bA36FaF03C514EF312287C";
@@ -44,6 +49,7 @@ describe("describePayment", () => {
       payTo: PAYEE,
       amount: "10000",
       reference: TX,
+      verification: { status: "unverified" },
     });
     // A failed or missing settlement names no transaction.
     expect(
@@ -91,6 +97,7 @@ describe("describePayment", () => {
       payTo: PAYEE,
       amount: "250000",
       reference: TX,
+      verification: { status: "unverified" },
     });
   });
 
@@ -141,6 +148,42 @@ describe("describePayment", () => {
       payTo: null,
       amount: null,
       reference: null,
+      verification: { status: "unverified" },
+    });
+  });
+
+  it("labels a settlement verified only after a verified result", () => {
+    const payment = describePayment(
+      URL_,
+      result({
+        paid: {
+          scheme: "exact",
+          network: "eip155:8453",
+          amount: "1",
+          asset: USDC,
+          payTo: PAYEE,
+        },
+      }),
+    );
+    expect(payment).not.toBeNull();
+    const mismatch = applySettlementVerification(payment!, {
+      status: "mismatch",
+      reason: "wrong recipient",
+    });
+    expect(mismatch).toMatchObject({
+      verification: { status: "mismatch", reason: "wrong recipient" },
+    });
+    expect(
+      applySettlementVerification(mismatch, { status: "verified" }),
+    ).toMatchObject({
+      verification: { status: "verified" },
+    });
+  });
+
+  it("uses the documented verification retry defaults", () => {
+    expect(DEFAULT_VERIFY_RETRY).toEqual({
+      attempts: 5,
+      delayMs: 4_000,
     });
   });
 });

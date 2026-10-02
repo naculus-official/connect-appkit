@@ -56,6 +56,11 @@ export type {
 } from "./client";
 export { clearClient, createClient, getClient } from "./client";
 export { useAccount } from "./hooks/useAccount";
+export type {
+  UseAuthorizationsOptions,
+  UseAuthorizationsReturn,
+} from "./hooks/useAuthorizations";
+export { useAuthorizations } from "./hooks/useAuthorizations";
 export { useBalance } from "./hooks/useBalance";
 export type {
   AtomicSupport,
@@ -70,7 +75,10 @@ export type {
   UseDelegateReturn,
 } from "./hooks/useDelegate";
 export { useDelegate } from "./hooks/useDelegate";
-export type { UsePaymentFetchReturn } from "./hooks/usePaymentFetch";
+export type {
+  UsePaymentFetchOptions,
+  UsePaymentFetchReturn,
+} from "./hooks/usePaymentFetch";
 export { usePaymentFetch } from "./hooks/usePaymentFetch";
 export type { UseMppSessionReturn } from "./hooks/useMppSession";
 export { useMppSession } from "./hooks/useMppSession";

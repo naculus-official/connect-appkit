@@ -78,6 +78,16 @@ function App() {
 
 **Other** — `useViemClient`, `useNotification`
 
+### Authorization and verified receipts
+
+`useAuthorizations({ managers })` lists the caller-owned EVM, Solana, and MPP
+authorizations and refreshes after `revoke(entry)`. Inspect the returned
+`onChainRevocationRequired` flag before declaring a Solana delegation revoked.
+
+`usePaymentFetch(pay, { verify })` records a paid response immediately, then
+verifies its settlement in the background. Pending verification retries five
+times at four-second intervals by default; pass `verifyRetry` to change that.
+
 ### Ask before executing
 
 ```tsx

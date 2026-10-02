@@ -111,4 +111,61 @@ describe("usePaymentFetch", () => {
     expect(hook.lastPayment.value).toBeNull();
     scope.stop();
   });
+
+  it("verifies asynchronously and retries pending until verified", async () => {
+    vi.useFakeTimers();
+    const verify = vi
+      .fn()
+      .mockResolvedValueOnce({ status: "pending" })
+      .mockResolvedValueOnce({ status: "verified" });
+    const { hook, scope } = mount(() =>
+      usePaymentFetch(vi.fn().mockResolvedValue(paid()), {
+        verify,
+        verifyRetry: { attempts: 3, delayMs: 10 },
+      }),
+    );
+    await hook.payFetch(URL_);
+    expect(hook.lastPayment.value?.verification.status).toBe("pending");
+    await vi.advanceTimersByTimeAsync(10);
+    expect(hook.lastPayment.value).toMatchObject({
+      verification: { status: "verified" },
+    });
+    expect(verify).toHaveBeenCalledTimes(2);
+    scope.stop();
+    vi.useRealTimers();
+  });
+
+  it("stops verification retries on mismatch", async () => {
+    const verify = vi.fn().mockResolvedValue({
+      status: "mismatch",
+      reason: "wrong recipient",
+    });
+    const { hook, scope } = mount(() =>
+      usePaymentFetch(vi.fn().mockResolvedValue(paid()), { verify }),
+    );
+    await hook.payFetch(URL_);
+    await Promise.resolve();
+    expect(hook.lastPayment.value?.verification).toEqual({
+      status: "mismatch",
+      reason: "wrong recipient",
+    });
+    expect(verify).toHaveBeenCalledTimes(1);
+    scope.stop();
+  });
+
+  it("does not publish a retry after scope disposal", async () => {
+    vi.useFakeTimers();
+    const verify = vi.fn().mockResolvedValue({ status: "pending" });
+    const { hook, scope } = mount(() =>
+      usePaymentFetch(vi.fn().mockResolvedValue(paid()), {
+        verify,
+        verifyRetry: { attempts: 3, delayMs: 10 },
+      }),
+    );
+    await hook.payFetch(URL_);
+    scope.stop();
+    await vi.advanceTimersByTimeAsync(20);
+    expect(verify).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
 });

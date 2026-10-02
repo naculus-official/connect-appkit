@@ -138,6 +138,9 @@
   type TxStatus
   type TxStatusEntry
   useAccount
+  useAuthorizations
+  type UseAuthorizationsOptions
+  type UseAuthorizationsReturn
   useBalance
   useCapabilities
   type UseCapabilitiesReturn
@@ -187,6 +190,7 @@
   usePassphraseGate
   type UsePassphraseGateReturn
   usePaymentFetch
+  type UsePaymentFetchOptions
   type UsePaymentFetchReturn
   useResolveName
   type UseResolveNameOptions
