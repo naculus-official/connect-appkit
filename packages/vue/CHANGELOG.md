@@ -213,7 +213,7 @@
 - 1fff014: Add Vue `useTokenList` and `useTokenSearch` composables over connect-core's
   `TokenListManager`, with CAIP-2 chain filtering and debounced search.
 - 2790e75: Add Vue `useValidateDestination`, returning the shared core's verdict with a
-  machine-readable `issue` for the caller to localise.
+  machine-readable `issue` for the caller to localize.
 - Updated dependencies [8ce3204]
 - Updated dependencies [46e710d]
 - Updated dependencies [4b0024a]

@@ -174,7 +174,7 @@ export function PassphraseDialogView({
         {isCreate && !tooShort && value.length > 0 && value.length < SHORT_LENGTH && (
           <p className="text-xs text-muted-foreground">
             {/* Factual, and the advice that actually helps. No strength meter:
-                a colour computed from character classes rates "P@ssw0rd!"
+                a color computed from character classes rates "P@ssw0rd!"
                 above four ordinary words, which is backwards. */}
             Short. Several ordinary words are far harder to guess than a short
             one with symbols in it.

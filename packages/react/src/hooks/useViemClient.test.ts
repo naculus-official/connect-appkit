@@ -172,7 +172,7 @@ describe("useViemClient — non-EVM chains", () => {
 });
 
 describe("useViemClient — stability", () => {
-  // The chain descriptor is rebuilt on every call, so an unmemoised one
+  // The chain descriptor is rebuilt on every call, so an unmemoized one
   // changes identity each render and drives the client effects into a loop
   // that never settles. The clients holding still is the observable form of
   // that not happening.

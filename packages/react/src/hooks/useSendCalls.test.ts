@@ -21,7 +21,7 @@ import { useSendCalls } from "./useSendCalls";
  * EIP-5792 batch calls, previously 0% covered.
  *
  * The refusals are the point: sending a batch with no session, with an empty
- * call list, or through an uninitialised client must fail before anything
+ * call list, or through an uninitialized client must fail before anything
  * reaches the wallet, and the hook's status has to end up somewhere a UI can
  * act on rather than staying "awaiting_approval" forever.
  */
@@ -93,7 +93,7 @@ describe("useSendCalls", () => {
     expect(result.current.status).toBe("failed");
   });
 
-  it("refuses when the client is not initialised", async () => {
+  it("refuses when the client is not initialized", async () => {
     mockUseWeb3.mockReturnValue({ session, chainId: "eip155:1", client: null });
     mockResolveClient.mockReturnValue(null);
     const { result } = renderHook(() => useSendCalls());

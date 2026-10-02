@@ -9,7 +9,7 @@ import { useEIP6963 } from "./useEIP6963";
 /**
  * EIP-6963 discovery is the entry point of every browser-extension
  * connection, and it had no coverage because this package carried no React
- * test setup at all. The behaviours worth pinning are the ones a user
+ * test setup at all. The behaviors worth pinning are the ones a user
  * notices: a wallet that announces twice must appear once, a malformed
  * announcement must not create a blank entry, and detection has to finish so
  * the UI can stop showing a spinner.

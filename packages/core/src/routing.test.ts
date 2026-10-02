@@ -74,7 +74,7 @@ describe("routing decisions", () => {
     ).toBeNull();
   });
 
-  it("normalises executor failures", () => {
+  it("normalizes executor failures", () => {
     expect(toExecuteRouteError(new Error("boom"))).toEqual({
       code: "execution_failed",
       message: "boom",

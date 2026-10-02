@@ -133,7 +133,7 @@ describe("useNameLookup — resolver selection", () => {
   });
 });
 
-describe("useNameLookup — behaviour", () => {
+describe("useNameLookup — behavior", () => {
   it("trims the input before querying", async () => {
     const query = vi.fn().mockResolvedValue("x");
     setup(query, { input: "  vitalik.eth  " });

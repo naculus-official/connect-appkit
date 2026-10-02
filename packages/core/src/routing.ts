@@ -174,7 +174,7 @@ export function validateRouteRecipient(
   return null;
 }
 
-/** Normalise whatever an executor threw into the hook's error shape. */
+/** Normalize whatever an executor threw into the hook's error shape. */
 export function toExecuteRouteError(cause: unknown): ExecuteRouteError {
   const error = cause as {
     code?: string;

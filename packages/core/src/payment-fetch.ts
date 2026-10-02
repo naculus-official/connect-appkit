@@ -5,7 +5,7 @@
  * `@naculus/payments-x402` or `createMppFetch` from `@naculus/payments-mpp`,
  * with the session key and limits it chooses — and the hooks only track its
  * state. So appkit takes no dependency on either package: their results are
- * read here by shape, and a shape this does not recognise is reported as
+ * read here by shape, and a shape this does not recognize is reported as
  * `protocol: "unknown"` rather than guessed at.
  */
 

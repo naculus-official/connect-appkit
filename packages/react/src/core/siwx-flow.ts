@@ -8,7 +8,7 @@
  * of what happened and lets the binding decide what to do about it.
  *
  * Keeping the decision here means Vue, Svelte and native bindings get the same
- * authentication behaviour instead of each re-deriving it.
+ * authentication behavior instead of each re-deriving it.
  */
 import { logger } from "@naculus/connect-core";
 import type { UniversalWalletSession } from "@naculus/connect-core";

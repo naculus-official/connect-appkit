@@ -155,7 +155,7 @@ describe("useExecuteRoute (Vue)", () => {
     expect(await first).toEqual({ fromTxHash: "0x1" });
   });
 
-  it("normalises executor failures and reports a missing executor", async () => {
+  it("normalizes executor failures and reports a missing executor", async () => {
     const executor = vi.fn(async () => {
       throw Object.assign(new Error("slow"), { code: "timeout" });
     });

@@ -132,7 +132,7 @@ describe("describePayment", () => {
     });
   });
 
-  it("reports an unrecognised shape as unknown rather than guessing", () => {
+  it("reports an unrecognized shape as unknown rather than guessing", () => {
     expect(describePayment(URL_, result({ paid: { amount: "5" } }))).toEqual({
       protocol: "unknown",
       resource: URL_,

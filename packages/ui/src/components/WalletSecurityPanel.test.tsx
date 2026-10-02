@@ -97,7 +97,7 @@ describe("WalletSecurityPanel", () => {
     ).toBeNull()
   })
 
-  it("summarises the backend and encryption state", () => {
+  it("summarizes the backend and encryption state", () => {
     state.value = {
       securityReport: {
         ...BEST_CASE,

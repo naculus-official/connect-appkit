@@ -74,7 +74,7 @@ export function useTokenBalance(options: UseTokenBalanceOptions) {
   );
   // Null for a non-EVM chain, and a viem client must not be built for one.
   const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
-  // Memoised: `toViemChain` builds a fresh object per call, and an unmemoised
+  // Memoized: `toViemChain` builds a fresh object per call, and an unmemoized
   // one would change identity every render — which drives the client effects
   // below into a loop that never settles.
   const viemChain = useMemo(

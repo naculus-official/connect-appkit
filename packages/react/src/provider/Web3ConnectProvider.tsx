@@ -113,7 +113,7 @@ export function Web3ConnectProvider({
 
   const sessionManagerRef = useRef<SessionManager | null>(null);
   // EIP-1193 chain events and an imperative switch can arrive in the same
-  // tick. Keep the external synchronisation promise visible to switchChain so
+  // tick. Keep the external synchronization promise visible to switchChain so
   // it cannot observe the old SessionManager chain and incorrectly no-op.
   const pendingExternalChainSyncRef = useRef<Promise<void> | null>(null);
 

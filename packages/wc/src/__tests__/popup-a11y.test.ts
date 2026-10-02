@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
-// Keyboard and ARIA behaviour of appkit-dropdown-menu (WAI-ARIA Menu Button)
+// Keyboard and ARIA behavior of appkit-dropdown-menu (WAI-ARIA Menu Button)
 // and appkit-popover (disclosure of a dialog), against the built custom
 // elements. Run `pnpm --filter @naculus/connect-appkit-wc build` first.
 

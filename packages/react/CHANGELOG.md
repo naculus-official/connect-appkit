@@ -146,7 +146,7 @@
 - a5c0f58: Move the signed off-chain delegation-policy flow into
   `@naculus/connect-appkit-core` (`createDelegationPolicyFlow`,
   `buildDelegationPolicyMessage`, `sameExecutionIntent`, the policy/adapter
-  types). The React `useDelegationPolicy` keeps every export and behaviour and
+  types). The React `useDelegationPolicy` keeps every export and behavior and
   now only wires React state and provider hooks to the shared flow.
 - 622a46f: Use shared ERC-20 calldata encoding for transfer, approval, and transfer previews. Transfer simulation now rejects malformed recipients and amounts with excess precision instead of previewing a different transaction than the send path, and hides stale results when inputs become invalid.
 - 531cbc2: Fail closed in three places found in review. `sameExecutionIntent` no longer
@@ -170,7 +170,7 @@
 - 36f2ccc: Move ERC-4337 receipt validation and the `eth_getUserOperationReceipt` call
   into `@naculus/connect-appkit-core` (`parseUserOperationReceipt`,
   `fetchUserOperationReceipt`, `InvalidUserOperationReceiptError`). React
-  `useUserOpStatus` keeps its behaviour and delegates to them.
+  `useUserOpStatus` keeps its behavior and delegates to them.
 - a8ebb69: Share simulation chain and RPC decisions between React and Vue, and add Vue `useSimulateTransfer` and `useTransactionSimulation` composables. Simulation remains a basic revert check with no asset-change or risk coverage. Simulation now rejects a chain override that would reuse another chain's RPC or client; pass a matching RPC URL when overriding the chain.
 - Updated dependencies [a5c0f58]
 - Updated dependencies [11a4fd8]
@@ -197,7 +197,7 @@
   `@naculus/connect-appkit-core`: `RouteQuote`, `CostComparison`,
   `ExecutableQuote` and friends, plus `isQuotableInput`, `compareCostsKey`,
   `validateRouteRecipient` and `toExecuteRouteError`. The React `useRouteQuote`,
-  `useCompareCosts` and `useExecuteRoute` keep their exported names and behaviour
+  `useCompareCosts` and `useExecuteRoute` keep their exported names and behavior
   and delegate to them.
 - e4b85d9: Move notification settings persistence and in-app notification actions into
   framework-neutral AppKit core while preserving the React hook behavior, and
@@ -485,7 +485,7 @@
   authenticator cannot answer it returns null and the record stays
   passphrase-only, so wiring it without asking cannot break anything.
   
-  There is no strength meter. A colour computed from character classes rates
+  There is no strength meter. A color computed from character classes rates
   `P@ssw0rd!` above four ordinary words, which is backwards; the dialog enforces
   the NIST SP 800-63B minimum of 8 and says that length beats symbols.
 - 961d3c9: Add a signed, persistent off-chain delegation-policy lifecycle that combines
@@ -522,7 +522,7 @@
   
   `useExecuteRoute` executes cross-chain transfers:
   
-  - It held a `mountedRef` initialised to `true` that nothing ever set to `false`, so every `if (mountedRef.current)` guard was dead code and the hook wrote state after unmount regardless. The unmount effect is now present.
+  - It held a `mountedRef` initialized to `true` that nothing ever set to `false`, so every `if (mountedRef.current)` guard was dead code and the hook wrote state after unmount regardless. The unmount effect is now present.
   - There was no concurrency guard, so a double-pressed button submitted the same route twice. It now refuses with `execution_in_progress`, matching `useSendUserOperation`. `reset()` deliberately does not release the guard: a request already handed to the executor is still outstanding.
   - `execute` returned `Promise<void>`, so a caller awaiting it could not tell whether the funds moved — `result` belongs to a later render. It now resolves with the result, or `null` on failure. Existing callers ignoring the value are unaffected.
   - Failing with no executor left the previous run's transaction hash in `result`, which reads as though something was sent. It is now cleared.

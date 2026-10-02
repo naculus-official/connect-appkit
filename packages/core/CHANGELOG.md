@@ -97,7 +97,7 @@
 - a5c0f58: Move the signed off-chain delegation-policy flow into
   `@naculus/connect-appkit-core` (`createDelegationPolicyFlow`,
   `buildDelegationPolicyMessage`, `sameExecutionIntent`, the policy/adapter
-  types). The React `useDelegationPolicy` keeps every export and behaviour and
+  types). The React `useDelegationPolicy` keeps every export and behavior and
   now only wires React state and provider hooks to the shared flow.
 - 11a4fd8: Expose strict ERC-20 transfer, approve, and transferFrom calldata encoders for shared React/Vue use. Encoding rejects invalid EVM address casing and out-of-range uint256 amounts.
 - 531cbc2: Fail closed in three places found in review. `sameExecutionIntent` no longer
@@ -122,7 +122,7 @@
 - 36f2ccc: Move ERC-4337 receipt validation and the `eth_getUserOperationReceipt` call
   into `@naculus/connect-appkit-core` (`parseUserOperationReceipt`,
   `fetchUserOperationReceipt`, `InvalidUserOperationReceiptError`). React
-  `useUserOpStatus` keeps its behaviour and delegates to them.
+  `useUserOpStatus` keeps its behavior and delegates to them.
 - a8ebb69: Share simulation chain and RPC decisions between React and Vue, and add Vue `useSimulateTransfer` and `useTransactionSimulation` composables. Simulation remains a basic revert check with no asset-change or risk coverage. Simulation now rejects a chain override that would reuse another chain's RPC or client; pass a matching RPC URL when overriding the chain.
 
 ## 0.2.5
@@ -138,7 +138,7 @@
   `@naculus/connect-appkit-core`: `RouteQuote`, `CostComparison`,
   `ExecutableQuote` and friends, plus `isQuotableInput`, `compareCostsKey`,
   `validateRouteRecipient` and `toExecuteRouteError`. The React `useRouteQuote`,
-  `useCompareCosts` and `useExecuteRoute` keep their exported names and behaviour
+  `useCompareCosts` and `useExecuteRoute` keep their exported names and behavior
   and delegate to them.
 - e4b85d9: Move notification settings persistence and in-app notification actions into
   framework-neutral AppKit core while preserving the React hook behavior, and

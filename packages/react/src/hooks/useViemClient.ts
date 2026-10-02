@@ -17,7 +17,7 @@ export function useViemClient(): {
   // client built with a stand-in number would address a real chain that is
   // not the one connected.
   const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
-  // Memoised: `toViemChain` builds a fresh object per call, and an unmemoised
+  // Memoized: `toViemChain` builds a fresh object per call, and an unmemoized
   // one would change identity every render — which drives the client effects
   // below into a loop that never settles.
   const viemChain = useMemo(

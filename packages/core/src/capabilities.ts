@@ -1,5 +1,5 @@
 /**
- * EIP-5792 capability answers, normalised once.
+ * EIP-5792 capability answers, normalized once.
  *
  * Deciding how to execute before sending is the whole point of
  * `wallet_getCapabilities`, and the reasoning that turns a raw answer into
@@ -64,7 +64,7 @@ export function normalizeCapabilities(
 /**
  * Find the entry for a chain, by CAIP-2 or by the hex form.
  *
- * Connectors normalise keys to CAIP-2, but a wallet answering in raw hex
+ * Connectors normalize keys to CAIP-2, but a wallet answering in raw hex
  * through a custom connector should still be found rather than reported as
  * "unknown" next to an entry that is sitting right there.
  */

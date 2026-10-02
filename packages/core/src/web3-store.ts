@@ -64,7 +64,7 @@ export async function withRetry<T>(
   throw lastError;
 }
 
-// ── CAIP normalisation ─────────────────────────────────────────────────
+// ── CAIP normalization ─────────────────────────────────────────────────
 
 /**
  * Convert EIP-1193 chainChanged values into the CAIP-2 form used by sessions.

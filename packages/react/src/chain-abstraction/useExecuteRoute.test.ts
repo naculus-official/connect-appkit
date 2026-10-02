@@ -169,7 +169,7 @@ describe("useExecuteRoute", () => {
   });
 
   it("stops writing state after unmount", async () => {
-    // mountedRef was initialised true and never cleared, so every guard on it
+    // mountedRef was initialized true and never cleared, so every guard on it
     // was dead code.
     let release!: (value: typeof result) => void;
     const execute = vi.fn(
@@ -283,7 +283,7 @@ describe("useExecuteRoute — recipient", () => {
   });
 
   it("does not judge a recipient when the quote names no destination", async () => {
-    // Current behaviour preserved: with nothing to validate against, the
+    // Current behavior preserved: with nothing to validate against, the
     // executor decides.
     const { execute } = await run(quote, "definitely-not-an-address");
     expect(execute).toHaveBeenCalled();

@@ -1,7 +1,7 @@
 /**
  * useExecuteRoute — execute a quoted cross-chain route once.
  *
- * Types, the recipient check and error normalisation live in
+ * Types, the recipient check and error normalization live in
  * `@naculus/connect-appkit-core` (`routing`), shared with the Vue composable.
  */
 

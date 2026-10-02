@@ -294,7 +294,7 @@
   authenticator cannot answer it returns null and the record stays
   passphrase-only, so wiring it without asking cannot break anything.
   
-  There is no strength meter. A colour computed from character classes rates
+  There is no strength meter. A color computed from character classes rates
   `P@ssw0rd!` above four ordinary words, which is backwards; the dialog enforces
   the NIST SP 800-63B minimum of 8 and says that length beats symbols.
 - c5ca02f: A Vue binding for the passphrase gate, and stories for the wallet components.

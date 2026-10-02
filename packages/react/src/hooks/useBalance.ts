@@ -54,7 +54,7 @@ export function useBalance(options?: UseBalanceOptions): UseBalanceResult {
     [chainId, chains],
   );
   const evmChainNumber = currentChain ? chainNumber(currentChain) : null;
-  // Memoised: `toViemChain` builds a fresh object per call, and an unmemoised
+  // Memoized: `toViemChain` builds a fresh object per call, and an unmemoized
   // one would change identity every render — which drives the client effects
   // below into a loop that never settles.
   const viemChain = useMemo(

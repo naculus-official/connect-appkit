@@ -37,7 +37,7 @@ export interface UseCapabilitiesReturn {
  * sending a batch and learning the answer from a rejection.
  *
  * Identical in substance to the React hook, because every decision in it —
- * normalising the raw answer, the CAIP-2/hex lookup, and `"unknown"` meaning
+ * normalizing the raw answer, the CAIP-2/hex lookup, and `"unknown"` meaning
  * "not told" rather than "no" — is in `@naculus/connect-appkit-core` and
  * neither binding gets to disagree about it.
  *
