@@ -7,5 +7,6 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: [/^@naculus\//],
+  // react comes with @naculus/connect-appkit-react (a peer); never bundle it.
+  external: [/^@naculus\//, "react", /^react\//],
 });

@@ -112,6 +112,9 @@ importers:
         specifier: '*'
         version: 0.87.1(@babel/core@7.29.7)(@types/react@19.3.0)(react@19.3.0)
     devDependencies:
+      '@naculus/connect-appkit-core':
+        specifier: workspace:*
+        version: link:../core
       '@naculus/connect-appkit-react':
         specifier: workspace:*
         version: link:../react

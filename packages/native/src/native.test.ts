@@ -24,6 +24,12 @@ import {
   wireFromKitTransaction,
 } from "./index";
 
+// The index also exports the payment components, which import React Native;
+// it cannot load under Node. Nothing in this file renders them.
+vi.mock("react-native", () => ({
+  StyleSheet: { create: <T>(styles: T) => styles },
+}));
+
 function fakeAsyncStorage() {
   const data = new Map<string, string>();
   return {

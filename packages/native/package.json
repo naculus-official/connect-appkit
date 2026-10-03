@@ -22,6 +22,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@naculus/connect-appkit-core": "^0.8.0",
     "@naculus/connect-core": "^0.8.0",
     "@naculus/connect-appkit-react": "^0.8.0",
     "@naculus/wallet-engine": "^0.8.0",
@@ -37,7 +38,8 @@
     "@naculus/wallet-engine": "^0.8.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
-    "@naculus/connect-appkit-react": "workspace:*"
+    "@naculus/connect-appkit-react": "workspace:*",
+    "@naculus/connect-appkit-core": "workspace:*"
   },
   "publishConfig": {
     "access": "public",
