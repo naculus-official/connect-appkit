@@ -21,6 +21,7 @@ import { Address, tone } from "./payment-ui";
 export interface AuthorizationConsentProps {
   authorization: Authorization | ListedAuthorization | AuthorizationDescription;
   assets?: Record<string, AuthorizationAssetMetadata>;
+  trustedAssets?: readonly string[];
   locale?: string;
   /** Unix timestamp in seconds, for a stable relative expiry. */
   now?: number;
@@ -41,6 +42,7 @@ function isDescription(
 export function AuthorizationConsent({
   authorization,
   assets = {},
+  trustedAssets,
   locale,
   now,
   requester,
@@ -52,7 +54,12 @@ export function AuthorizationConsent({
 }: AuthorizationConsentProps) {
   const description = isDescription(authorization)
     ? authorization
-    : describeAuthorization(authorization, { assets, locale, now });
+    : describeAuthorization(authorization, {
+        assets,
+        trustedAssets,
+        locale,
+        now,
+      });
   const registry = useComponentRegistry();
   const Button =
     (registry.Button as RegistryButton | undefined) ?? NativeButton;
@@ -141,6 +148,15 @@ export function AuthorizationConsent({
             <h3 className="break-all text-sm font-semibold">
               {grant.assetLabel}
             </h3>
+            {grant.assetTrust === "unverified" && (
+              <div
+                role="alert"
+                className="mt-3 flex gap-2 rounded-lg border border-amber-700 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100"
+              >
+                <AlertTriangle aria-hidden className="shrink-0" size={18} />
+                <strong>Unverified token — not on the trusted list</strong>
+              </div>
+            )}
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-muted-foreground">Per payment</p>
@@ -205,7 +221,10 @@ export function AuthorizationConsent({
           {description.expiry.absolute}
         </time>
       </div>
-      <div data-payment-actions className="naculus-sticky-actions sticky bottom-0 z-10 -mx-1 grid min-h-14 grid-cols-2 gap-3 border-t border-border bg-background px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3">
+      <div
+        data-payment-actions
+        className="naculus-sticky-actions sticky bottom-0 z-10 -mx-1 grid min-h-14 grid-cols-2 gap-3 border-t border-border bg-background px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3"
+      >
         <Button variant="outline" onClick={onDecline}>
           Decline
         </Button>

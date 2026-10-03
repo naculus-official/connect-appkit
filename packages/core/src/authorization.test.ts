@@ -47,6 +47,50 @@ function request(over: Partial<SpendRequest> = {}): SpendRequest {
 }
 
 describe("describeAuthorization", () => {
+  it("classifies trusted assets canonically and hides unverified metadata", () => {
+    const metadata = { [ASSET]: { symbol: "USDC", decimals: 6 } };
+    const unchecked = describeAuthorization(authorization(), {
+      assets: metadata,
+    });
+    expect(unchecked.grants[0]).toMatchObject({
+      assetTrust: "unchecked",
+      assetLabel: "USDC",
+      perPayment: { formatted: "2 USDC" },
+    });
+
+    const trusted = describeAuthorization(authorization(), {
+      assets: metadata,
+      trustedAssets: [ASSET.toLowerCase()],
+    });
+    expect(trusted.grants[0]).toMatchObject({
+      assetTrust: "trusted",
+      assetLabel: "USDC",
+      perPayment: { formatted: "2 USDC" },
+    });
+
+    const unverified = describeAuthorization(authorization(), {
+      assets: metadata,
+      trustedAssets: [],
+    });
+    expect(unverified.grants[0]).toMatchObject({
+      assetTrust: "unverified",
+      assetLabel: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      perPayment: { formatted: "2,000,000 base units" },
+      total: { formatted: "10,000,000 base units" },
+    });
+    expect(JSON.stringify(unverified)).not.toContain("USDC");
+  });
+
+  it("keeps Solana asset references case-sensitive", () => {
+    const asset =
+      "solana:mainnet/slip44:So11111111111111111111111111111111111111112";
+    const grant = { ...authorization().grants[0], asset };
+    const view = describeAuthorization(authorization({ grants: [grant] }), {
+      trustedAssets: [asset.replace("So111", "so111")],
+    });
+    expect(view.grants[0].assetTrust).toBe("unverified");
+  });
+
   it("formats known metadata and never guesses unknown asset metadata", () => {
     const known = describeAuthorization(authorization(), {
       assets: { [ASSET]: { symbol: "USDC", decimals: 6 } },
@@ -180,6 +224,46 @@ describe("describeAuthorization", () => {
       );
     },
   );
+});
+
+describe("formatAuthorizationAmount on Hermes", () => {
+  it("groups digits without relying on BigInt.prototype.toLocaleString", () => {
+    // Hermes (React Native) ignores the locale for BigInt: "2000000".
+    const original = BigInt.prototype.toLocaleString;
+    BigInt.prototype.toLocaleString = function (this: bigint) {
+      return this.toString();
+    };
+    try {
+      expect(formatAuthorizationAmount(2_000_000n, undefined).formatted).toBe(
+        "2,000,000 base units",
+      );
+      expect(
+        formatAuthorizationAmount(1_234_567_890_000_000n, {
+          symbol: "USDC",
+          decimals: 6,
+        }).formatted,
+      ).toBe("1,234,567,890 USDC");
+    } finally {
+      BigInt.prototype.toLocaleString = original;
+    }
+  });
+});
+
+describe("explainSpend with trusted assets", () => {
+  it("never shows a caller-supplied symbol for an unverified asset", () => {
+    const hostile = { [ASSET]: { symbol: "USDC", decimals: 6 } };
+    const unverified = explainSpend(authorization(), request(), {
+      assets: hostile,
+      trustedAssets: [],
+    });
+    expect(unverified.sentence).not.toContain("USDC");
+    expect(unverified.sentence).toContain("base units");
+    const trusted = explainSpend(authorization(), request(), {
+      assets: hostile,
+      trustedAssets: [ASSET],
+    });
+    expect(trusted.sentence).toContain("USDC");
+  });
 });
 
 describe("explainSpend", () => {

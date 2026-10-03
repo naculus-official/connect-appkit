@@ -225,6 +225,33 @@ describe("AuthorizationConsentNative", () => {
     expect(screen.queryByRole("button", { name: /dismiss|close/i })).toBeNull();
   });
 
+  it("warns only for unverified assets and hides hostile metadata", () => {
+    const { rerender } = consent({ trustedAssets: [] });
+    expect(
+      screen.getByText("Unverified token — not on the trusted list"),
+    ).toBeDefined();
+    expect(
+      screen.getByText("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+    ).toBeDefined();
+    expect(screen.getByText("2,000,000 base units")).toBeDefined();
+    expect(screen.queryByText(/USDC/)).toBeNull();
+
+    rerender(
+      <AuthorizationConsentNative
+        authorization={authorization}
+        assets={assets}
+        trustedAssets={[USDC.toLowerCase()]}
+        requester={{ name: "SenderPay" }}
+        onApprove={() => {}}
+        onDecline={() => {}}
+      />,
+    );
+    expect(
+      screen.queryByText("Unverified token — not on the trusted list"),
+    ).toBeNull();
+    expect(screen.getByText("2 USDC")).toBeDefined();
+  });
+
   it("shows the Allowed / Blocked preview from explainSpend", () => {
     const request = {
       asset: USDC,
@@ -310,6 +337,33 @@ describe("AuthorizationListNative", () => {
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe(
       "40",
     );
+  });
+
+  it("warns only for unverified assets and formats their spend in base units", () => {
+    const props = {
+      entries: [listed()],
+      assets,
+      onRevoke: () => ({ onChainRevocationRequired: false as const }),
+    };
+    const { rerender } = render(
+      <AuthorizationListNative {...props} trustedAssets={[]} />,
+    );
+    expect(
+      screen.getByText("Unverified token — not on the trusted list"),
+    ).toBeDefined();
+    expect(screen.getByText("Spent 4,000,000 base units")).toBeDefined();
+    expect(screen.queryByText(/USDC/)).toBeNull();
+
+    rerender(
+      <AuthorizationListNative
+        {...props}
+        trustedAssets={[USDC.toLowerCase()]}
+      />,
+    );
+    expect(
+      screen.queryByText("Unverified token — not on the trusted list"),
+    ).toBeNull();
+    expect(screen.getByText("Spent 4 USDC")).toBeDefined();
   });
 
   it("never invents spend when the entry has none", () => {

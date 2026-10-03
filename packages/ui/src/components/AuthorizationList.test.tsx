@@ -71,6 +71,26 @@ describe("AuthorizationList", () => {
     expect(screen.getByText("Total 1 USDC")).toBeDefined();
     expect(screen.getByText("EVM session key")).toBeDefined();
   });
+  it("warns only for unverified assets and formats their spend in base units", () => {
+    const props = {
+      entries: [entry],
+      assets: { asset: { symbol: "USDC", decimals: 1 } },
+      onRevoke: () => ({ onChainRevocationRequired: false as const }),
+    };
+    const { rerender } = render(
+      <AuthorizationList {...props} trustedAssets={[]} />,
+    );
+    expect(
+      screen.getByText("Unverified token — not on the trusted list"),
+    ).toBeDefined();
+    expect(screen.getByText("Spent 4 base units")).toBeDefined();
+    expect(screen.queryByText(/USDC/)).toBeNull();
+
+    rerender(<AuthorizationList {...props} />);
+    expect(
+      screen.queryByText("Unverified token — not on the trusted list"),
+    ).toBeNull();
+  });
   it("labels inactive expiry by status and keeps the ISO timestamp", () => {
     render(
       <AuthorizationList

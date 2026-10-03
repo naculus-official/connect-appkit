@@ -15,6 +15,7 @@ export interface AuthorizationAssetMetadata {
 
 export interface DescribeAuthorizationOptions {
   assets?: Record<AssetId, AuthorizationAssetMetadata>;
+  trustedAssets?: readonly string[];
   locale?: string;
   /** Unix timestamp in seconds. */
   now?: number;
@@ -31,6 +32,7 @@ export interface AuthorizationAmountView {
 
 export interface AuthorizationGrantView {
   asset: AssetId;
+  assetTrust: "trusted" | "unverified" | "unchecked";
   assetLabel: string;
   recipients: AuthorizationRecipientView[];
   perPayment: AuthorizationAmountView;
@@ -53,12 +55,9 @@ export interface AuthorizationDescription {
   warnings: string[];
 }
 
-function assetAddress(asset: string): string {
-  return asset.split(/[:/]/).at(-1)!;
-}
-
-// Linear-time helpers: regular expressions over caller-supplied digit strings
-// (lookahead grouping, /0+$/) can take quadratic time on long inputs.
+// Grouping by hand, not toLocaleString: Hermes (React Native) ignores the
+// locale for BigInt and prints "2000000". Linear-time, no regular expression
+// over caller-supplied digits.
 function groupDigits(value: string): string {
   let out = "";
   for (let i = 0; i < value.length; i++)
@@ -66,10 +65,26 @@ function groupDigits(value: string): string {
   return out;
 }
 
-function trimTrailingZeros(value: string): string {
-  let end = value.length;
-  while (value[end - 1] === "0") end--;
-  return value.slice(0, end);
+/** Metadata for an asset, or none when a trusted list is given and the asset is not on it. */
+function trustedMetadata(
+  asset: string,
+  options: DescribeAuthorizationOptions,
+): [AuthorizationGrantView["assetTrust"], AuthorizationAssetMetadata?] {
+  const trust = !options.trustedAssets
+    ? "unchecked"
+    : options.trustedAssets.some(
+          (t) => canonicalAssetId(t) === canonicalAssetId(asset),
+        )
+      ? "trusted"
+      : "unverified";
+  return [trust, trust === "unverified" ? undefined : options.assets?.[asset]];
+}
+
+function canonicalAssetId(asset: string): string {
+  return asset.replace(
+    /^(eip155:[^/]+\/erc20:)(.+)$/,
+    (_, prefix: string, reference: string) => prefix + reference.toLowerCase(),
+  );
 }
 
 export function formatAuthorizationAmount(
@@ -78,8 +93,7 @@ export function formatAuthorizationAmount(
 ): AuthorizationAmountView {
   const baseUnits = amount.toString();
   if (
-    !metadata ||
-    !metadata.symbol ||
+    !metadata?.symbol ||
     !Number.isSafeInteger(metadata.decimals) ||
     metadata.decimals < 0 ||
     metadata.decimals > 255 // ERC-20 decimals are a uint8
@@ -90,11 +104,12 @@ export function formatAuthorizationAmount(
   }
   const decimals = metadata.decimals;
   const padded = baseUnits.padStart(decimals + 1, "0");
-  const integer = decimals === 0 ? padded : padded.slice(0, -decimals);
-  const fraction =
-    decimals === 0 ? "" : trimTrailingZeros(padded.slice(-decimals));
-  const value = `${groupDigits(integer)}${fraction ? `.${fraction}` : ""}`;
-  return { formatted: `${value} ${metadata.symbol}` };
+  const integer = padded.slice(0, decimals ? -decimals : undefined);
+  let fraction = decimals ? padded.slice(-decimals) : "";
+  while (fraction.endsWith("0")) fraction = fraction.slice(0, -1);
+  return {
+    formatted: `${groupDigits(integer)}${fraction ? `.${fraction}` : ""} ${metadata.symbol}`,
+  };
 }
 
 function relativeExpiry(
@@ -104,30 +119,18 @@ function relativeExpiry(
 ): string {
   const seconds = expiresAt - now;
   const absolute = Math.abs(seconds);
-  const divisor =
+  const [divisor, unit]: [number, Intl.RelativeTimeFormatUnit] =
     absolute >= 31_536_000
-      ? 31_536_000
+      ? [31_536_000, "year"]
       : absolute >= 2_592_000
-        ? 2_592_000
+        ? [2_592_000, "month"]
         : absolute >= 86_400
-          ? 86_400
+          ? [86_400, "day"]
           : absolute >= 3_600
-            ? 3_600
+            ? [3_600, "hour"]
             : absolute >= 60
-              ? 60
-              : 1;
-  const unit =
-    divisor === 31_536_000
-      ? "year"
-      : divisor === 2_592_000
-        ? "month"
-        : divisor === 86_400
-          ? "day"
-          : divisor === 3_600
-            ? "hour"
-            : divisor === 60
-              ? "minute"
-              : "second";
+              ? [60, "minute"]
+              : [1, "second"];
   const value = Math.round(seconds / divisor);
   // Hermes (React Native) ships no Intl.RelativeTimeFormat; fall back to
   // the English form RelativeTimeFormat produces for "en".
@@ -152,10 +155,11 @@ export function describeAuthorization(
     label,
     principal: input.principal ?? null,
     grants: input.grants.map((grant) => {
-      const metadata = options.assets?.[grant.asset];
+      const [assetTrust, metadata] = trustedMetadata(grant.asset, options);
       return {
         asset: grant.asset,
-        assetLabel: metadata?.symbol || assetAddress(grant.asset),
+        assetTrust,
+        assetLabel: metadata?.symbol || grant.asset.split(":").at(-1)!,
         recipients: grant.recipients.map((full) => ({
           shortened:
             full.length <= 14 ? full : `${full.slice(0, 6)}…${full.slice(-6)}`,
@@ -229,9 +233,11 @@ export function explainSpend(
     authorization.grants[verdict.grant].maxTotal -
     request.spentSoFar -
     request.amount;
+  // Same trust rule as describeAuthorization: an unverified asset never gets
+  // a caller-supplied symbol, here either.
   const remainingTotalFormatted = formatAuthorizationAmount(
     remainingTotal,
-    options.assets?.[authorization.grants[verdict.grant].asset],
+    trustedMetadata(authorization.grants[verdict.grant].asset, options)[1],
   );
   return {
     allowed: true,

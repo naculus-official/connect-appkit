@@ -115,4 +115,36 @@ describe("AuthorizationConsent", () => {
     expect(screen.getByText("May 18, 2033, 03:33 UTC")).toBeDefined();
     expect(screen.queryByRole("button", { name: /dismiss/i })).toBeNull();
   });
+
+  it("warns only for unverified assets and hides hostile metadata", () => {
+    const props = {
+      authorization,
+      assets: {
+        "eip155:8453/erc20:0xtoken": { symbol: "USDC", decimals: 6 },
+      },
+      requester: { name: "SenderPay" },
+      onApprove: () => {},
+      onDecline: () => {},
+    };
+    const { rerender } = render(
+      <AuthorizationConsent {...props} trustedAssets={[]} />,
+    );
+    expect(
+      screen.getByText("Unverified token — not on the trusted list"),
+    ).toBeDefined();
+    expect(screen.getByText("0xtoken")).toBeDefined();
+    expect(screen.getByText("2,000,000 base units")).toBeDefined();
+    expect(screen.queryByText(/USDC/)).toBeNull();
+
+    rerender(
+      <AuthorizationConsent
+        {...props}
+        trustedAssets={["eip155:8453/erc20:0xTOKEN"]}
+      />,
+    );
+    expect(
+      screen.queryByText("Unverified token — not on the trusted list"),
+    ).toBeNull();
+    expect(screen.getByText("2 USDC")).toBeDefined();
+  });
 });

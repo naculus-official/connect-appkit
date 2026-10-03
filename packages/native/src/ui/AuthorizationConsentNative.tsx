@@ -20,6 +20,7 @@ export interface AuthorizationConsentNativeProps {
   /** A raw authorization, or a description already built by the caller. */
   authorization: Authorization | ListedAuthorization | AuthorizationDescription;
   assets?: Record<string, AuthorizationAssetMetadata>;
+  trustedAssets?: readonly string[];
   /** `explainSpend` result for the payment that triggered this consent. */
   preview?: SpendExplanation;
   onApprove: () => void;
@@ -39,6 +40,7 @@ export interface AuthorizationConsentNativeProps {
 export function AuthorizationConsentNative({
   authorization,
   assets = {},
+  trustedAssets,
   locale,
   now,
   requester,
@@ -53,7 +55,12 @@ export function AuthorizationConsentNative({
   const description =
     "expiry" in authorization
       ? authorization
-      : describeAuthorization(authorization, { assets, locale, now });
+      : describeAuthorization(authorization, {
+          assets,
+          trustedAssets,
+          locale,
+          now,
+        });
   const muted = { color: theme.mutedForeground };
 
   return (
@@ -125,6 +132,13 @@ export function AuthorizationConsentNative({
             <Text style={[styles.assetLabel, { color: theme.foreground }]}>
               {grant.assetLabel}
             </Text>
+            {grant.assetTrust === "unverified" && (
+              <Callout tone="warning" glyph="⚠" role="alert" theme={theme}>
+                <Text style={styles.strong}>
+                  Unverified token — not on the trusted list
+                </Text>
+              </Callout>
+            )}
             <View style={styles.limits}>
               <View style={styles.limit}>
                 <Text style={[shared.label, muted]}>Per payment</Text>

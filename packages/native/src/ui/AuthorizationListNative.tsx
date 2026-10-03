@@ -23,6 +23,7 @@ import { type NativePaymentTheme, useNativePaymentTheme } from "./theme";
 export interface AuthorizationListNativeProps {
   entries: ListedAuthorization[] | { entries: ListedAuthorization[] };
   assets?: Record<string, AuthorizationAssetMetadata>;
+  trustedAssets?: readonly string[];
   onRevoke: (
     entry: ListedAuthorization,
   ) =>
@@ -98,6 +99,7 @@ function StatusBadge({
 export function AuthorizationListNative({
   entries: input,
   assets = {},
+  trustedAssets,
   onRevoke,
   revokingId,
   locale,
@@ -118,7 +120,11 @@ export function AuthorizationListNative({
     });
 
   const renderItem = ({ item: entry }: { item: ListedAuthorization }) => {
-    const view = describeAuthorization(entry, { assets, locale });
+    const view = describeAuthorization(entry, {
+      assets,
+      trustedAssets,
+      locale,
+    });
     const busy = revokingId === entry.keyId;
     const live = entry.status === "active" || entry.status === "pending";
     return (
@@ -160,6 +166,11 @@ export function AuthorizationListNative({
                   {grant.assetLabel}
                 </Text>
               )}
+              {grant.assetTrust === "unverified" && (
+                <Callout tone="warning" glyph="⚠" role="alert" theme={theme}>
+                  Unverified token — not on the trusted list
+                </Callout>
+              )}
               {grant.recipients.map((recipient) => (
                 <CopyableValue
                   key={recipient.full}
@@ -175,8 +186,12 @@ export function AuthorizationListNative({
                     <Text style={[styles.small, { color: theme.foreground }]}>
                       Spent{" "}
                       {
-                        formatAuthorizationAmount(spent, assets[grant.asset])
-                          .formatted
+                        formatAuthorizationAmount(
+                          spent,
+                          grant.assetTrust === "unverified"
+                            ? undefined
+                            : assets[grant.asset],
+                        ).formatted
                       }
                     </Text>
                     <Text style={[styles.small, { color: theme.foreground }]}>

@@ -25,6 +25,7 @@ import { Address } from "./payment-ui";
 export interface AuthorizationListProps {
   entries: ListedAuthorization[] | { entries: ListedAuthorization[] };
   assets?: Record<string, AuthorizationAssetMetadata>;
+  trustedAssets?: readonly string[];
   onRevoke: (
     entry: ListedAuthorization,
   ) =>
@@ -38,6 +39,7 @@ export interface AuthorizationListProps {
 export function AuthorizationList({
   entries: input,
   assets = {},
+  trustedAssets,
   onRevoke,
   revokingId,
   locale,
@@ -78,16 +80,26 @@ export function AuthorizationList({
   return (
     <section
       aria-labelledby="authorization-list-title"
-      className={cn("naculus-payment-surface flex w-full max-w-lg flex-col gap-3", className)}
+      className={cn(
+        "naculus-payment-surface flex w-full max-w-lg flex-col gap-3",
+        className,
+      )}
     >
       <h2 id="authorization-list-title" className="text-lg font-semibold">
         Payment authorizations
       </h2>
       {entries.map((entry) => {
-        const view = describeAuthorization(entry, { assets, locale });
+        const view = describeAuthorization(entry, {
+          assets,
+          trustedAssets,
+          locale,
+        });
         const busy = revokingId === entry.keyId;
         return (
-          <Card key={entry.keyId} className="flex min-h-full min-w-0 flex-col overflow-y-auto p-4">
+          <Card
+            key={entry.keyId}
+            className="flex min-h-full min-w-0 flex-col overflow-y-auto p-4"
+          >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
                 <h3 className="break-all font-semibold">
@@ -105,8 +117,10 @@ export function AuthorizationList({
               <Badge
                 className={cn(
                   "capitalize",
-                  entry.status === "active" && "bg-primary text-primary-foreground",
-                  entry.status === "pending" && "border border-border bg-background",
+                  entry.status === "active" &&
+                    "bg-primary text-primary-foreground",
+                  entry.status === "pending" &&
+                    "border border-border bg-background",
                   (entry.status === "revoked" || entry.status === "expired") &&
                     "bg-muted text-muted-foreground",
                 )}
@@ -134,6 +148,19 @@ export function AuthorizationList({
                         {grant.assetLabel}
                       </p>
                     )}
+                    {grant.assetTrust === "unverified" && (
+                      <p
+                        role="alert"
+                        className="mt-2 flex gap-2 rounded-md border border-amber-700 bg-amber-50 p-2 text-sm text-amber-950 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100"
+                      >
+                        <AlertTriangle
+                          aria-hidden
+                          className="shrink-0"
+                          size={16}
+                        />
+                        Unverified token — not on the trusted list
+                      </p>
+                    )}
                     <div className="mt-1 flex flex-col gap-1">
                       {grant.recipients.map((recipient) => (
                         <Address key={recipient.full} value={recipient.full} />
@@ -144,10 +171,14 @@ export function AuthorizationList({
                         <div className="flex justify-between gap-2 text-xs">
                           <span>
                             Spent{" "}
-                            {formatAuthorizationAmount(
-                              spent,
-                              assets[grant.asset],
-                            ).formatted}
+                            {
+                              formatAuthorizationAmount(
+                                spent,
+                                grant.assetTrust === "unverified"
+                                  ? undefined
+                                  : assets[grant.asset],
+                              ).formatted
+                            }
                           </span>
                           <span>Total {grant.total.formatted}</span>
                         </div>
@@ -178,7 +209,8 @@ export function AuthorizationList({
                 ? "Expired"
                 : entry.status === "revoked"
                   ? "Revoked"
-                  : `Expires ${view.expiry.relative}`} · {view.expiry.absolute}
+                  : `Expires ${view.expiry.relative}`}{" "}
+              · {view.expiry.absolute}
             </p>
             {view.warnings.map((warning) => (
               <p
@@ -200,7 +232,10 @@ export function AuthorizationList({
               </p>
             )}
             {entry.status === "active" || entry.status === "pending" ? (
-              <div data-payment-actions className="naculus-sticky-actions sticky bottom-0 z-10 -mx-1 mt-3 flex min-h-14 justify-end gap-2 border-t border-border bg-card px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3">
+              <div
+                data-payment-actions
+                className="naculus-sticky-actions sticky bottom-0 z-10 -mx-1 mt-3 flex min-h-14 justify-end gap-2 border-t border-border bg-card px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3"
+              >
                 {confirming === entry.keyId ? (
                   <>
                     <Button variant="ghost" onClick={() => setConfirming(null)}>
