@@ -1,5 +1,14 @@
 # @naculus/connect-native
 
+## 0.8.0
+
+### Patch Changes
+
+- 5ab74ff: Depend on and accept connect-lib 0.8.0 (`^0.8.0` dependency and peer ranges), which provides the authorization model and settlement verifiers the authorization consent, listing and payment-verification features use.
+- Updated dependencies [561b126]
+- Updated dependencies [5ab74ff]
+  - @naculus/connect-appkit-react@0.8.0
+
 ## 0.7.0
 
 ### Patch Changes

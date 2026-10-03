@@ -1,5 +1,20 @@
 # @naculus/connect-appkit-ui
 
+## 0.8.0
+
+### Minor Changes
+
+- 471e86a: Add authorization consent and management views plus verification-honest payment receipts, and format authorization expiry in useful time units.
+
+### Patch Changes
+
+- 5ab74ff: Depend on and accept connect-lib 0.8.0 (`^0.8.0` dependency and peer ranges), which provides the authorization model and settlement verifiers the authorization consent, listing and payment-verification features use.
+- Updated dependencies [471e86a]
+- Updated dependencies [561b126]
+- Updated dependencies [5ab74ff]
+  - @naculus/connect-appkit-core@0.8.0
+  - @naculus/connect-appkit-react@0.8.0
+
 ## 0.7.0
 
 ### Minor Changes

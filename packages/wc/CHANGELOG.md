@@ -1,5 +1,9 @@
 # @naculus/connect-appkit-wc
 
+## 0.8.0
+
+No changes in this release.
+
 ## 0.7.0
 
 ### Patch Changes

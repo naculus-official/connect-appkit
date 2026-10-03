@@ -70,7 +70,9 @@ export function PaymentReceipt({
     <Card
       data-verification={status}
       className={cn(
-        "mx-auto w-full max-w-lg min-w-0 overflow-hidden p-5",
+        // h-full + flex column: receipts placed side by side stretch to one
+        // height instead of each following its own verification text.
+        "mx-auto flex h-full w-full max-w-lg min-w-0 flex-col overflow-hidden p-5",
         className,
       )}
     >
@@ -89,7 +91,12 @@ export function PaymentReceipt({
       </header>
       <div
         aria-live="polite"
-        className={cn("mt-5 flex gap-2 rounded-lg p-3", tone(verified, error))}
+        // Reserve room for badge, explanation and a reason so the card does
+        // not jump when verification moves from pending to mismatch/failed.
+        className={cn(
+          "mt-5 flex min-h-[9rem] gap-2 rounded-lg p-3",
+          tone(verified, error),
+        )}
       >
         <Icon
           aria-hidden
