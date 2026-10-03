@@ -128,10 +128,15 @@ function relativeExpiry(
             : divisor === 60
               ? "minute"
               : "second";
-  return new Intl.RelativeTimeFormat(locale).format(
-    Math.round(seconds / divisor),
-    unit,
-  );
+  const value = Math.round(seconds / divisor);
+  // Hermes (React Native) ships no Intl.RelativeTimeFormat; fall back to
+  // the English form RelativeTimeFormat produces for "en".
+  if (typeof Intl.RelativeTimeFormat !== "function") {
+    const count = Math.abs(value);
+    const phrase = `${count} ${unit}${count === 1 ? "" : "s"}`;
+    return value < 0 || Object.is(value, -0) ? `${phrase} ago` : `in ${phrase}`;
+  }
+  return new Intl.RelativeTimeFormat(locale).format(value, unit);
 }
 
 /** Build a network-free consent/listing view of an authorization. */

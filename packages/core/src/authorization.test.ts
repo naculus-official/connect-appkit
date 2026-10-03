@@ -92,6 +92,28 @@ describe("describeAuthorization", () => {
     expect(german.expiry.relative).toBe("in 1 Tag");
   });
 
+  it("formats relative expiry without Intl.RelativeTimeFormat (Hermes)", () => {
+    const offsets = [-7_200, -1, 0, 1, 90, 86_400, 172_800, 62_208_000];
+    const describe = (offset: number) =>
+      describeAuthorization(
+        authorization({ expiresAt: 2_000_000_000 + offset }),
+        { now: 2_000_000_000 },
+      ).expiry.relative;
+    const expected = offsets.map(describe);
+    const original = Intl.RelativeTimeFormat;
+    // Hermes on Android has no RelativeTimeFormat; `new undefined` crashed.
+    Reflect.deleteProperty(Intl, "RelativeTimeFormat");
+    try {
+      expect(offsets.map(describe)).toEqual(expected);
+    } finally {
+      Object.defineProperty(Intl, "RelativeTimeFormat", {
+        value: original,
+        configurable: true,
+        writable: true,
+      });
+    }
+  });
+
   it.each([
     [90, "in 2 minutes"],
     [7_200, "in 2 hours"],
