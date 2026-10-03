@@ -60,6 +60,10 @@ describe("AccountSelector", () => {
     render(<AccountSelector />);
     expect(screen.getByText("Ethereum & EVM")).toBeDefined();
     expect(screen.getByText("Solana")).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: "Copy Ethereum & EVM address" })
+        .className,
+    ).toContain("naculus-hit-target");
   });
 
   it("marks only the active account as checked", () => {

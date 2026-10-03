@@ -65,14 +65,14 @@ export function AuthorizationConsent({
     <section
       aria-labelledby="authorization-consent-title"
       className={cn(
-        "mx-auto flex w-full max-w-lg flex-col gap-4 overflow-hidden text-foreground",
+        "naculus-payment-surface naculus-authorization-consent mx-auto flex w-full max-w-lg flex-col gap-4 overflow-y-auto text-foreground",
         className,
       )}
       onKeyDown={(event) => {
         if (event.key === "Escape") onDecline();
       }}
     >
-      <header className="flex min-w-0 items-center gap-3">
+      <header className="naculus-consent-requester flex min-w-0 items-center gap-3">
         {requester.icon ? (
           <img
             className="h-11 w-11 shrink-0 rounded-xl object-cover"
@@ -106,7 +106,7 @@ export function AuthorizationConsent({
         <div
           key={warning}
           role="alert"
-          className="flex gap-2 rounded-lg border border-amber-700 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100"
+          className="naculus-consent-summary flex gap-2 rounded-lg border border-amber-700 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100"
         >
           <AlertTriangle aria-hidden className="mt-0.5 shrink-0" size={18} />
           <strong>{warning}</strong>
@@ -116,7 +116,7 @@ export function AuthorizationConsent({
       {preview && (
         <div
           className={cn(
-            "flex gap-2 rounded-lg p-3 text-sm",
+            "naculus-consent-summary flex gap-2 rounded-lg p-3 text-sm",
             tone(preview.allowed, !preview.allowed),
           )}
         >
@@ -132,7 +132,7 @@ export function AuthorizationConsent({
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="naculus-consent-grants flex flex-col gap-3">
         {description.grants.map((grant) => (
           <Card
             key={`${grant.asset}:${grant.recipients.map((recipient) => recipient.full).join(",")}:${grant.perPayment.formatted}:${grant.total.formatted}`}
@@ -196,7 +196,7 @@ export function AuthorizationConsent({
         ))}
       </div>
 
-      <div className="rounded-lg bg-muted p-3 text-sm">
+      <div className="naculus-consent-expiry rounded-lg bg-muted p-3 text-sm">
         <p className="font-medium">Expires {description.expiry.relative}</p>
         <time
           className="text-xs text-muted-foreground"
@@ -205,7 +205,7 @@ export function AuthorizationConsent({
           {description.expiry.absolute}
         </time>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div data-payment-actions className="naculus-sticky-actions sticky bottom-0 z-10 -mx-1 grid min-h-14 grid-cols-2 gap-3 border-t border-border bg-background px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3">
         <Button variant="outline" onClick={onDecline}>
           Decline
         </Button>

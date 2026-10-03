@@ -34,7 +34,7 @@ export function Address({ value }: { value: string }) {
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 shrink-0 p-0"
+        className="naculus-hit-target h-8 w-8 shrink-0 p-0"
         aria-label={copied ? `Copied ${value}` : `Copy ${value}`}
         onClick={() => void copy()}
       >

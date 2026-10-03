@@ -30,6 +30,12 @@ import "@naculus/connect-appkit-ui/styles"
 No Tailwind setup is required in the consuming app. Add the `dark` class to an
 ancestor of the UI to use the dark theme.
 
+The component stylesheet also handles foldable and dual-screen spanning. When
+a browser exposes two viewport segments, payment cards and dialogs stay in the
+first segment instead of centering across a hinge; vertically segmented screens
+keep those surfaces above the fold. These rules use viewport-segment media
+features and have no effect at ordinary single-screen viewport sizes.
+
 The components assume a page reset (Tailwind preflight, as shadcn components
 do). An app that already uses Tailwind has one. Otherwise also import the
 opt-in reset, which changes element defaults for the whole page:

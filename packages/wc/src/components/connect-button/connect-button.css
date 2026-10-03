@@ -1,5 +1,11 @@
 /* ── Wallet Badge (connected state) ──────────────────────────── */
+/* Never wider than its container: on very narrow screens (e.g. a 280 px
+   foldable cover screen) the balance truncates instead of overflowing. */
+:host { display: inline-block; max-width: 100%; }
 .wallet-badge {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -15,8 +21,8 @@
 }
 .wallet-badge:hover { background-color: hsl(var(--accent)); }
 .dot { width: 0.5rem; height: 0.5rem; border-radius: 9999px; background-color: #22c55e; flex-shrink: 0; }
-.addr-text { font-family: monospace; font-weight: 500; }
-.bal-text { color: hsl(var(--muted-foreground)); font-weight: 400; }
+.addr-text { font-family: monospace; font-weight: 500; flex-shrink: 0; white-space: nowrap; }
+.bal-text { color: hsl(var(--muted-foreground)); font-weight: 400; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .load-skel { width: 3.75rem; height: 1rem; border-radius: 0.25rem; background-color: hsl(var(--muted)); animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 

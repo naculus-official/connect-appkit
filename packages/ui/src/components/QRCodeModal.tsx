@@ -129,7 +129,7 @@ export function QRCodeModal({
   return (
     <ModalToUse open={open} onClose={onClose} closable title={title} className={className}>
       <div className="p-6">
-        <div className="text-center mb-5">
+        <div className="sticky top-0 z-10 -mx-1 mb-5 bg-card px-1 py-1 text-center">
           <div className="flex justify-center mb-3">
             {status === "pending" && !isExpired && (
               <Loader2 size={20} className="animate-spin text-primary" data-testid="loader-icon-inline" />
@@ -159,7 +159,7 @@ export function QRCodeModal({
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
+        <div data-dialog-actions className="sticky bottom-0 z-10 -mx-1 flex flex-col gap-2 border-t border-border bg-card px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3">
           {showDeepLink && uri && status === "pending" && !isExpired && (
             <button type="button"
               onClick={handleDeepLink}

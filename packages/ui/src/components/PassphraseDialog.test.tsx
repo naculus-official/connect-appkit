@@ -42,6 +42,8 @@ describe("PassphraseDialog", () => {
       "Unlock your wallet",
     )
     expect(screen.queryByText("Type it again")).toBeNull()
+    expect(screen.getByRole("dialog").getAttribute("aria-modal")).toBe("true")
+    expect(document.querySelector("[data-dialog-actions]")).not.toBeNull()
   })
 
   it("asks for a new passphrase on create, with a confirm field", () => {
@@ -129,6 +131,9 @@ describe("PassphraseDialog", () => {
     const input = type("Passphrase", "secret") as HTMLInputElement
     expect(input.type).toBe("password")
     fireEvent.click(screen.getByLabelText("Show passphrase"))
+    expect(screen.getByLabelText("Hide passphrase").className).toContain(
+      "naculus-hit-target",
+    )
     expect(
       (screen.getByLabelText("Passphrase") as HTMLInputElement).type,
     ).toBe("text")

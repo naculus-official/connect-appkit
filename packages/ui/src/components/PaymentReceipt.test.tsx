@@ -69,6 +69,9 @@ describe("PaymentReceipt", () => {
     expect(
       screen.getByRole("link", { name: /View on explorer/ }),
     ).toBeDefined();
+    expect(
+      screen.getByRole("link", { name: /View on explorer/ }).className,
+    ).toContain("naculus-hit-target");
   });
   it("groups large known and base-unit amounts and preserves protocol casing", () => {
     const { rerender } = render(

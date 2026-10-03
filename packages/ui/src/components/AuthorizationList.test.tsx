@@ -89,6 +89,7 @@ describe("AuthorizationList", () => {
     render(<AuthorizationList entries={[entry]} onRevoke={revoke} />);
     fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
     expect(revoke).not.toHaveBeenCalled();
+    expect(document.querySelector("[data-payment-actions]")).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Confirm revoke" }));
     await waitFor(() => expect(revoke).toHaveBeenCalledWith(entry));
     expect(

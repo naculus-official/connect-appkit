@@ -1,8 +1,14 @@
+/* A button is never wider than its container; slotted content that allows
+   shrinking (min-width: 0 + ellipsis) truncates instead of overflowing. */
 :host {
   display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .button {
+  max-width: 100%;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;

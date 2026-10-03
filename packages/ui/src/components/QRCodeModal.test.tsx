@@ -111,8 +111,7 @@ describe("QRCodeModal", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog).toBeDefined();
     expect(dialog.getAttribute("aria-modal")).toBe("true");
-    // DefaultDialog doesn't set aria-label (unlike the removed FallbackModal)
-    expect(dialog.getAttribute("aria-label")).toBeNull();
+    expect(dialog.getAttribute("aria-label")).toBe("Scan with WalletConnect");
   });
 
   it("shows expired state when timeElapsed >= timeoutMs", async () => {

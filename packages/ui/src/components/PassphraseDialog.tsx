@@ -86,7 +86,7 @@ export function PassphraseDialogView({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="naculus-dialog-viewport fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       role="presentation"
     >
       <form
@@ -95,11 +95,11 @@ export function PassphraseDialogView({
         aria-label={isCreate ? "Choose a passphrase" : "Unlock your wallet"}
         onSubmit={handleSubmit}
         className={cn(
-          "flex w-full max-w-sm flex-col gap-4 rounded-lg border border-border bg-card p-5 shadow-lg",
+          "naculus-dialog-surface flex w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-lg border border-border bg-card p-5 shadow-lg",
           className,
         )}
       >
-        <div className="flex items-center gap-2">
+        <div className="sticky top-0 z-10 -mx-1 flex items-center gap-2 bg-card px-1 py-1">
           <KeyRound size={18} className="shrink-0 text-primary" />
           <h2 className="text-base font-semibold">
             {isCreate ? "Choose a passphrase" : "Unlock your wallet"}
@@ -140,7 +140,7 @@ export function PassphraseDialogView({
               type="button"
               aria-label={visible ? "Hide passphrase" : "Show passphrase"}
               onClick={() => setVisible((v) => !v)}
-              className="absolute right-2 text-muted-foreground hover:text-foreground"
+              className="naculus-hit-target absolute right-2 text-muted-foreground hover:text-foreground"
             >
               {visible ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
@@ -192,7 +192,7 @@ export function PassphraseDialogView({
           </p>
         )}
 
-        <div className="flex justify-end gap-2 pt-1">
+        <div data-dialog-actions className="sticky bottom-0 z-10 -mx-5 flex min-h-14 justify-end gap-2 border-t border-border bg-card px-5 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3">
           <button
             type="button"
             onClick={() => cancel()}

@@ -48,6 +48,10 @@ describe("AuthorizationConsent", () => {
     expect(screen.getByText("x402 exact")).toBeDefined();
     expect(screen.getByText(/Blocked/)).toBeDefined();
     expect(screen.getByRole("button", { name: /Copy 0x111/ })).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: /Copy 0x111/ }).className,
+    ).toContain("naculus-hit-target");
+    expect(document.querySelector("[data-payment-actions]")).not.toBeNull();
   });
 
   it("calls actions, disables approve while busy, and maps Escape only to decline", () => {

@@ -72,7 +72,7 @@ export function PaymentReceipt({
       className={cn(
         // h-full + flex column: receipts placed side by side stretch to one
         // height instead of each following its own verification text.
-        "mx-auto flex h-full w-full max-w-lg min-w-0 flex-col overflow-hidden p-5",
+        "naculus-payment-surface mx-auto flex h-full w-full max-w-lg min-w-0 flex-col overflow-hidden p-5",
         className,
       )}
     >
@@ -143,7 +143,7 @@ export function PaymentReceipt({
                 <Address value={record.reference} />
                 {link && (
                   <a
-                    className="inline-flex items-center gap-1 rounded text-xs font-medium underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="naculus-hit-target relative inline-flex items-center gap-1 rounded text-xs font-medium underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     href={link}
                     target="_blank"
                     rel="noreferrer"

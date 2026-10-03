@@ -60,12 +60,14 @@ export function DefaultDialog({
   children,
   closable,
   className,
+  title,
 }: {
   open: boolean
   onClose?: () => void
   children: React.ReactNode
   closable?: boolean
   className?: string
+  title?: string
 }) {
   useEffect(() => {
     if (!open) return
@@ -86,7 +88,7 @@ export function DefaultDialog({
   if (!open) return null
   return (
     <div
-      className={cn("fixed inset-0 z-50 flex items-center justify-center p-4", className)}
+      className={cn("naculus-dialog-viewport fixed inset-0 z-50 flex items-center justify-center p-4", className)}
       style={{
         position: "fixed",
         inset: 0,
@@ -106,13 +108,13 @@ export function DefaultDialog({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-sm rounded-xl border bg-card text-card-foreground shadow-2xl max-h-[85vh] overflow-y-auto p-6"
+        aria-label={title ?? "Dialog"}
+        className="naculus-dialog-surface relative z-10 flex w-full max-w-lg flex-col overflow-y-auto rounded-xl border bg-card p-6 text-card-foreground shadow-2xl"
         style={{
           position: "relative",
           zIndex: 10,
           width: "100%",
-          maxWidth: "24rem",
-          maxHeight: "85vh",
+          maxWidth: "32rem",
           overflowY: "auto",
           borderRadius: "0.75rem",
           padding: "1.5rem",
@@ -157,7 +159,7 @@ export function DefaultDialogHeader({
   showCloseButton?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="sticky top-0 z-10 -mx-1 mb-4 flex items-center justify-between bg-card px-1 py-1">
       <h2 className="text-lg font-semibold m-0">{title}</h2>
       {showCloseButton && onClose && (
         <button

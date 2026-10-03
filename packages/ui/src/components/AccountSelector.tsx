@@ -126,7 +126,7 @@ function AccountRow({
         type="button"
         aria-label={`Copy ${label.name} address`}
         onClick={copy}
-        className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+        className="naculus-hit-target shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
       >
         {copied ? <Check size={14} /> : <Copy size={14} />}
       </button>

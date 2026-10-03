@@ -92,7 +92,7 @@ export function SeedPhraseBackup({
   const registry = useComponentRegistry()
   const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton
   const Dialog = registry.Dialog as React.ComponentType<{ open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }> | undefined
-  const DialogContent = registry.DialogContent as React.ComponentType<{ children: React.ReactNode }> | undefined
+  const DialogContent = registry.DialogContent as React.ComponentType<{ className?: string; children: React.ReactNode }> | undefined
   const DialogHeader = registry.DialogHeader as React.ComponentType<{ children: React.ReactNode }> | undefined
   const DialogTitle = registry.DialogTitle as React.ComponentType<{ children: React.ReactNode }> | undefined
 
@@ -251,7 +251,7 @@ export function SeedPhraseBackup({
             </div>
           )}
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+          <div data-dialog-actions className="sticky bottom-0 z-10 -mx-1 flex min-h-14 flex-col gap-2 border-t border-border bg-card px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3 sm:flex-row sm:justify-between">
             <Button onClick={handleStartConfirm} variant="default">
               I&apos;ve Saved It
               <ArrowRight size={16} />
@@ -314,7 +314,7 @@ export function SeedPhraseBackup({
         )
       })}
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+      <div data-dialog-actions className="sticky bottom-0 z-10 -mx-1 flex min-h-14 flex-col gap-2 border-t border-border bg-card px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3 sm:flex-row sm:justify-between">
         <Button
           onClick={handleVerify}
           variant="default"
@@ -386,7 +386,7 @@ export function SeedPhraseBackup({
   if (Dialog && DialogContent) {
     return (
       <Dialog open={true} onOpenChange={(o: boolean) => { if (!o) onOpenChange?.(false); }}>
-        <DialogContent>
+        <DialogContent className="naculus-dialog-surface flex w-full max-w-lg flex-col overflow-y-auto">
           {DialogHeader && DialogTitle ? (
             <><DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader><div className="mt-2 max-h-[55vh] overflow-y-auto">{body}</div></>
           ) : (
@@ -398,8 +398,8 @@ export function SeedPhraseBackup({
   }
 
   return (
-    <DefaultDialog open={true} onClose={() => onOpenChange?.(false)}>
-      <div className="flex items-center justify-between mb-4">
+    <DefaultDialog open={true} onClose={() => onOpenChange?.(false)} title={title}>
+      <div className="sticky top-0 z-10 -mx-1 mb-4 flex items-center justify-between bg-card px-1 py-1">
         <h2 className="text-lg font-semibold m-0">{title}</h2>
         {onOpenChange && (
           <button

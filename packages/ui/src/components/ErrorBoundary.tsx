@@ -43,14 +43,14 @@ function DefaultErrorFallback({
   const registry = useComponentRegistry();
   const Button = (registry.Button as RegistryButton | undefined) ?? NativeButton;
   const Dialog = registry.Dialog as React.ComponentType<{ open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }> | undefined;
-  const DialogContent = registry.DialogContent as React.ComponentType<{ children: React.ReactNode }> | undefined;
+  const DialogContent = registry.DialogContent as React.ComponentType<{ className?: string; children: React.ReactNode }> | undefined;
   const DialogHeader = registry.DialogHeader as React.ComponentType<{ children: React.ReactNode }> | undefined;
   const DialogTitle = registry.DialogTitle as React.ComponentType<{ children: React.ReactNode }> | undefined;
 
   if (Dialog && DialogContent) {
     return (
       <Dialog open={true} onOpenChange={() => {}}>
-        <DialogContent>
+        <DialogContent className="naculus-dialog-surface flex w-full max-w-lg flex-col overflow-y-auto">
           {DialogHeader && DialogTitle ? (
             <>
               <DialogHeader><DialogTitle>Something went wrong</DialogTitle></DialogHeader>
@@ -130,7 +130,7 @@ function DefaultErrorFallback({
   const onClose = dismiss ?? undefined;
 
   return (
-    <DefaultDialog open={isOpen} onClose={onClose}>
+    <DefaultDialog open={isOpen} onClose={onClose} title="Something went wrong">
       <DefaultDialogHeader title="Something went wrong" onClose={onClose} showCloseButton={!!dismiss} />
       <DefaultDialogContent>
         <p

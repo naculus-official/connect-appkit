@@ -97,7 +97,7 @@ export function AddressWarningDialog({
         <p className="text-sm text-muted-foreground m-0">{warning}</p>
       )}
 
-      <div className="flex gap-2 justify-end pt-2">
+      <div data-dialog-actions className="sticky bottom-0 z-10 -mx-1 flex min-h-14 justify-end gap-2 border-t border-border bg-card px-1 pb-[max(0rem,env(safe-area-inset-bottom))] pt-3">
         {Button ? (
           <Button
             onClick={onClose}
@@ -137,7 +137,7 @@ export function AddressWarningDialog({
   if (Dialog && DialogContent && DialogHeader && DialogTitle) {
     return (
       <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="naculus-dialog-surface flex w-full max-w-lg flex-col overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Address Warning</DialogTitle>
           </DialogHeader>
@@ -150,14 +150,15 @@ export function AddressWarningDialog({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="naculus-dialog-viewport fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80" aria-hidden="true" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-sm rounded-xl border bg-card text-card-foreground shadow-2xl p-6"
+        aria-label="Address warning"
+        className="naculus-dialog-surface relative z-10 flex w-full max-w-lg flex-col overflow-y-auto rounded-xl border bg-card p-6 text-card-foreground shadow-2xl"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="sticky top-0 z-10 -mx-1 mb-4 flex items-center justify-between bg-card px-1 py-1">
           <h2 className="text-lg font-semibold m-0">Address Warning</h2>
           <button
             onClick={onClose}
