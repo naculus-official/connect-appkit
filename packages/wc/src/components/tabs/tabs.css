@@ -1,11 +1,21 @@
 :host {
   display: block;
+  max-width: 100%;
+  min-width: 0;
 }
 
+/* On narrow screens the tabs scroll sideways instead of widening the page. */
 .tablist {
   display: flex;
   border-bottom: 1px solid hsl(var(--border));
   gap: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.tab {
+  flex-shrink: 0;
 }
 
 .tab {
