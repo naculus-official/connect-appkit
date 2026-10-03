@@ -274,6 +274,7 @@
     "validators",
     "viem",
     "viemclient",
+    "viewports",
     "vitalik",
     "vite",
     "vitest",

@@ -1,5 +1,16 @@
 # @naculus/connect-appkit-ui
 
+## 0.8.1
+
+### Patch Changes
+
+- 67ff65c: Keep dialogs and payment authorization actions reachable in short, zoomed, and
+  foldable viewports, and enlarge compact copy and reveal controls' touch areas.
+  
+  appkit-button never grows wider than its container, and the connected wallet badge truncates a long balance with an ellipsis instead of overflowing on very narrow screens (e.g. a 280 px foldable cover screen).
+- @naculus/connect-appkit-react@0.8.1
+  - @naculus/connect-appkit-core@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes

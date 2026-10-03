@@ -1,5 +1,15 @@
 # @naculus/connect-appkit-wc
 
+## 0.8.1
+
+### Patch Changes
+
+- 8e15e9d: appkit-tabs: on narrow screens the tab list scrolls sideways instead of widening the page (280 px foldable cover screens overflowed by 25 px).
+- 67ff65c: Keep dialogs and payment authorization actions reachable in short, zoomed, and
+  foldable viewports, and enlarge compact copy and reveal controls' touch areas.
+  
+  appkit-button never grows wider than its container, and the connected wallet badge truncates a long balance with an ellipsis instead of overflowing on very narrow screens (e.g. a 280 px foldable cover screen).
+
 ## 0.8.0
 
 No changes in this release.

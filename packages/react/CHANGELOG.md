@@ -1,5 +1,14 @@
 # @naculus/connect-appkit-react
 
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [8e15e9d]
+- Updated dependencies [67ff65c]
+  - @naculus/connect-appkit-wc@0.8.1
+  - @naculus/connect-appkit-core@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes
