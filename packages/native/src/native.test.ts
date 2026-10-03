@@ -404,3 +404,19 @@ describe("keystoreWalletStorage", () => {
     expect(secureStore.data.size).toBe(0);
   });
 });
+
+describe("entry points", () => {
+  it("keeps the payment UI out of the main entry", async () => {
+    // The main entry must load under Node without React Native; the UI lives
+    // in @naculus/connect-native/ui.
+    const main = await import("./index");
+    for (const name of [
+      "AuthorizationConsentNative",
+      "AuthorizationListNative",
+      "PaymentReceiptNative",
+      "NativePaymentThemeProvider",
+    ]) {
+      expect(main).not.toHaveProperty(name);
+    }
+  });
+});

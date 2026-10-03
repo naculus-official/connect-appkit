@@ -20,3 +20,15 @@
   setupNaculusNative
   type WalletLinkTarget
   wireFromKitTransaction
+./ui:
+  AuthorizationConsentNative
+  type AuthorizationConsentNativeProps
+  AuthorizationListNative
+  type AuthorizationListNativeProps
+  darkPaymentTheme
+  lightPaymentTheme
+  type NativePaymentTheme
+  NativePaymentThemeProvider
+  PaymentReceiptNative
+  type PaymentReceiptNativeProps
+  useNativePaymentTheme

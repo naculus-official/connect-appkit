@@ -57,8 +57,19 @@ function assetAddress(asset: string): string {
   return asset.split(/[:/]/).at(-1)!;
 }
 
+// Linear-time helpers: regular expressions over caller-supplied digit strings
+// (lookahead grouping, /0+$/) can take quadratic time on long inputs.
 function groupDigits(value: string): string {
-  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  let out = "";
+  for (let i = 0; i < value.length; i++)
+    out += (i && (value.length - i) % 3 === 0 ? "," : "") + value[i];
+  return out;
+}
+
+function trimTrailingZeros(value: string): string {
+  let end = value.length;
+  while (value[end - 1] === "0") end--;
+  return value.slice(0, end);
 }
 
 export function formatAuthorizationAmount(
@@ -70,7 +81,8 @@ export function formatAuthorizationAmount(
     !metadata ||
     !metadata.symbol ||
     !Number.isSafeInteger(metadata.decimals) ||
-    metadata.decimals < 0
+    metadata.decimals < 0 ||
+    metadata.decimals > 255 // ERC-20 decimals are a uint8
   ) {
     return {
       formatted: `${groupDigits(baseUnits)} base units`,
@@ -80,7 +92,7 @@ export function formatAuthorizationAmount(
   const padded = baseUnits.padStart(decimals + 1, "0");
   const integer = decimals === 0 ? padded : padded.slice(0, -decimals);
   const fraction =
-    decimals === 0 ? "" : padded.slice(-decimals).replace(/0+$/, "");
+    decimals === 0 ? "" : trimTrailingZeros(padded.slice(-decimals));
   const value = `${groupDigits(integer)}${fraction ? `.${fraction}` : ""}`;
   return { formatted: `${value} ${metadata.symbol}` };
 }
@@ -116,10 +128,15 @@ function relativeExpiry(
             : divisor === 60
               ? "minute"
               : "second";
-  return new Intl.RelativeTimeFormat(locale).format(
-    Math.round(seconds / divisor),
-    unit,
-  );
+  const value = Math.round(seconds / divisor);
+  // Hermes (React Native) ships no Intl.RelativeTimeFormat; fall back to
+  // the English form RelativeTimeFormat produces for "en".
+  if (typeof Intl.RelativeTimeFormat !== "function") {
+    const count = Math.abs(value);
+    const phrase = `${count} ${unit}${count === 1 ? "" : "s"}`;
+    return value < 0 || Object.is(value, -0) ? `${phrase} ago` : `in ${phrase}`;
+  }
+  return new Intl.RelativeTimeFormat(locale).format(value, unit);
 }
 
 /** Build a network-free consent/listing view of an authorization. */
@@ -141,9 +158,7 @@ export function describeAuthorization(
         assetLabel: metadata?.symbol || assetAddress(grant.asset),
         recipients: grant.recipients.map((full) => ({
           shortened:
-            full.length <= 14
-              ? full
-              : `${full.slice(0, 6)}…${full.slice(-6)}`,
+            full.length <= 14 ? full : `${full.slice(0, 6)}…${full.slice(-6)}`,
           full,
         })),
         perPayment: formatAuthorizationAmount(grant.maxPerPayment, metadata),
