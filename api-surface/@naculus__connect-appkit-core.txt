@@ -65,6 +65,7 @@
   type ExecuteRouteResult
   explainSpend
   fetchUserOperationReceipt
+  formatAuthorizationAmount
   getResolver
   type GetRouteQuotes
   getSharedSessionKeyManager

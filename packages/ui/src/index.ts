@@ -113,3 +113,10 @@ export type { AddressWarningDialogProps } from "./components/AddressWarningDialo
 
 export { WalletPicker } from "./components/WalletPicker";
 export type { WalletPickerProps } from "./components/WalletPicker";
+
+export { AuthorizationConsent } from "./components/AuthorizationConsent";
+export type { AuthorizationConsentProps } from "./components/AuthorizationConsent";
+export { AuthorizationList } from "./components/AuthorizationList";
+export type { AuthorizationListProps } from "./components/AuthorizationList";
+export { PaymentReceipt } from "./components/PaymentReceipt";
+export type { PaymentReceiptProps } from "./components/PaymentReceipt";

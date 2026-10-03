@@ -16,6 +16,10 @@
   type AppKitChainSelectorProps
   type AppKitContextValue
   type AppKitProps
+  AuthorizationConsent
+  type AuthorizationConsentProps
+  AuthorizationList
+  type AuthorizationListProps
   type BundlerPreset
   ChainSelector
   type ChainSelectorProps
@@ -36,6 +40,8 @@
   PassphraseDialogView
   type PassphraseDialogViewProps
   type PaymasterType
+  PaymentReceipt
+  type PaymentReceiptProps
   QRCodeModal
   type QRCodeModalProps
   type QRCodeModalStatus

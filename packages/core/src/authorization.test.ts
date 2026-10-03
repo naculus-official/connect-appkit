@@ -4,7 +4,11 @@ import type {
   SpendRequest,
 } from "@naculus/connect-core";
 import { describe, expect, it } from "vitest";
-import { describeAuthorization, explainSpend } from "./authorization";
+import {
+  describeAuthorization,
+  explainSpend,
+  formatAuthorizationAmount,
+} from "./authorization";
 
 const ASSET = "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const RECIPIENT = "0x209693Bc6afc0C5328bA36FaF03C514EF312287C";
@@ -46,6 +50,7 @@ describe("describeAuthorization", () => {
   it("formats known metadata and never guesses unknown asset metadata", () => {
     const known = describeAuthorization(authorization(), {
       assets: { [ASSET]: { symbol: "USDC", decimals: 6 } },
+      locale: "en-US",
       now: 1_999_913_600,
     });
     expect(known.grants[0]).toMatchObject({
@@ -56,16 +61,51 @@ describe("describeAuthorization", () => {
       rails: ["x402 exact"],
       recipients: [{ shortened: "0x2096…12287C", full: RECIPIENT }],
     });
-    expect(known.expiry.relative).toBe("in 86,400 seconds");
+    expect(known.expiry.relative).toBe("in 1 day");
+    expect(known.expiry.absolute).toBe("May 18, 2033, 03:33 UTC");
+    expect(known.expiry.timestamp).toBe(2_000_000_000);
 
     const unknown = describeAuthorization(authorization(), {
       now: 2_000_000_001,
     });
     expect(unknown.grants[0]).toMatchObject({
       assetLabel: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-      perPayment: { formatted: "2000000 base units" },
+      perPayment: { formatted: "2,000,000 base units" },
     });
     expect(unknown.expiry.relative).toBe("1 second ago");
+    expect(unknown.expiry.absolute).toBe("May 18, 2033, 03:33 UTC");
+  });
+
+  it("uses English by default and honors an explicit locale", () => {
+    const defaults = describeAuthorization(authorization(), {
+      now: 1_999_913_600,
+    });
+    expect(defaults.expiry).toMatchObject({
+      absolute: "May 18, 2033, 03:33 UTC",
+      relative: "in 1 day",
+    });
+    const german = describeAuthorization(authorization(), {
+      locale: "de-DE",
+      now: 1_999_913_600,
+    });
+    expect(german.expiry.absolute).toBe("18. Mai 2033, 03:33 UTC");
+    expect(german.expiry.relative).toBe("in 1 Tag");
+  });
+
+  it.each([
+    [90, "in 2 minutes"],
+    [7_200, "in 2 hours"],
+    [172_800, "in 2 days"],
+    [-7_200, "2 hours ago"],
+    [31_536_000, "in 1 year"],
+    [62_208_000, "in 2 years"],
+  ])("formats a %i second offset with a useful unit", (offset, expected) => {
+    expect(
+      describeAuthorization(
+        authorization({ expiresAt: 2_000_000_000 + offset }),
+        { locale: "en", now: 2_000_000_000 },
+      ).expiry.relative,
+    ).toBe(expected);
   });
 
   it("turns every listing flag into its required warning", () => {
@@ -80,10 +120,34 @@ describe("describeAuthorization", () => {
     expect(
       describeAuthorization(listed, { now: 1_900_000_000 }).warnings,
     ).toEqual([
-        "Strong warning: key can pay any recipient",
-      "this key can do more than shown",
+      "This key can pay any recipient.",
+      "This key can do more than shown here.",
     ]);
   });
+
+  it.each([
+    [0n, { symbol: "USDC", decimals: 6 }, "0 USDC"],
+    [999_000_000n, { symbol: "USDC", decimals: 6 }, "999 USDC"],
+    [1_000_000_000n, { symbol: "USDC", decimals: 6 }, "1,000 USDC"],
+    [
+      1_234_567_890_000n,
+      { symbol: "USDC", decimals: 6 },
+      "1,234,567.89 USDC",
+    ],
+    [
+      12_345_678_901_234_567_890n,
+      { symbol: "ETH", decimals: 18 },
+      "12.34567890123456789 ETH",
+    ],
+    [1_234_567n, undefined, "1,234,567 base units"],
+  ] as const)(
+    "formats %s without floating point",
+    (amount, metadata, expected) => {
+      expect(formatAuthorizationAmount(amount, metadata).formatted).toBe(
+        expected,
+      );
+    },
+  );
 });
 
 describe("explainSpend", () => {
@@ -161,9 +225,9 @@ describe("explainSpend", () => {
       grant: 0,
       remainingTotal: 7_000_000n,
       remainingTotalFormatted: {
-        formatted: "7000000 base units",
+        formatted: "7,000,000 base units",
       },
-      sentence: "Allowed by grant 1; 7000000 base units remain.",
+      sentence: "Allowed by grant 1; 7,000,000 base units remain.",
     });
   });
 });

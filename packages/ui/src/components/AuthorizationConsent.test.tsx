@@ -1,0 +1,114 @@
+/// <reference types="vitest" />
+/// @vitest-environment jsdom
+
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { Authorization } from "@naculus/connect-core";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { AuthorizationConsent } from "./AuthorizationConsent";
+
+const authorization: Authorization = {
+  version: 1,
+  principal: "eip155:8453:0xowner",
+  label: "Coffee budget",
+  grants: [
+    {
+      asset: "eip155:8453/erc20:0xtoken",
+      recipients: ["0x1111111111111111111111111111111111111111"],
+      maxPerPayment: 2_000_000n,
+      maxTotal: 10_000_000n,
+      maxCount: 5,
+      rails: ["x402-exact", "mpp-charge"],
+    },
+  ],
+  expiresAt: 2_000_000_000,
+};
+
+afterEach(cleanup);
+
+describe("AuthorizationConsent", () => {
+  it("renders limits, recipients, methods, expiry, and preview", () => {
+    render(
+      <AuthorizationConsent
+        authorization={authorization}
+        assets={{
+          "eip155:8453/erc20:0xtoken": { symbol: "USDC", decimals: 6 },
+        }}
+        requester={{ name: "SenderPay", origin: "https://pay.example" }}
+        preview={{
+          allowed: false,
+          reason: "over-total",
+          sentence: "This amount exceeds the remaining total limit.",
+        }}
+        onApprove={() => {}}
+        onDecline={() => {}}
+      />,
+    );
+    expect(screen.getByText("2 USDC")).toBeDefined();
+    expect(screen.getByText("10 USDC")).toBeDefined();
+    expect(screen.getByText("x402 exact")).toBeDefined();
+    expect(screen.getByText(/Blocked/)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Copy 0x111/ })).toBeDefined();
+  });
+
+  it("calls actions, disables approve while busy, and maps Escape only to decline", () => {
+    const approve = vi.fn();
+    const decline = vi.fn();
+    const { container } = render(
+      <AuthorizationConsent
+        authorization={authorization}
+        requester={{ name: "SenderPay" }}
+        busy
+        onApprove={approve}
+        onDecline={decline}
+      />,
+    );
+    expect(
+      screen
+        .getByRole("button", { name: "Approving…" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    fireEvent.keyDown(container.firstElementChild as Element, {
+      key: "Escape",
+    });
+    expect(decline).toHaveBeenCalledOnce();
+    expect(approve).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Decline" }));
+    expect(decline).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders non-dismissible warnings", () => {
+    render(
+      <AuthorizationConsent
+        authorization={
+          {
+            ...authorization,
+            grants: [
+              {
+                ...authorization.grants[0],
+                maxPerPayment: 9_999_999_999_999_999_123_456n,
+              },
+            ],
+            keyId: "legacy-key",
+            status: "active",
+            enforcer: "evm-session",
+            flags: ["unrestricted-recipient-legacy"],
+            raw: {},
+          } as never
+        }
+        assets={{
+          "eip155:8453/erc20:0xtoken": { symbol: "USDC", decimals: 6 },
+        }}
+        now={1_999_913_600}
+        requester={{ name: "Legacy app" }}
+        onApprove={() => {}}
+        onDecline={() => {}}
+      />,
+    );
+    expect(screen.getByText("9,999,999,999,999,999.123456 USDC")).toBeDefined();
+    expect(screen.getByRole("alert").textContent).toContain(
+      "This key can pay any recipient.",
+    );
+    expect(screen.getByText("May 18, 2033, 03:33 UTC")).toBeDefined();
+    expect(screen.queryByRole("button", { name: /dismiss/i })).toBeNull();
+  });
+});

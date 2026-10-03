@@ -1,0 +1,108 @@
+/// <reference types="vitest" />
+/// @vitest-environment jsdom
+
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import type { ListedAuthorization } from "@naculus/connect-core";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { AuthorizationList } from "./AuthorizationList";
+
+const entry = {
+  keyId: "key-1",
+  status: "active",
+  enforcer: "evm-session",
+  principal: "owner",
+  expiresAt: 2_000_000_000,
+  grants: [
+    {
+      asset: "asset",
+      recipients: ["0x1111111111111111111111111111111111111111"],
+      maxPerPayment: 2n,
+      maxTotal: 10n,
+      maxCount: 2,
+      rails: ["x402-exact"],
+    },
+  ],
+  spent: { asset: 4n },
+  flags: [],
+  raw: {},
+} as unknown as ListedAuthorization;
+
+afterEach(cleanup);
+
+describe("AuthorizationList", () => {
+  it("shows empty state", () => {
+    render(
+      <AuthorizationList
+        entries={[]}
+        onRevoke={() => ({ onChainRevocationRequired: false })}
+      />,
+    );
+    expect(screen.getByText("No payment authorizations")).toBeDefined();
+  });
+  it("renders status and real spent progress", () => {
+    render(
+      <AuthorizationList
+        entries={{ entries: [entry] }}
+        onRevoke={() => ({ onChainRevocationRequired: false })}
+      />,
+    );
+    expect(screen.getByText("active")).toBeDefined();
+    expect(screen.getByText("Spent 4 base units")).toBeDefined();
+    expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe(
+      "40",
+    );
+  });
+  it("formats spent and total with the same asset metadata", () => {
+    render(
+      <AuthorizationList
+        entries={[entry]}
+        assets={{ asset: { symbol: "USDC", decimals: 1 } }}
+        locale="en-US"
+        onRevoke={() => ({ onChainRevocationRequired: false })}
+      />,
+    );
+    expect(screen.getByText("Spent 0.4 USDC")).toBeDefined();
+    expect(screen.getByText("Total 1 USDC")).toBeDefined();
+    expect(screen.getByText("EVM session key")).toBeDefined();
+  });
+  it("labels inactive expiry by status and keeps the ISO timestamp", () => {
+    render(
+      <AuthorizationList
+        entries={[{ ...entry, status: "expired" } as ListedAuthorization]}
+        locale="en-US"
+        onRevoke={() => ({ onChainRevocationRequired: false })}
+      />,
+    );
+    const expiry = screen.getByText(/^Expired ·/);
+    expect(expiry.getAttribute("title")).toBe("2033-05-18T03:33:20.000Z");
+  });
+  it("confirms before revoke and reports required on-chain work", async () => {
+    const revoke = vi
+      .fn()
+      .mockResolvedValue({ onChainRevocationRequired: true });
+    render(<AuthorizationList entries={[entry]} onRevoke={revoke} />);
+    fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
+    expect(revoke).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm revoke" }));
+    await waitFor(() => expect(revoke).toHaveBeenCalledWith(entry));
+    expect(
+      await screen.findByText(/Complete the on-chain revocation/),
+    ).toBeDefined();
+  });
+  it("does not invent spent progress", () => {
+    const { spent: _spent, ...withoutSpent } = entry;
+    render(
+      <AuthorizationList
+        entries={[withoutSpent as ListedAuthorization]}
+        onRevoke={() => ({ onChainRevocationRequired: false })}
+      />,
+    );
+    expect(screen.queryByRole("progressbar")).toBeNull();
+  });
+});

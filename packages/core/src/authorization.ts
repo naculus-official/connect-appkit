@@ -15,6 +15,7 @@ export interface AuthorizationAssetMetadata {
 
 export interface DescribeAuthorizationOptions {
   assets?: Record<AssetId, AuthorizationAssetMetadata>;
+  locale?: string;
   /** Unix timestamp in seconds. */
   now?: number;
 }
@@ -53,42 +54,72 @@ export interface AuthorizationDescription {
 }
 
 function assetAddress(asset: string): string {
-  const separator = asset.indexOf("/");
-  const reference = separator === -1 ? asset : asset.slice(separator + 1);
-  const colon = reference.indexOf(":");
-  return colon === -1 ? reference : reference.slice(colon + 1);
+  return asset.split(/[:/]/).at(-1)!;
 }
 
-function shorten(value: string): string {
-  return value.length <= 14 ? value : `${value.slice(0, 6)}…${value.slice(-6)}`;
+function groupDigits(value: string): string {
+  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function formatAmount(
+export function formatAuthorizationAmount(
   amount: bigint,
   metadata: AuthorizationAssetMetadata | undefined,
 ): AuthorizationAmountView {
   const baseUnits = amount.toString();
-  if (!metadata) {
-    return { formatted: `${baseUnits} base units` };
-  }
   if (
-    metadata.symbol === "" ||
+    !metadata ||
+    !metadata.symbol ||
     !Number.isSafeInteger(metadata.decimals) ||
     metadata.decimals < 0
   ) {
-    return { formatted: `${baseUnits} base units` };
+    return {
+      formatted: `${groupDigits(baseUnits)} base units`,
+    };
   }
   const decimals = metadata.decimals;
   const padded = baseUnits.padStart(decimals + 1, "0");
   const integer = decimals === 0 ? padded : padded.slice(0, -decimals);
   const fraction =
     decimals === 0 ? "" : padded.slice(-decimals).replace(/0+$/, "");
-  const value = `${integer}${fraction ? `.${fraction}` : ""}`;
+  const value = `${groupDigits(integer)}${fraction ? `.${fraction}` : ""}`;
   return { formatted: `${value} ${metadata.symbol}` };
 }
 
-function relativeExpiry(expiresAt: number, now: number): string {
-  return new Intl.RelativeTimeFormat("en").format(expiresAt - now, "second");
+function relativeExpiry(
+  expiresAt: number,
+  now: number,
+  locale?: string,
+): string {
+  const seconds = expiresAt - now;
+  const absolute = Math.abs(seconds);
+  const divisor =
+    absolute >= 31_536_000
+      ? 31_536_000
+      : absolute >= 2_592_000
+        ? 2_592_000
+        : absolute >= 86_400
+          ? 86_400
+          : absolute >= 3_600
+            ? 3_600
+            : absolute >= 60
+              ? 60
+              : 1;
+  const unit =
+    divisor === 31_536_000
+      ? "year"
+      : divisor === 2_592_000
+        ? "month"
+        : divisor === 86_400
+          ? "day"
+          : divisor === 3_600
+            ? "hour"
+            : divisor === 60
+              ? "minute"
+              : "second";
+  return new Intl.RelativeTimeFormat(locale).format(
+    Math.round(seconds / divisor),
+    unit,
+  );
 }
 
 /** Build a network-free consent/listing view of an authorization. */
@@ -97,6 +128,7 @@ export function describeAuthorization(
   options: DescribeAuthorizationOptions = {},
 ): AuthorizationDescription {
   const now = options.now ?? Math.floor(Date.now() / 1_000);
+  const locale = options.locale ?? "en";
   const flags = "flags" in input ? input.flags : [];
   const label = "label" in input ? (input.label ?? null) : null;
   return {
@@ -108,24 +140,36 @@ export function describeAuthorization(
         asset: grant.asset,
         assetLabel: metadata?.symbol || assetAddress(grant.asset),
         recipients: grant.recipients.map((full) => ({
-          shortened: shorten(full),
+          shortened:
+            full.length <= 14
+              ? full
+              : `${full.slice(0, 6)}…${full.slice(-6)}`,
           full,
         })),
-        perPayment: formatAmount(grant.maxPerPayment, metadata),
-        total: formatAmount(grant.maxTotal, metadata),
+        perPayment: formatAuthorizationAmount(grant.maxPerPayment, metadata),
+        total: formatAuthorizationAmount(grant.maxTotal, metadata),
         count: grant.maxCount ?? null,
-        rails: grant.rails.map((rail) => rail.replaceAll("-", " ")),
+        rails: grant.rails.map((r) => r.replace("-", " ")),
       };
     }),
     expiry: {
       timestamp: input.expiresAt,
-      absolute: new Date(input.expiresAt * 1_000).toISOString(),
-      relative: relativeExpiry(input.expiresAt, now),
+      absolute: new Intl.DateTimeFormat(locale, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+        timeZone: "UTC",
+        timeZoneName: "short",
+      }).format(input.expiresAt * 1_000),
+      relative: relativeExpiry(input.expiresAt, now, locale),
     },
     warnings: flags.map((flag) =>
       flag === "unrestricted-recipient-legacy"
-        ? "Strong warning: key can pay any recipient"
-        : "this key can do more than shown",
+        ? "This key can pay any recipient."
+        : "This key can do more than shown here.",
     ),
   };
 }
@@ -170,14 +214,15 @@ export function explainSpend(
     authorization.grants[verdict.grant].maxTotal -
     request.spentSoFar -
     request.amount;
+  const remainingTotalFormatted = formatAuthorizationAmount(
+    remainingTotal,
+    options.assets?.[authorization.grants[verdict.grant].asset],
+  );
   return {
     allowed: true,
     grant: verdict.grant,
     remainingTotal,
-    remainingTotalFormatted: formatAmount(
-      remainingTotal,
-      options.assets?.[authorization.grants[verdict.grant].asset],
-    ),
-    sentence: `Allowed by grant ${verdict.grant + 1}; ${remainingTotal.toString()} base units remain.`,
+    remainingTotalFormatted,
+    sentence: `Allowed by grant ${verdict.grant + 1}; ${remainingTotalFormatted.formatted} remain.`,
   };
 }
