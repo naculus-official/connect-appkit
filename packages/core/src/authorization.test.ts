@@ -125,21 +125,31 @@ describe("describeAuthorization", () => {
     ]);
   });
 
+  it("formats very long amounts in linear time", () => {
+    const amount = 10n ** 5000n;
+    const started = performance.now();
+    const view = formatAuthorizationAmount(amount, {
+      symbol: "X",
+      decimals: 255,
+    });
+    expect(performance.now() - started).toBeLessThan(200);
+    expect(view.formatted.endsWith(" X")).toBe(true);
+  });
+
   it.each([
     [0n, { symbol: "USDC", decimals: 6 }, "0 USDC"],
     [999_000_000n, { symbol: "USDC", decimals: 6 }, "999 USDC"],
     [1_000_000_000n, { symbol: "USDC", decimals: 6 }, "1,000 USDC"],
-    [
-      1_234_567_890_000n,
-      { symbol: "USDC", decimals: 6 },
-      "1,234,567.89 USDC",
-    ],
+    [1_234_567_890_000n, { symbol: "USDC", decimals: 6 }, "1,234,567.89 USDC"],
     [
       12_345_678_901_234_567_890n,
       { symbol: "ETH", decimals: 18 },
       "12.34567890123456789 ETH",
     ],
     [1_234_567n, undefined, "1,234,567 base units"],
+    [1_000_000n, { symbol: "BIG", decimals: 256 }, "1,000,000 base units"],
+    [100n, { symbol: "ONE", decimals: 2 }, "1 ONE"],
+    [1_000n, { symbol: "K", decimals: 0 }, "1,000 K"],
   ] as const)(
     "formats %s without floating point",
     (amount, metadata, expected) => {
