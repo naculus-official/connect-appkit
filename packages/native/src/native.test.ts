@@ -24,12 +24,6 @@ import {
   wireFromKitTransaction,
 } from "./index";
 
-// The index also exports the payment components, which import React Native;
-// it cannot load under Node. Nothing in this file renders them.
-vi.mock("react-native", () => ({
-  StyleSheet: { create: <T>(styles: T) => styles },
-}));
-
 function fakeAsyncStorage() {
   const data = new Map<string, string>();
   return {
@@ -408,5 +402,21 @@ describe("keystoreWalletStorage", () => {
     await storage.clear();
     expect(asyncStorage.data.size).toBe(0);
     expect(secureStore.data.size).toBe(0);
+  });
+});
+
+describe("entry points", () => {
+  it("keeps the payment UI out of the main entry", async () => {
+    // The main entry must load under Node without React Native; the UI lives
+    // in @naculus/connect-native/ui.
+    const main = await import("./index");
+    for (const name of [
+      "AuthorizationConsentNative",
+      "AuthorizationListNative",
+      "PaymentReceiptNative",
+      "NativePaymentThemeProvider",
+    ]) {
+      expect(main).not.toHaveProperty(name);
+    }
   });
 });

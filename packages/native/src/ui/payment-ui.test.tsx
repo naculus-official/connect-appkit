@@ -109,7 +109,7 @@ const {
   darkPaymentTheme,
   lightPaymentTheme,
   NativePaymentThemeProvider,
-} = await import("../index");
+} = await import("./index");
 
 afterEach(cleanup);
 

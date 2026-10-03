@@ -4,6 +4,7 @@
   "budgets": {
     "packages/core/dist/index.js": 16640,
     "packages/native/dist/index.js": 4096,
+    "packages/native/dist/ui/index.js": 10240,
     "packages/react/dist/client.js": 2048,
     "packages/react/dist/index.js": 33792,
     "packages/ui/dist/index.js": 36864,

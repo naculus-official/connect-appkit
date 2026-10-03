@@ -10,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./ui": {
+      "types": "./dist/ui/index.d.ts",
+      "import": "./dist/ui/index.js",
+      "require": "./dist/ui/index.cjs"
     }
   },
   "files": [
@@ -51,7 +56,7 @@
     "url": "https://github.com/naculus-official/connect-appkit.git"
   },
   "license": "MIT",
-  "description": "Naculus Connect for React Native \u2014 AsyncStorage sessions, WalletConnect deep links, Solana Mobile Wallet Adapter, Coinbase Mobile Wallet Protocol and a Keystore-sealed embedded wallet, wired into the React hooks",
+  "description": "Naculus Connect for React Native — AsyncStorage sessions, WalletConnect deep links, Solana Mobile Wallet Adapter, Coinbase Mobile Wallet Protocol and a Keystore-sealed embedded wallet, wired into the React hooks",
   "homepage": "https://github.com/naculus-official/connect-appkit#readme",
   "bugs": "https://github.com/naculus-official/connect-appkit/issues",
   "keywords": [
