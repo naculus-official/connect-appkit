@@ -1,5 +1,11 @@
 # @naculus/connect-appkit-core
 
+## 0.9.0
+
+### Patch Changes
+
+- df53f88: `describeAuthorization` no longer crashes on React Native: Hermes ships no `Intl.RelativeTimeFormat`, so the relative expiry ("in 3 days", "2 hours ago") now falls back to the English form instead of throwing `undefined cannot be used as a constructor`.
+
 ## 0.8.1
 
 No changes in this release.

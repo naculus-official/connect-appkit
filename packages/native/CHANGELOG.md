@@ -1,5 +1,17 @@
 # @naculus/connect-native
 
+## 0.9.0
+
+### Minor Changes
+
+- df53f88: Payment UI for React Native, imported from `@naculus/connect-native/ui` (the main entry stays free of UI code): `AuthorizationConsentNative`, `AuthorizationListNative` and `PaymentReceiptNative`, the native counterparts of the web `AuthorizationConsent`, `AuthorizationList` and `PaymentReceipt`. They render the same `@naculus/connect-appkit-core` view models (`describeAuthorization`, `explainSpend`, `formatAuthorizationAmount`, `PaymentRecord`) with plain `react-native` primitives, themed by `NativePaymentTheme` (light and dark palettes from the appkit tokens). Copy actions call the app's `onCopy(text)`; no clipboard dependency is added. `@naculus/connect-appkit-core` is now a peer dependency.
+
+### Patch Changes
+
+- Updated dependencies [df53f88]
+  - @naculus/connect-appkit-core@0.9.0
+  - @naculus/connect-appkit-react@0.9.0
+
 ## 0.8.1
 
 ### Patch Changes

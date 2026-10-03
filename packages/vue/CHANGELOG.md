@@ -1,5 +1,13 @@
 # @naculus/connect-appkit-vue
 
+## 0.9.0
+
+### Patch Changes
+
+- Updated dependencies [df53f88]
+  - @naculus/connect-appkit-core@0.9.0
+  - @naculus/connect-appkit-wc@0.9.0
+
 ## 0.8.1
 
 ### Patch Changes
