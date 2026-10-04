@@ -1,5 +1,20 @@
 # @naculus/connect-appkit-react
 
+## 0.10.0
+
+### Minor Changes
+
+- 2fcdb09: Add `useX402Signer` for React and Vue so a connected external EVM wallet can pay through `createX402Fetch`. `findX402Provider` (appkit-core) picks the provider for a session by its wallet type, shared by both frameworks; the resolver reports why no signer is available and supports injected EIP-6963 sessions plus WalletConnect when its EIP-1193 request facade is available.
+  
+  Raise every connect-lib dependency and peer range from `^0.8.0` to `^0.9.0`; React and Vue now depend on `@naculus/payments-x402` at `^0.9.0`.
+
+### Patch Changes
+
+- Updated dependencies [2fcdb09]
+- Updated dependencies [88ab081]
+  - @naculus/connect-appkit-core@0.10.0
+  - @naculus/connect-appkit-wc@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes

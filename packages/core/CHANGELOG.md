@@ -1,5 +1,16 @@
 # @naculus/connect-appkit-core
 
+## 0.10.0
+
+### Minor Changes
+
+- 2fcdb09: Add `useX402Signer` for React and Vue so a connected external EVM wallet can pay through `createX402Fetch`. `findX402Provider` (appkit-core) picks the provider for a session by its wallet type, shared by both frameworks; the resolver reports why no signer is available and supports injected EIP-6963 sessions plus WalletConnect when its EIP-1193 request facade is available.
+  
+  Raise every connect-lib dependency and peer range from `^0.8.0` to `^0.9.0`; React and Vue now depend on `@naculus/payments-x402` at `^0.9.0`.
+- 88ab081: Trusted assets: `describeAuthorization` and `explainSpend` accept `trustedAssets` (CAIP-19 IDs; EVM token addresses compared case-insensitively). Each grant reports `assetTrust` (`trusted`, `unverified`, or `unchecked` when no list is given, which keeps the previous output). An unverified asset never shows caller-supplied metadata: its label is the token address and amounts are in base units, so a token that merely calls itself "USDC" cannot read as USDC. The web and React Native consent and listing components take `trustedAssets` and show "Unverified token — not on the trusted list".
+  
+  Amounts are grouped without `toLocaleString`, so React Native (Hermes, which ignores the locale for BigInt) shows "2,000,000" like the web does.
+
 ## 0.9.0
 
 ### Patch Changes
