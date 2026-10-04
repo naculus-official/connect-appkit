@@ -1,5 +1,15 @@
 # @naculus/connect-appkit-core
 
+## 0.11.0
+
+### Minor Changes
+
+- 2ab054a: Show periodic authorization limits and whether the blockchain or the current device enforces them across shared descriptions, web components, and React Native components. Require connect-lib 0.10.0 for the periodic authorization model.
+
+### Patch Changes
+
+- 1fc1a0e: Describe grant periods that are whole minutes in minutes: a 1800-second period reads "every 30 minutes" instead of "every 1800 seconds". Periods that are not a whole number of minutes stay in seconds, and weeks, days, and hours read as before.
+
 ## 0.10.0
 
 ### Minor Changes

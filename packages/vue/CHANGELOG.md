@@ -1,5 +1,18 @@
 # @naculus/connect-appkit-vue
 
+## 0.11.0
+
+### Minor Changes
+
+- 2ab054a: Show periodic authorization limits and whether the blockchain or the current device enforces them across shared descriptions, web components, and React Native components. Require connect-lib 0.10.0 for the periodic authorization model.
+
+### Patch Changes
+
+- Updated dependencies [2ab054a]
+- Updated dependencies [1fc1a0e]
+  - @naculus/connect-appkit-core@0.11.0
+  - @naculus/connect-appkit-wc@0.11.0
+
 ## 0.10.0
 
 ### Minor Changes

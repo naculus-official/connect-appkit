@@ -1,6 +1,6 @@
 {
   "name": "@naculus/connect-native",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -27,9 +27,9 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@naculus/connect-appkit-core": "^0.10.0",
+    "@naculus/connect-appkit-core": "^0.11.0",
     "@naculus/connect-core": "^0.10.0",
-    "@naculus/connect-appkit-react": "^0.10.0",
+    "@naculus/connect-appkit-react": "^0.11.0",
     "@naculus/wallet-engine": "^0.10.0",
     "react-native": "*",
     "@react-native-async-storage/async-storage": "*",
