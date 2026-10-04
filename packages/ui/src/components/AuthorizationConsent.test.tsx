@@ -1,8 +1,8 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { Authorization } from "@naculus/connect-core";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthorizationConsent } from "./AuthorizationConsent";
 
@@ -52,6 +52,37 @@ describe("AuthorizationConsent", () => {
       screen.getByRole("button", { name: /Copy 0x111/ }).className,
     ).toContain("naculus-hit-target");
     expect(document.querySelector("[data-payment-actions]")).not.toBeNull();
+    expect(screen.queryByText(/^Up to .* every /)).toBeNull();
+    expect(screen.queryByText(/^Limits enforced by/)).toBeNull();
+  });
+
+  it("renders a periodic limit and on-chain enforcement from a real authorization", () => {
+    render(
+      <AuthorizationConsent
+        authorization={{
+          ...authorization,
+          grants: [
+            {
+              ...authorization.grants[0],
+              period: {
+                amount: 3_000_000n,
+                seconds: 2_592_000,
+                start: 1_900_000_000,
+              },
+            },
+          ],
+        }}
+        assets={{
+          "eip155:8453/erc20:0xtoken": { symbol: "USDC", decimals: 6 },
+        }}
+        enforcement="on-chain"
+        requester={{ name: "SenderPay" }}
+        onApprove={() => {}}
+        onDecline={() => {}}
+      />,
+    );
+    expect(screen.getByText("Up to 3 USDC every 30 days")).toBeDefined();
+    expect(screen.getByText("Limits enforced by the blockchain")).toBeDefined();
   });
 
   it("calls actions, disables approve while busy, and maps Escape only to decline", () => {

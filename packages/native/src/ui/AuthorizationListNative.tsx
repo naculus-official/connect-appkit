@@ -33,6 +33,9 @@ export interface AuthorizationListNativeProps {
   revokingId?: string;
   /** BCP 47 locale for expiry dates; English when omitted. */
   locale?: string;
+  getEnforcement?: (
+    entry: ListedAuthorization,
+  ) => "on-chain" | "device" | undefined;
   onCopy?: (text: string) => void;
   theme?: NativePaymentTheme;
 }
@@ -103,6 +106,7 @@ export function AuthorizationListNative({
   onRevoke,
   revokingId,
   locale,
+  getEnforcement,
   onCopy,
   theme: themeProp,
 }: AuthorizationListNativeProps) {
@@ -124,6 +128,7 @@ export function AuthorizationListNative({
       assets,
       trustedAssets,
       locale,
+      enforcement: getEnforcement?.(entry),
     });
     const busy = revokingId === entry.keyId;
     const live = entry.status === "active" || entry.status === "pending";
@@ -180,6 +185,17 @@ export function AuthorizationListNative({
                   theme={theme}
                 />
               ))}
+              {grant.period && (
+                <View>
+                  <Text style={[styles.strong, { color: theme.foreground }]}>
+                    Up to {grant.period.amount.formatted} every{" "}
+                    {grant.period.every}
+                  </Text>
+                  <Text style={[styles.small, muted]}>
+                    Starts {grant.period.startsAt}
+                  </Text>
+                </View>
+              )}
               {spent !== undefined && (
                 <View>
                   <View style={styles.spentRow}>
@@ -222,6 +238,12 @@ export function AuthorizationListNative({
             </View>
           );
         })}
+
+        {view.enforcementLabel && (
+          <Text style={[styles.strong, { color: theme.foreground }]}>
+            {view.enforcementLabel}
+          </Text>
+        )}
 
         <Text style={[styles.small, muted]}>
           {entry.status === "expired"

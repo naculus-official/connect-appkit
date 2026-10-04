@@ -1,25 +1,25 @@
 "use client";
 
+import {
+  type AuthorizationAssetMetadata,
+  describeAuthorization,
+  formatAuthorizationAmount,
+} from "@naculus/connect-appkit-core";
 import type {
   ListedAuthorization,
   RevokeListedAuthorizationResult,
 } from "@naculus/connect-core";
-import {
-  describeAuthorization,
-  formatAuthorizationAmount,
-  type AuthorizationAssetMetadata,
-} from "@naculus/connect-appkit-core";
 import { AlertTriangle, Ban } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { useComponentRegistry } from "../contexts/ComponentRegistry";
+import { cn } from "../lib/cn";
 import {
   NativeBadge,
   NativeButton,
   NativeCard,
   type RegistryButton,
 } from "../lib/registry-fallbacks";
-import { cn } from "../lib/cn";
 import { Address } from "./payment-ui";
 
 export interface AuthorizationListProps {
@@ -33,6 +33,9 @@ export interface AuthorizationListProps {
     | Promise<RevokeListedAuthorizationResult>;
   revokingId?: string;
   locale?: string;
+  getEnforcement?: (
+    entry: ListedAuthorization,
+  ) => "on-chain" | "device" | undefined;
   className?: string;
 }
 
@@ -43,6 +46,7 @@ export function AuthorizationList({
   onRevoke,
   revokingId,
   locale,
+  getEnforcement,
   className,
 }: AuthorizationListProps) {
   const entries = Array.isArray(input) ? input : input.entries;
@@ -93,6 +97,7 @@ export function AuthorizationList({
           assets,
           trustedAssets,
           locale,
+          enforcement: getEnforcement?.(entry),
         });
         const busy = revokingId === entry.keyId;
         return (
@@ -166,6 +171,17 @@ export function AuthorizationList({
                         <Address key={recipient.full} value={recipient.full} />
                       ))}
                     </div>
+                    {grant.period && (
+                      <div className="mt-3 text-sm">
+                        <p className="font-medium">
+                          Up to {grant.period.amount.formatted} every{" "}
+                          {grant.period.every}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Starts {grant.period.startsAt}
+                        </p>
+                      </div>
+                    )}
                     {spent !== undefined && (
                       <div className="mt-3">
                         <div className="flex justify-between gap-2 text-xs">
@@ -201,6 +217,11 @@ export function AuthorizationList({
                 );
               })}
             </div>
+            {view.enforcementLabel && (
+              <p className="mt-3 text-sm font-medium">
+                {view.enforcementLabel}
+              </p>
+            )}
             <p
               className="mt-3 text-xs text-muted-foreground"
               title={new Date(view.expiry.timestamp * 1_000).toISOString()}

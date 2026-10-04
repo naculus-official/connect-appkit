@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react";
 import { explainSpend } from "@naculus/connect-appkit-core";
 import type { Authorization, ListedAuthorization } from "@naculus/connect-core";
+import type { Meta, StoryObj } from "@storybook/react";
 import { AuthorizationConsent } from "./AuthorizationConsent";
 
 const asset = "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
@@ -59,6 +59,24 @@ export const Blocked: Story = {
   },
 };
 export const Busy: Story = { args: { busy: true } };
+export const PeriodicOnChain: Story = {
+  args: {
+    authorization: {
+      ...authorization,
+      grants: [
+        {
+          ...authorization.grants[0],
+          period: {
+            amount: 25_000_000n,
+            seconds: 2_592_000,
+            start: now,
+          },
+        },
+      ],
+    },
+    enforcement: "on-chain",
+  },
+};
 const warningAuthorization = {
   ...authorization,
   keyId: "legacy-key",
@@ -84,6 +102,16 @@ export const WarningManyRecipients: Story = {
 export const MissingMetadata: Story = { args: { assets: {} } };
 export const Dark360: Story = {
   args: WarningManyRecipients.args,
+  decorators: [
+    (Story) => (
+      <div className="dark w-[360px] bg-background p-3 text-foreground">
+        <Story />
+      </div>
+    ),
+  ],
+};
+export const DarkPeriodic360: Story = {
+  args: PeriodicOnChain.args,
   decorators: [
     (Story) => (
       <div className="dark w-[360px] bg-background p-3 text-foreground">

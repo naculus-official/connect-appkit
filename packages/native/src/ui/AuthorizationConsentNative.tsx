@@ -33,6 +33,7 @@ export interface AuthorizationConsentNativeProps {
   locale?: string;
   /** Unix timestamp in seconds, for a stable relative expiry. */
   now?: number;
+  enforcement?: "on-chain" | "device";
   theme?: NativePaymentTheme;
 }
 
@@ -43,6 +44,7 @@ export function AuthorizationConsentNative({
   trustedAssets,
   locale,
   now,
+  enforcement,
   requester,
   preview,
   onApprove,
@@ -60,6 +62,7 @@ export function AuthorizationConsentNative({
           trustedAssets,
           locale,
           now,
+          enforcement,
         });
   const muted = { color: theme.mutedForeground };
 
@@ -153,6 +156,20 @@ export function AuthorizationConsentNative({
                 </Text>
               </View>
             </View>
+            {grant.period && (
+              <View>
+                <Text style={[styles.term, { color: theme.foreground }]}>
+                  Period limit
+                </Text>
+                <Text style={[styles.amount, { color: theme.foreground }]}>
+                  Up to {grant.period.amount.formatted} every{" "}
+                  {grant.period.every}
+                </Text>
+                <Text style={[styles.small, muted]}>
+                  Starts {grant.period.startsAt}
+                </Text>
+              </View>
+            )}
 
             <Text style={[styles.term, { color: theme.foreground }]}>
               Recipients
@@ -200,6 +217,12 @@ export function AuthorizationConsentNative({
             </View>
           </View>
         ))}
+
+        {description.enforcementLabel && (
+          <Text style={[styles.strong, { color: theme.foreground }]}>
+            {description.enforcementLabel}
+          </Text>
+        )}
 
         <View style={[styles.expiry, { backgroundColor: theme.muted }]}>
           <Text style={[styles.strong, { color: theme.foreground }]}>

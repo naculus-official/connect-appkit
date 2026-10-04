@@ -1,21 +1,21 @@
 "use client";
 
-import type { Authorization, ListedAuthorization } from "@naculus/connect-core";
 import {
-  describeAuthorization,
   type AuthorizationAssetMetadata,
   type AuthorizationDescription,
+  describeAuthorization,
   type SpendExplanation,
 } from "@naculus/connect-appkit-core";
+import type { Authorization, ListedAuthorization } from "@naculus/connect-core";
 import { AlertTriangle, ShieldCheck, ShieldX } from "lucide-react";
 import type React from "react";
 import { useComponentRegistry } from "../contexts/ComponentRegistry";
+import { cn } from "../lib/cn";
 import {
   NativeButton,
   NativeCard,
   type RegistryButton,
 } from "../lib/registry-fallbacks";
-import { cn } from "../lib/cn";
 import { Address, tone } from "./payment-ui";
 
 export interface AuthorizationConsentProps {
@@ -25,6 +25,7 @@ export interface AuthorizationConsentProps {
   locale?: string;
   /** Unix timestamp in seconds, for a stable relative expiry. */
   now?: number;
+  enforcement?: "on-chain" | "device";
   requester: { name: string; icon?: string; origin?: string };
   preview?: SpendExplanation;
   onApprove: () => void;
@@ -45,6 +46,7 @@ export function AuthorizationConsent({
   trustedAssets,
   locale,
   now,
+  enforcement,
   requester,
   preview,
   onApprove,
@@ -59,6 +61,7 @@ export function AuthorizationConsent({
         trustedAssets,
         locale,
         now,
+        enforcement,
       });
   const registry = useComponentRegistry();
   const Button =
@@ -170,6 +173,18 @@ export function AuthorizationConsent({
                   {grant.total.formatted}
                 </p>
               </div>
+              {grant.period && (
+                <div className="col-span-2">
+                  <p className="text-xs text-muted-foreground">Period limit</p>
+                  <p className="break-words text-xl font-semibold tabular-nums">
+                    Up to {grant.period.amount.formatted} every{" "}
+                    {grant.period.every}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Starts {grant.period.startsAt}
+                  </p>
+                </div>
+              )}
             </div>
             <dl className="mt-4 grid gap-3 text-sm">
               <div>
@@ -211,6 +226,10 @@ export function AuthorizationConsent({
           </Card>
         ))}
       </div>
+
+      {description.enforcementLabel && (
+        <p className="text-sm font-medium">{description.enforcementLabel}</p>
+      )}
 
       <div className="naculus-consent-expiry rounded-lg bg-muted p-3 text-sm">
         <p className="font-medium">Expires {description.expiry.relative}</p>

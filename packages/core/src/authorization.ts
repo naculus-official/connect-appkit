@@ -19,6 +19,8 @@ export interface DescribeAuthorizationOptions {
   locale?: string;
   /** Unix timestamp in seconds. */
   now?: number;
+  /** Enforcement reported by a successful authorization compile result. */
+  enforcement?: "on-chain" | "device";
 }
 
 export interface AuthorizationRecipientView {
@@ -38,6 +40,11 @@ export interface AuthorizationGrantView {
   perPayment: AuthorizationAmountView;
   total: AuthorizationAmountView;
   count: number | null;
+  period: {
+    amount: AuthorizationAmountView;
+    every: string;
+    startsAt: string;
+  } | null;
   rails: string[];
 }
 
@@ -52,6 +59,8 @@ export interface AuthorizationDescription {
   principal: string | null;
   grants: AuthorizationGrantView[];
   expiry: AuthorizationExpiryView;
+  enforcement: "on-chain" | "device" | null;
+  enforcementLabel: string | null;
   warnings: string[];
 }
 
@@ -142,6 +151,41 @@ function relativeExpiry(
   return new Intl.RelativeTimeFormat(locale).format(value, unit);
 }
 
+function absoluteUtc(timestamp: number, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  }).format(timestamp * 1_000);
+}
+
+function formatPeriodLength(seconds: number): string {
+  const [amount, unit] =
+    seconds % 604_800 === 0
+      ? [seconds / 604_800, "week"]
+      : seconds % 86_400 === 0
+        ? [seconds / 86_400, "day"]
+        : seconds % 3_600 === 0
+          ? [seconds / 3_600, "hour"]
+          : [seconds, "second"];
+  return `${amount} ${unit}${amount === 1 ? "" : "s"}`;
+}
+
+function formatAuthorizationEnforcement(
+  enforcement: AuthorizationDescription["enforcement"],
+): string | null {
+  return enforcement === "on-chain"
+    ? "Limits enforced by the blockchain"
+    : enforcement === "device"
+      ? "Limits enforced by this device"
+      : null;
+}
+
 /** Build a network-free consent/listing view of an authorization. */
 export function describeAuthorization(
   input: Authorization | ListedAuthorization,
@@ -168,23 +212,25 @@ export function describeAuthorization(
         perPayment: formatAuthorizationAmount(grant.maxPerPayment, metadata),
         total: formatAuthorizationAmount(grant.maxTotal, metadata),
         count: grant.maxCount ?? null,
+        period: grant.period
+          ? {
+              amount: formatAuthorizationAmount(grant.period.amount, metadata),
+              every: formatPeriodLength(grant.period.seconds),
+              startsAt: absoluteUtc(grant.period.start, locale),
+            }
+          : null,
         rails: grant.rails.map((r) => r.replace("-", " ")),
       };
     }),
     expiry: {
       timestamp: input.expiresAt,
-      absolute: new Intl.DateTimeFormat(locale, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-        timeZone: "UTC",
-        timeZoneName: "short",
-      }).format(input.expiresAt * 1_000),
+      absolute: absoluteUtc(input.expiresAt, locale),
       relative: relativeExpiry(input.expiresAt, now, locale),
     },
+    enforcement: options.enforcement ?? null,
+    enforcementLabel: formatAuthorizationEnforcement(
+      options.enforcement ?? null,
+    ),
     warnings: flags.map((flag) =>
       flag === "unrestricted-recipient-legacy"
         ? "This key can pay any recipient."
@@ -201,6 +247,8 @@ const REFUSAL_SENTENCES: Record<SpendRefusal, string> = {
   "over-per-payment": "This amount exceeds the per-payment limit.",
   "over-total": "This amount exceeds the remaining total limit.",
   "over-count": "This authorization has reached its payment count limit.",
+  "period-limit-exceeded":
+    "This amount exceeds the limit for the current period.",
   "rail-not-allowed": "This payment rail is not allowed.",
   "invalid-authorization": "The authorization or spend request is invalid.",
 };

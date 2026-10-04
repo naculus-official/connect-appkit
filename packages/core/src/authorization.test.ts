@@ -120,6 +120,44 @@ describe("describeAuthorization", () => {
     expect(unknown.expiry.absolute).toBe("May 18, 2033, 03:33 UTC");
   });
 
+  it.each([
+    [60, "60 seconds"],
+    [3_600, "1 hour"],
+    [86_400, "1 day"],
+    [2_592_000, "30 days"],
+    [604_800, "1 week"],
+  ])("formats a %i second grant period", (seconds, every) => {
+    const grant = {
+      ...authorization().grants[0],
+      period: { amount: 3_000_000n, seconds, start: 1_900_000_000 },
+    };
+    const view = describeAuthorization(authorization({ grants: [grant] }), {
+      assets: { [ASSET]: { symbol: "USDC", decimals: 6 } },
+      enforcement: "on-chain",
+    });
+    expect(view.grants[0].period).toEqual({
+      amount: { formatted: "3 USDC" },
+      every,
+      startsAt: "Mar 17, 2030, 17:46 UTC",
+    });
+    expect(view.enforcement).toBe("on-chain");
+  });
+
+  it("formats an unverified period amount in base units", () => {
+    const grant = {
+      ...authorization().grants[0],
+      period: { amount: 3_000_000n, seconds: 86_400, start: 1_900_000_000 },
+    };
+    const view = describeAuthorization(authorization({ grants: [grant] }), {
+      assets: { [ASSET]: { symbol: "USDC", decimals: 6 } },
+      trustedAssets: [],
+    });
+    expect(view.grants[0].period?.amount.formatted).toBe(
+      "3,000,000 base units",
+    );
+    expect(view.enforcement).toBeNull();
+  });
+
   it("uses English by default and honors an explicit locale", () => {
     const defaults = describeAuthorization(authorization(), {
       now: 1_999_913_600,
@@ -311,6 +349,23 @@ describe("explainSpend", () => {
       authorization(),
       request({ countSoFar: 3 }),
       "This authorization has reached its payment count limit.",
+    ],
+    [
+      "period-limit-exceeded",
+      authorization({
+        grants: [
+          {
+            ...authorization().grants[0],
+            period: {
+              amount: 2_000_000n,
+              seconds: 86_400,
+              start: 1_800_000_000,
+            },
+          },
+        ],
+      }),
+      request({ amount: 1_000_000n, periodSpentSoFar: 1_500_000n }),
+      "This amount exceeds the limit for the current period.",
     ],
     [
       "rail-not-allowed",

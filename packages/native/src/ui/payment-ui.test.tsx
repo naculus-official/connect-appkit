@@ -194,6 +194,29 @@ describe("AuthorizationConsentNative", () => {
     expect(
       screen.getByRole("button", { name: `Copied ${RECIPIENT}` }),
     ).toBeDefined();
+    expect(screen.queryByText(/^Up to .* every /)).toBeNull();
+    expect(screen.queryByText(/^Limits enforced by/)).toBeNull();
+  });
+
+  it("shows a periodic limit and on-chain enforcement", () => {
+    consent({
+      authorization: {
+        ...authorization,
+        grants: [
+          {
+            ...authorization.grants[0],
+            period: {
+              amount: 3_000_000n,
+              seconds: 2_592_000,
+              start: 1_900_000_000,
+            },
+          },
+        ],
+      },
+      enforcement: "on-chain",
+    });
+    expect(screen.getByText("Up to 3 USDC every 30 days")).toBeDefined();
+    expect(screen.getByText("Limits enforced by the blockchain")).toBeDefined();
   });
 
   it("falls back to base units and the asset address without metadata", () => {
@@ -337,6 +360,39 @@ describe("AuthorizationListNative", () => {
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe(
       "40",
     );
+    expect(screen.queryByText(/^Up to .* every /)).toBeNull();
+    expect(screen.queryByText(/^Limits enforced by/)).toBeNull();
+  });
+
+  it("shows periodic limits with per-entry enforcement", () => {
+    const periodic = listed({
+      grants: [
+        {
+          ...authorization.grants[0],
+          period: {
+            amount: 3_000_000n,
+            seconds: 604_800,
+            start: 1_900_000_000,
+          },
+        },
+      ],
+    });
+    render(
+      <AuthorizationListNative
+        entries={[
+          periodic,
+          listed({ keyId: "key-2", grants: periodic.grants }),
+        ]}
+        assets={assets}
+        getEnforcement={(entry) =>
+          entry.keyId === "key-1" ? "device" : "on-chain"
+        }
+        onRevoke={() => ({ onChainRevocationRequired: false })}
+      />,
+    );
+    expect(screen.getAllByText("Up to 3 USDC every 1 week")).toHaveLength(2);
+    expect(screen.getByText("Limits enforced by this device")).toBeDefined();
+    expect(screen.getByText("Limits enforced by the blockchain")).toBeDefined();
   });
 
   it("warns only for unverified assets and formats their spend in base units", () => {

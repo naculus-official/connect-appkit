@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 /// @vitest-environment jsdom
 
+import type { ListedAuthorization } from "@naculus/connect-core";
 import {
   cleanup,
   fireEvent,
@@ -8,7 +9,6 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import type { ListedAuthorization } from "@naculus/connect-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthorizationList } from "./AuthorizationList";
 
@@ -57,6 +57,36 @@ describe("AuthorizationList", () => {
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe(
       "40",
     );
+    expect(screen.queryByText(/^Up to .* every /)).toBeNull();
+    expect(screen.queryByText(/^Limits enforced by/)).toBeNull();
+  });
+  it("renders periodic limits with per-entry enforcement", () => {
+    const periodic = {
+      ...entry,
+      grants: [
+        {
+          ...entry.grants[0],
+          period: { amount: 3n, seconds: 604_800, start: 1_900_000_000 },
+        },
+      ],
+    } as ListedAuthorization;
+    render(
+      <AuthorizationList
+        entries={[
+          periodic,
+          { ...periodic, keyId: "key-2" } as ListedAuthorization,
+        ]}
+        getEnforcement={(authorization) =>
+          authorization.keyId === "key-1" ? "device" : "on-chain"
+        }
+        onRevoke={() => ({ onChainRevocationRequired: false })}
+      />,
+    );
+    expect(
+      screen.getAllByText("Up to 3 base units every 1 week"),
+    ).toHaveLength(2);
+    expect(screen.getByText("Limits enforced by this device")).toBeDefined();
+    expect(screen.getByText("Limits enforced by the blockchain")).toBeDefined();
   });
   it("formats spent and total with the same asset metadata", () => {
     render(
