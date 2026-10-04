@@ -94,11 +94,90 @@ authorizations and refreshes after `revoke(entry)`. Inspect the returned
 verifies its settlement in the background. Pending verification retries five
 times at four-second intervals by default; pass `verifyRetry` to change that.
 
-`useX402Signer(session, provider, switchChain, chainId)` creates the same x402
-signer from caller-owned reactive connection values. Its `signer` and `reason`
-are computed refs; pass `signer.value` to `createX402Fetch` only when it is
-non-null. Injected EIP-6963 sessions are supported, as is WalletConnect when
-the caller can supply its EIP-1193-shaped request facade.
+### Pay x402 from the connected wallet
+
+Vue has no provider component, so `useX402Signer` takes the connection from
+you: `useX402Signer(session, provider, switchChain, chainId)`. Pick the
+provider with `findX402Provider` from `@naculus/connect-appkit-core`, which
+chooses it by the session's wallet type, the same rule the React hook uses.
+The injected wallets come from `@naculus/connector-evm-injected` and the
+WalletConnect connector from `@naculus/connector-walletconnect`; install
+whichever your app connects with.
+
+```ts
+import {
+  findX402Provider,
+  type PaymentFetch,
+} from "@naculus/connect-appkit-core";
+import type { SessionManager } from "@naculus/connect-core";
+import {
+  usePaymentFetch,
+  useSession,
+  useX402Signer,
+} from "@naculus/connect-appkit-vue";
+import { eip6963Connector } from "@naculus/connector-evm-injected";
+import type { WalletConnectConnector } from "@naculus/connector-walletconnect";
+import { createX402Fetch } from "@naculus/payments-x402";
+import { computed } from "vue";
+
+// Your app's SessionManager, and its WalletConnect connector if it has one.
+declare const manager: SessionManager;
+declare const walletConnect: WalletConnectConnector | null;
+
+const { session, activeChainId } = useSession(manager);
+const provider = computed(() =>
+  findX402Provider(session.value, {
+    injected: eip6963Connector.getDiscoveredWallets(),
+    walletConnect,
+  }),
+);
+const switchChain = (chainId: string) => manager.switchChain(chainId);
+
+const { signer, reason } = useX402Signer(
+  session,
+  provider,
+  switchChain,
+  activeChainId,
+);
+const pay = computed<PaymentFetch | null>(() =>
+  signer.value ? createX402Fetch({ signer: signer.value }) : null,
+);
+```
+
+`signer` and `reason` are computed refs. `usePaymentFetch` takes a paying
+fetch, not `null`, so call it in a child component that is rendered only once
+`pay` is set (`<PaidResource v-if="pay" :pay="pay" />`):
+
+```ts
+// PaidResource.vue, <script setup lang="ts">
+import type { PaymentFetch } from "@naculus/connect-appkit-core";
+import { usePaymentFetch } from "@naculus/connect-appkit-vue";
+import { toRef } from "vue";
+
+const props = defineProps<{ pay: PaymentFetch }>();
+const { payFetch, isPending, lastPayment, error } = usePaymentFetch(
+  toRef(props, "pay"),
+);
+// Call payFetch(url) from an event handler.
+```
+
+`reason` is `null` whenever `signer` is set. Otherwise it says why there is no
+signer, and what to show for it:
+
+| `reason` | Meaning | Show |
+|----------|---------|------|
+| `"no-session"` | No wallet is connected. | The connect button. |
+| `"not-evm"` | The session has no EVM (`eip155`) account, for example a Solana-only wallet. | Ask for an EVM account or an EVM wallet. |
+| `"unsupported-wallet-type"` | The session is not an injected (EIP-6963) or WalletConnect wallet, or no provider was found for it. Embedded and passkey EVM wallets land here. | Offer a browser wallet or WalletConnect instead. |
+
+The signer switches the wallet to the chain the server asks for before it
+signs, through the `switchChain` you pass, so a wallet on another EVM chain is
+not a `reason`.
+
+WalletConnect sessions are supported when you pass the WalletConnect connector
+to `findX402Provider`. The injected (EIP-6963) path is the one verified end to
+end with real wallets; test WalletConnect against the wallets you target before
+you rely on it.
 
 ## License
 

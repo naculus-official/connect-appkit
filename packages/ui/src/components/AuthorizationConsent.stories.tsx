@@ -77,6 +77,47 @@ export const PeriodicOnChain: Story = {
     enforcement: "on-chain",
   },
 };
+// Each periodic story passes a real Authorization through the component, so
+// the period line is what describeAuthorization renders, not a fixture string.
+const hourlyDeviceAuthorization: Authorization = {
+  ...authorization,
+  label: "SenderPay hourly budget",
+  grants: [
+    {
+      ...authorization.grants[0],
+      period: { amount: 5_000_000n, seconds: 3_600, start: now },
+    },
+  ],
+};
+export const PeriodicDeviceHourly: Story = {
+  args: { authorization: hourlyDeviceAuthorization, enforcement: "device" },
+};
+const unverifiedAsset =
+  "eip155:8453/erc20:0x4200000000000000000000000000000000000042";
+const unverifiedPeriodicAuthorization: Authorization = {
+  ...authorization,
+  label: "Unlisted token budget",
+  grants: [
+    {
+      ...authorization.grants[0],
+      asset: unverifiedAsset,
+      period: { amount: 25_000_000n, seconds: 2_592_000, start: now },
+    },
+  ],
+};
+// The caller has metadata for the token, but it is not on the trusted list:
+// every amount, the period included, stays in base units.
+export const PeriodicUnverifiedAsset: Story = {
+  args: {
+    authorization: unverifiedPeriodicAuthorization,
+    assets: {
+      ...assets,
+      [unverifiedAsset]: { symbol: "USDC", decimals: 6 },
+    },
+    trustedAssets: [asset],
+    enforcement: "on-chain",
+  },
+};
 const warningAuthorization = {
   ...authorization,
   keyId: "legacy-key",
