@@ -216,3 +216,5 @@
   type UseUserOpStatusReturn
   useValidateDestination
   type UseValidateDestinationReturn
+  useX402Signer
+  type UseX402SignerReturn

@@ -88,6 +88,27 @@ authorizations and refreshes after `revoke(entry)`. Inspect the returned
 verifies its settlement in the background. Pending verification retries five
 times at four-second intervals by default; pass `verifyRetry` to change that.
 
+For x402 with the connected browser wallet, build the paying fetch from the
+hook's signer. Render the component that calls `usePaymentFetch` only after
+`pay` is available, because `usePaymentFetch` accepts a paying fetch rather
+than `null`:
+
+```tsx
+const { signer } = useX402Signer();
+const pay = useMemo(
+  () => signer && createX402Fetch({ signer }),
+  [signer],
+);
+
+if (!pay) return null;
+return <PaidResource pay={pay} />;
+
+function PaidResource({ pay }: { pay: PaymentFetch }) {
+  const { payFetch } = usePaymentFetch(pay);
+  // Call payFetch(url) from an event or effect.
+}
+```
+
 ### Ask before executing
 
 ```tsx

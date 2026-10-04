@@ -94,6 +94,12 @@ authorizations and refreshes after `revoke(entry)`. Inspect the returned
 verifies its settlement in the background. Pending verification retries five
 times at four-second intervals by default; pass `verifyRetry` to change that.
 
+`useX402Signer(session, provider, switchChain, chainId)` creates the same x402
+signer from caller-owned reactive connection values. Its `signer` and `reason`
+are computed refs; pass `signer.value` to `createX402Fetch` only when it is
+non-null. Injected EIP-6963 sessions are supported, as is WalletConnect when
+the caller can supply its EIP-1193-shaped request facade.
+
 ## License
 
 MIT

@@ -37,6 +37,7 @@
   createNotification
   createNotificationSettingsStorage
   createSolanaSessionKeyFlow
+  createX402WalletSigner
   type DecimalsCache
   decodeRevertReason
   DEFAULT_NOTIFICATION_SETTINGS
@@ -65,6 +66,7 @@
   type ExecuteRouteResult
   explainSpend
   fetchUserOperationReceipt
+  findX402Provider
   formatAuthorizationAmount
   getResolver
   type GetRouteQuotes
@@ -123,6 +125,7 @@
   resolveRevertReason
   resolveSimulationEndpoint
   resolveUserOpChain
+  resolveX402Wallet
   type RetryOptions
   type RouteQuote
   type RouteQuoteInput
@@ -172,3 +175,9 @@
   withRetry
   withTimeout
   writeDecimals
+  type X402Eip1193Provider
+  type X402ProviderSources
+  type X402SignerResolution
+  type X402SignerUnavailableReason
+  X402TypedDataSigner
+  type X402WalletResolution

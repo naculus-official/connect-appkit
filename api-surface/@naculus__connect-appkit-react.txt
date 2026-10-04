@@ -273,6 +273,8 @@
   useWeb3
   useWeb3ErrorHandler
   type UseWeb3ErrorHandlerReturn
+  useX402Signer
+  type UseX402SignerReturn
   validateDestination
   WALLET_ERROR_DESCRIPTIONS
   WALLET_ERROR_TITLES

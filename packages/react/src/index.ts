@@ -80,6 +80,8 @@ export type {
   UsePaymentFetchReturn,
 } from "./hooks/usePaymentFetch";
 export { usePaymentFetch } from "./hooks/usePaymentFetch";
+export { useX402Signer } from "./hooks/useX402Signer";
+export type { UseX402SignerReturn } from "./hooks/useX402Signer";
 export type { UseMppSessionReturn } from "./hooks/useMppSession";
 export { useMppSession } from "./hooks/useMppSession";
 export type { UseSolanaSessionKeyReturn } from "./hooks/useSolanaSessionKey";

@@ -22,11 +22,12 @@
   },
   "dependencies": {
     "@naculus/connect-appkit-wc": "workspace:*",
+    "@naculus/payments-x402": "^0.9.0",
     "@stencil/vue-output-target": "^0.14.3"
   },
   "peerDependencies": {
     "@naculus/connect-appkit-core": "^0.9.0",
-    "@naculus/connect-core": "^0.8.0",
+    "@naculus/connect-core": "^0.9.0",
     "vue": "^3.5.0"
   },
   "publishConfig": {
@@ -34,7 +35,7 @@
   },
   "devDependencies": {
     "@naculus/connect-appkit-core": "workspace:*",
-    "@naculus/connect-core": "^0.8.0",
+    "@naculus/connect-core": "^0.9.0",
     "vitest": "^5.0.0",
     "vue": "^3.5.43"
   },

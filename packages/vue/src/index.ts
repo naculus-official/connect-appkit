@@ -77,6 +77,8 @@ export { useDisconnect } from "./useDisconnect";
 export type { UseDisconnectReturn } from "./useDisconnect";
 export { useSwitchChain } from "./useSwitchChain";
 export type { UseSwitchChainReturn } from "./useSwitchChain";
+export { useX402Signer } from "./useX402Signer";
+export type { UseX402SignerReturn } from "./useX402Signer";
 export { useSignMessage } from "./useSignMessage";
 export type {
   SignMessageAction,
