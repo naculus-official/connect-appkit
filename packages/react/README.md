@@ -88,26 +88,62 @@ authorizations and refreshes after `revoke(entry)`. Inspect the returned
 verifies its settlement in the background. Pending verification retries five
 times at four-second intervals by default; pass `verifyRetry` to change that.
 
-For x402 with the connected browser wallet, build the paying fetch from the
-hook's signer. Render the component that calls `usePaymentFetch` only after
-`pay` is available, because `usePaymentFetch` accepts a paying fetch rather
-than `null`:
+### Pay x402 from the connected wallet
+
+`useX402Signer()` reads the connected session from `Web3ConnectProvider` and
+returns `{ signer, reason }`. Build the paying fetch with
+`createX402Fetch({ signer })` from `@naculus/payments-x402`, then hand it to
+`usePaymentFetch`. `usePaymentFetch` takes a paying fetch, not `null`, so
+render the component that calls it only once `signer` exists:
 
 ```tsx
-const { signer } = useX402Signer();
-const pay = useMemo(
-  () => signer && createX402Fetch({ signer }),
-  [signer],
-);
+import type { PaymentFetch } from "@naculus/connect-appkit-core";
+import { usePaymentFetch, useX402Signer } from "@naculus/connect-appkit-react";
+import { createX402Fetch } from "@naculus/payments-x402";
+import { useMemo } from "react";
 
-if (!pay) return null;
-return <PaidResource pay={pay} />;
+const REASON_TEXT = {
+  "no-session": "Connect a wallet to pay.",
+  "not-evm": "Switch to an EVM account to pay with x402.",
+  "unsupported-wallet-type":
+    "This wallet cannot sign x402 payments here. Connect a browser wallet or use WalletConnect.",
+} as const;
+
+function PayWithWallet() {
+  const { signer, reason } = useX402Signer();
+  const pay = useMemo(
+    () => (signer ? createX402Fetch({ signer }) : null),
+    [signer],
+  );
+
+  if (!pay) return <p>{reason ? REASON_TEXT[reason] : null}</p>;
+  return <PaidResource pay={pay} />;
+}
 
 function PaidResource({ pay }: { pay: PaymentFetch }) {
-  const { payFetch } = usePaymentFetch(pay);
-  // Call payFetch(url) from an event or effect.
+  const { payFetch, isPending, lastPayment, error } = usePaymentFetch(pay);
+  // Call payFetch(url) from an event handler; render isPending, lastPayment
+  // and error.
+  return null;
 }
 ```
+
+`reason` is `null` whenever `signer` is set. Otherwise it says why there is no
+signer, and what to show for it:
+
+| `reason` | Meaning | Show |
+|----------|---------|------|
+| `"no-session"` | No wallet is connected. | The connect button. |
+| `"not-evm"` | The session has no EVM (`eip155`) account, for example a Solana-only wallet. | Ask for an EVM account or an EVM wallet. |
+| `"unsupported-wallet-type"` | The session is not an injected (EIP-6963) or WalletConnect wallet, or its provider is no longer available. Embedded and passkey EVM wallets land here. | Offer a browser wallet or WalletConnect instead. |
+
+The signer switches the wallet to the chain the server asks for before it
+signs, so a wallet on another EVM chain is not a `reason`.
+
+WalletConnect sessions are supported: the hook signs through the WalletConnect
+connector. The injected (EIP-6963) path is the one verified end to end with
+real wallets; test WalletConnect against the wallets you target before you rely
+on it.
 
 ### Ask before executing
 

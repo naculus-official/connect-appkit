@@ -121,11 +121,16 @@ describe("describeAuthorization", () => {
   });
 
   it.each([
-    [60, "60 seconds"],
+    [1, "1 second"],
+    [59, "59 seconds"],
+    [60, "1 minute"],
+    [90, "90 seconds"],
+    [1_800, "30 minutes"],
     [3_600, "1 hour"],
+    [5_400, "90 minutes"],
     [86_400, "1 day"],
-    [2_592_000, "30 days"],
     [604_800, "1 week"],
+    [2_592_000, "30 days"],
   ])("formats a %i second grant period", (seconds, every) => {
     const grant = {
       ...authorization().grants[0],

@@ -164,6 +164,9 @@ function absoluteUtc(timestamp: number, locale: string): string {
   }).format(timestamp * 1_000);
 }
 
+// The largest unit that divides the period exactly, so 90 seconds stays
+// "90 seconds" rather than a rounded "2 minutes". Plain arithmetic and English
+// plurals, no Intl: Hermes (React Native) lacks parts of it.
 function formatPeriodLength(seconds: number): string {
   const [amount, unit] =
     seconds % 604_800 === 0
@@ -172,7 +175,9 @@ function formatPeriodLength(seconds: number): string {
         ? [seconds / 86_400, "day"]
         : seconds % 3_600 === 0
           ? [seconds / 3_600, "hour"]
-          : [seconds, "second"];
+          : seconds % 60 === 0
+            ? [seconds / 60, "minute"]
+            : [seconds, "second"];
   return `${amount} ${unit}${amount === 1 ? "" : "s"}`;
 }
 
