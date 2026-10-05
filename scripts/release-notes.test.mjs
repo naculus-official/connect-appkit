@@ -1,7 +1,7 @@
 // node --test scripts/release-notes.test.mjs
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { releaseNotes } from "./release-notes.mjs";
+import { extractSection, releaseNotes } from "./release-notes.mjs";
 
 const FEATURE = `## 0.5.0
 
@@ -67,5 +67,14 @@ test("refuses a release in which no package changed", () => {
   assert.throws(
     () => releaseNotes(packages.slice(2), "0.5.0"),
     /add a changeset/,
+  );
+});
+
+test("treats every metacharacter in a version literally", () => {
+  const changelog = `## 1.0.0+build(1)\n\n- Exact\n\n## 1x0x0build1\n\n- Different\n`;
+  assert.equal(extractSection(changelog, "1.0.0+build(1)"), "- Exact");
+  assert.equal(
+    extractSection("## 1x0x0build1\n\n- Different\n", "1.0.0+build(1)"),
+    null,
   );
 });

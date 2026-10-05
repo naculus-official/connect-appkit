@@ -24,10 +24,14 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** The body of `## <version>`, or null when the heading is absent. */
 export function extractSection(changelog, version) {
   const lines = changelog.split("\n");
-  const heading = new RegExp(`^## ${version.replace(/\./g, "\\.")}(\\s|$)`);
+  const heading = new RegExp(`^## ${escapeRegExp(version)}(\\s|$)`);
   const start = lines.findIndex((line) => heading.test(line));
   if (start === -1) return null;
   let end = lines.findIndex((line, i) => i > start && /^## /.test(line));
