@@ -1,5 +1,14 @@
 # @naculus/connect-appkit-vue
 
+## 0.11.1
+
+### Patch Changes
+
+- Require connect-lib 0.11. Every `@naculus/*` connect-lib dependency and peer range is now `^0.11.0` (was `^0.10.0`, which in 0.x excludes 0.11.0). With appkit 0.11.0, installing `@naculus/connect-core@0.11.0` next to it left several copies of `@naculus/connect-core` (0.10.0 nested under the connectors, 0.11.0 at the root). connect-lib packages pin each other to one exact version, so appkit cannot span two lib minors: with 0.11.1, a project still on connect-lib 0.10 gets an explicit npm ERESOLVE instead of duplicate copies; upgrade every `@naculus/*` connect-lib package to 0.11. No code change; `@naculus/connect-appkit-wc` is version bump only.
+- Updated dependencies
+  - @naculus/connect-appkit-core@0.11.1
+  - @naculus/connect-appkit-wc@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes
