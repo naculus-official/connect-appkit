@@ -210,6 +210,31 @@ describe("useSendCalls — execution strategy", () => {
     expect(result.current.status).toBe("failed");
   });
 
+  it.each([
+    [
+      { code: -32603, message: "in-flight transaction limit reached" },
+      /in-flight transaction limit reached \(code -32603\)/,
+    ],
+    [new Error("User rejected"), /User rejected/],
+    ["wallet unavailable", /wallet unavailable/],
+  ])("preserves a sequential rejection reason", async (rejection, expected) => {
+    const { client } = batchingClient({ atomicBatch: { supported: false } });
+    client.sendTransaction = vi
+      .fn()
+      .mockResolvedValueOnce(TX_HASH)
+      .mockRejectedValueOnce(rejection);
+    mockUseWeb3.mockReturnValue({ session, chainId: "eip155:1", client: {} });
+    mockResolveClient.mockReturnValue(client);
+    const { result } = renderHook(() => useSendCalls());
+
+    await act(async () => {
+      await expect(result.current.sendCalls([call, call])).rejects.toThrow(
+        expected,
+      );
+    });
+    expect(result.current.error?.message).toMatch(expected);
+  });
+
   it("falls back when the wallet cannot be asked at all", async () => {
     // An older wallet with no getCapabilities is the common case, not an edge.
     const { client, sendCalls, sendTransaction } = batchingClient();

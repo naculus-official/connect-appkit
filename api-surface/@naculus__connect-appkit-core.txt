@@ -59,6 +59,7 @@
   encodeErc20Approve
   encodeErc20Transfer
   encodeErc20TransferFrom
+  errorMessage
   type ExecutableQuote
   type ExecuteRoute
   type ExecuteRouteError

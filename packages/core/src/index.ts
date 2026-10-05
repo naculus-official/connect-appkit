@@ -58,6 +58,7 @@ export * from "./erc20-calldata";
 
 // ── Errors ────────────────────────────────────────────────────────
 export * from "./provider-errors";
+export * from "./error-message";
 export * from "./revert-reason";
 export * from "./simulation-endpoint";
 export * from "./transaction-simulation";

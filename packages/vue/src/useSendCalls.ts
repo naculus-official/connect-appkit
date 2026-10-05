@@ -1,3 +1,4 @@
+import { errorMessage } from "@naculus/connect-appkit-core";
 import type { ComputedRef, MaybeRef, MaybeRefOrGetter, ShallowRef } from "vue";
 import { computed, onScopeDispose, shallowRef, toValue, unref } from "vue";
 import type {
@@ -65,7 +66,7 @@ export function useSendCalls(options: UseSendCallsOptions): UseSendCallsReturn {
       return hash;
     } catch (cause) {
       const normalized =
-        cause instanceof Error ? cause : new Error("sendCalls failed");
+        cause instanceof Error ? cause : new Error(errorMessage(cause));
       if (!disposed && own === sendGeneration) {
         status.value = "failed";
         error.value = normalized;

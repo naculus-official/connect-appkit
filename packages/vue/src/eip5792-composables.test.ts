@@ -22,6 +22,28 @@ const callsStatus: CallsStatus = {
 };
 
 describe("Vue EIP-5792 shells", () => {
+  it.each([
+    [
+      { code: -32603, message: "in-flight transaction limit reached" },
+      /in-flight transaction limit reached \(code -32603\)/,
+    ],
+    [new Error("User rejected"), /User rejected/],
+    ["wallet unavailable", /wallet unavailable/],
+  ])("preserves a send rejection reason", async (rejection, expected) => {
+    const scope = effectScope();
+    const state = scope.run(() =>
+      useSendCalls({
+        sendCalls: vi.fn().mockRejectedValue(rejection),
+        getCallsStatus: vi.fn<GetCallsStatusAction>(),
+        showCallsStatus: vi.fn<ShowCallsStatusAction>(),
+      }),
+    )!;
+
+    await expect(state.sendCalls(calls)).rejects.toThrow(expected);
+    expect(state.error.value?.message).toMatch(expected);
+    scope.stop();
+  });
+
   it("passes send inputs and action results unchanged", async () => {
     const first = vi.fn<SendCallsAction>().mockResolvedValue("0xfirst");
     const second = vi.fn<SendCallsAction>().mockResolvedValue("0xbundle");

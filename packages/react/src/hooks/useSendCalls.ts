@@ -1,3 +1,4 @@
+import { errorMessage } from "@naculus/connect-appkit-core";
 import type {
   BatchCall,
   CallsStatus,
@@ -138,7 +139,7 @@ export function useSendCalls() {
               "tx_failed",
               `Call ${i + 1} of ${calls.length} failed after ${i} already landed ` +
                 `(sent sequentially — this wallet cannot batch atomically): ` +
-                `${err instanceof Error ? err.message : String(err)}`,
+                `${errorMessage(err)}`,
             );
           }
         }
@@ -147,9 +148,7 @@ export function useSendCalls() {
         return lastHash;
       } catch (err) {
         setStatus("failed");
-        const errorMessage =
-          err instanceof Error ? err.message : "sendCalls failed";
-        setError(err instanceof Error ? err : new Error(errorMessage));
+        setError(err instanceof Error ? err : new Error(errorMessage(err)));
         throw err;
       }
     },
