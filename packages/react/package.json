@@ -70,8 +70,5 @@
     "ui",
     "components",
     "react"
-  ],
-  "optionalDependencies": {
-    "@naculus/connect-appkit-ui": "workspace:*"
-  }
+  ]
 }
