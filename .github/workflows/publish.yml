@@ -30,6 +30,7 @@ jobs:
       # unable to fire in this repo at all.
       contents: write
       id-token: write
+    environment: npm-publish
 
     steps:
       - uses: actions/checkout@v7
