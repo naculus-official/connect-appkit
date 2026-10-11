@@ -1,5 +1,11 @@
 # @naculus/connect-appkit-ui
 
+## 0.12.1
+
+### Patch Changes
+
+- Update `lucide-react` to `^1.52.0`.
+
 ## 0.12.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @naculus/connect-appkit-vue
 
+## 0.12.1
+
+### Patch Changes
+
+- Version bump only to keep all appkit packages in lockstep at 0.12.1.
+
 ## 0.12.0
 
 ### Minor Changes

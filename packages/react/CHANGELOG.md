@@ -1,5 +1,11 @@
 # @naculus/connect-appkit-react
 
+## 0.12.1
+
+### Patch Changes
+
+- Remove the unused optional dependency on `@naculus/connect-appkit-ui`, so React consumers do not install UI assets automatically. Users who need UI components must explicitly install `@naculus/connect-appkit-ui`.
+
 ## 0.12.0
 
 ### Minor Changes
