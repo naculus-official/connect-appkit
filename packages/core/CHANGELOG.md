@@ -1,5 +1,15 @@
 # @naculus/connect-appkit-core
 
+## 0.12.0
+
+### Minor Changes
+
+- Require connect-lib 0.12 (`@naculus/connect` and its packages). Every connect-lib dependency and peer range is now `^0.12.0` (0.12 makes `MppSessionPolicy.mint` required; see the connect-lib 0.12.0 changelog). Install connect-lib 0.12 alongside this release.
+
+### Patch Changes
+
+- 12ae163: Preserve wallet provider messages and error codes when call submission fails.
+
 ## 0.11.1
 
 ### Patch Changes
