@@ -1,5 +1,13 @@
 # @naculus/connect-appkit-wc
 
+## 0.13.0
+
+### Minor Changes
+
+- Require connect-lib 0.13: every `@naculus/connect-*`, connector, payments, siwx and wallet-engine range moves from `^0.12.0` to `^0.13.0`.
+  
+  Breaking, inherited from connect-lib 0.13.0: a session-key scope that should sign x402 exact or MPP charge payments must now list them in `rails`; a scope without `rails` refuses EIP-3009 signing. The shared session-key manager passes scopes through unchanged, so re-create affected grants. See the connect-lib 0.13.0 changelog.
+
 ## 0.12.1
 
 ### Patch Changes
