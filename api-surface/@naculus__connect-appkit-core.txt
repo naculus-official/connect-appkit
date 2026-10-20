@@ -23,6 +23,7 @@
   chainNumber
   chainsForNamespace
   channelsUpdate
+  checkSessionKeyRailGrant
   clearOneInAppNotification
   type CompareCosts
   type CompareCostsInput
@@ -56,6 +57,7 @@
   type DestinationIssue
   type DestinationValidation
   eip155ChainIdToNumber
+  type Eip3009SessionKeyRail
   encodeErc20Approve
   encodeErc20Transfer
   encodeErc20TransferFrom
@@ -135,6 +137,7 @@
   saveNotificationSettings
   selectChainCapabilities
   sessionKeyConfigFingerprint
+  type SessionKeyRailGrantCheck
   simulateTransactionPreview
   type SimulationCallClient
   type SimulationTransaction
