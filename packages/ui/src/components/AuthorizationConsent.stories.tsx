@@ -59,6 +59,15 @@ export const Blocked: Story = {
   },
 };
 export const Busy: Story = { args: { busy: true } };
+export const RegrantNeeded: Story = {
+  args: {
+    railGrantCheck: {
+      status: "needs-regrant",
+      missingRail: "x402-exact",
+    },
+    onRegrant: () => undefined,
+  },
+};
 export const PeriodicOnChain: Story = {
   args: {
     authorization: {

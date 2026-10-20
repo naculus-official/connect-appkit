@@ -4,6 +4,8 @@ import {
   type AuthorizationAssetMetadata,
   type AuthorizationDescription,
   describeAuthorization,
+  type Eip3009SessionKeyRail,
+  type SessionKeyRailGrantCheck,
   type SpendExplanation,
 } from "@naculus/connect-appkit-core";
 import type { Authorization, ListedAuthorization } from "@naculus/connect-core";
@@ -31,6 +33,8 @@ export interface AuthorizationConsentProps {
   onApprove: () => void;
   onDecline: () => void;
   busy?: boolean;
+  railGrantCheck?: SessionKeyRailGrantCheck;
+  onRegrant?: (missingRail: Eip3009SessionKeyRail) => void;
   className?: string;
 }
 
@@ -52,6 +56,8 @@ export function AuthorizationConsent({
   onApprove,
   onDecline,
   busy = false,
+  railGrantCheck,
+  onRegrant,
   className,
 }: AuthorizationConsentProps) {
   const description = isDescription(authorization)
@@ -111,6 +117,31 @@ export function AuthorizationConsent({
           )}
         </div>
       </header>
+
+      {railGrantCheck?.status === "needs-regrant" && (
+        <div
+          role="alert"
+          className="flex gap-2 rounded-lg border border-amber-700 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100"
+        >
+          <AlertTriangle aria-hidden className="shrink-0" size={18} />
+          <div>
+            <p className="font-semibold">Re-grant needed</p>
+            <p>
+              This session key cannot sign {railGrantCheck.missingRail}{" "}
+              payments. Create a new wallet-approved grant for the same account
+              and chain.
+            </p>
+            {onRegrant && (
+              <Button
+                className="mt-2"
+                onClick={() => onRegrant(railGrantCheck.missingRail)}
+              >
+                Re-grant
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {description.warnings.map((warning) => (
         <div

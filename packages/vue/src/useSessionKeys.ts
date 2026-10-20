@@ -1,4 +1,9 @@
-import { getSharedSessionKeyManager } from "@naculus/connect-appkit-core";
+import {
+  checkSessionKeyRailGrant,
+  type Eip3009SessionKeyRail,
+  getSharedSessionKeyManager,
+  type SessionKeyRailGrantCheck,
+} from "@naculus/connect-appkit-core";
 import type {
   ScopeCheckResult,
   SessionKeyInfo,
@@ -41,6 +46,10 @@ export interface UseSessionKeysReturn {
   refresh: () => Promise<void>;
   clearError: () => void;
   storageAvailable: boolean;
+  checkRailGrant: (
+    scope: SessionKeyScope | null | undefined,
+    rail: Eip3009SessionKeyRail,
+  ) => SessionKeyRailGrantCheck;
 }
 
 /**
@@ -106,6 +115,7 @@ export function useSessionKeys(
       error.value = null;
     },
     storageAvailable: manager.isStorageAvailable(),
+    checkRailGrant: checkSessionKeyRailGrant,
   };
 }
 

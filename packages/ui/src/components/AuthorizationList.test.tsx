@@ -82,9 +82,9 @@ describe("AuthorizationList", () => {
         onRevoke={() => ({ onChainRevocationRequired: false })}
       />,
     );
-    expect(
-      screen.getAllByText("Up to 3 base units every 1 week"),
-    ).toHaveLength(2);
+    expect(screen.getAllByText("Up to 3 base units every 1 week")).toHaveLength(
+      2,
+    );
     expect(screen.getByText("Limits enforced by this device")).toBeDefined();
     expect(screen.getByText("Limits enforced by the blockchain")).toBeDefined();
   });
@@ -155,5 +155,22 @@ describe("AuthorizationList", () => {
       />,
     );
     expect(screen.queryByRole("progressbar")).toBeNull();
+  });
+  it("shows a re-grant action without changing the grant", () => {
+    const regrant = vi.fn();
+    render(
+      <AuthorizationList
+        entries={[entry]}
+        getRailGrantCheck={() => ({
+          status: "needs-regrant",
+          missingRail: "mpp-charge",
+        })}
+        onRegrant={regrant}
+        onRevoke={() => ({ onChainRevocationRequired: false })}
+      />,
+    );
+    expect(screen.getByRole("alert").textContent).toContain("Re-grant needed");
+    fireEvent.click(screen.getByRole("button", { name: "Re-grant" }));
+    expect(regrant).toHaveBeenCalledWith(entry, "mpp-charge");
   });
 });

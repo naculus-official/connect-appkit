@@ -178,4 +178,27 @@ describe("AuthorizationConsent", () => {
     ).toBeNull();
     expect(screen.getByText("2 USDC")).toBeDefined();
   });
+
+  it("shows a re-grant action for a missing payment rail", () => {
+    const regrant = vi.fn();
+    render(
+      <AuthorizationConsent
+        authorization={authorization}
+        requester={{ name: "SenderPay" }}
+        railGrantCheck={{
+          status: "needs-regrant",
+          missingRail: "x402-exact",
+        }}
+        onRegrant={regrant}
+        onApprove={() => {}}
+        onDecline={() => {}}
+      />,
+    );
+    expect(screen.getByRole("alert").textContent).toContain("Re-grant needed");
+    expect(screen.getByRole("alert").textContent).toContain(
+      "cannot sign x402-exact payments",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Re-grant" }));
+    expect(regrant).toHaveBeenCalledWith("x402-exact");
+  });
 });

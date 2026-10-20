@@ -3,7 +3,9 @@
 import {
   type AuthorizationAssetMetadata,
   describeAuthorization,
+  type Eip3009SessionKeyRail,
   formatAuthorizationAmount,
+  type SessionKeyRailGrantCheck,
 } from "@naculus/connect-appkit-core";
 import type {
   ListedAuthorization,
@@ -36,6 +38,13 @@ export interface AuthorizationListProps {
   getEnforcement?: (
     entry: ListedAuthorization,
   ) => "on-chain" | "device" | undefined;
+  getRailGrantCheck?: (
+    entry: ListedAuthorization,
+  ) => SessionKeyRailGrantCheck | undefined;
+  onRegrant?: (
+    entry: ListedAuthorization,
+    missingRail: Eip3009SessionKeyRail,
+  ) => void;
   className?: string;
 }
 
@@ -47,6 +56,8 @@ export function AuthorizationList({
   revokingId,
   locale,
   getEnforcement,
+  getRailGrantCheck,
+  onRegrant,
   className,
 }: AuthorizationListProps) {
   const entries = Array.isArray(input) ? input : input.entries;
@@ -100,6 +111,7 @@ export function AuthorizationList({
           enforcement: getEnforcement?.(entry),
         });
         const busy = revokingId === entry.keyId;
+        const railCheck = getRailGrantCheck?.(entry);
         return (
           <Card
             key={entry.keyId}
@@ -134,6 +146,30 @@ export function AuthorizationList({
               </Badge>
             </div>
             <div className="mt-3 flex flex-col gap-3">
+              {railCheck?.status === "needs-regrant" && (
+                <div
+                  role="alert"
+                  className="flex gap-2 rounded-lg border border-amber-700 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-500 dark:bg-amber-950 dark:text-amber-100"
+                >
+                  <AlertTriangle aria-hidden className="shrink-0" size={18} />
+                  <div>
+                    <p className="font-semibold">Re-grant needed</p>
+                    <p>
+                      This session key cannot sign {railCheck.missingRail}{" "}
+                      payments. Create a new wallet-approved grant for the same
+                      account and chain.
+                    </p>
+                    {onRegrant && (
+                      <Button
+                        className="mt-2"
+                        onClick={() => onRegrant(entry, railCheck.missingRail)}
+                      >
+                        Re-grant
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
               {view.grants.map((grant) => {
                 const spent = entry.spent?.[grant.asset];
                 const total = entry.grants.find(

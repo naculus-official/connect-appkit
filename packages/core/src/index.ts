@@ -77,6 +77,7 @@ export * from "./routing";
 
 // ── Session keys ──────────────────────────────────────────────────
 export * from "./session-key-manager";
+export * from "./session-key-rail";
 
 // ── Account abstraction ───────────────────────────────────────────
 export * from "./user-op-receipt";

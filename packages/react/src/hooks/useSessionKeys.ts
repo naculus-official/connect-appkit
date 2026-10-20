@@ -1,8 +1,11 @@
 "use client";
 
 import {
+  checkSessionKeyRailGrant,
+  type Eip3009SessionKeyRail,
   getSharedSessionKeyManager,
   resetSharedSessionKeyManager,
+  type SessionKeyRailGrantCheck,
 } from "@naculus/connect-appkit-core";
 import type {
   SessionKeyInfo,
@@ -44,6 +47,11 @@ export interface UseSessionKeysReturn {
   clearError: () => void;
   /** Whether the storage backend is available */
   storageAvailable: boolean;
+  /** Fail-closed check for whether a stored scope grants EIP-3009 signing. */
+  checkRailGrant: (
+    scope: SessionKeyScope | null | undefined,
+    rail: Eip3009SessionKeyRail,
+  ) => SessionKeyRailGrantCheck;
 }
 
 /**
@@ -113,6 +121,7 @@ export function useSessionKeys(
     refresh,
     clearError,
     storageAvailable,
+    checkRailGrant: checkSessionKeyRailGrant,
   };
 }
 

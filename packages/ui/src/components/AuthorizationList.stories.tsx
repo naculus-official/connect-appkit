@@ -75,6 +75,15 @@ export const WarningAndOnChainRevoke: Story = {
   },
 };
 export const Revoking: Story = { args: { revokingId: "senderpay-coffee" } };
+export const RegrantNeeded: Story = {
+  args: {
+    getRailGrantCheck: () => ({
+      status: "needs-regrant",
+      missingRail: "x402-exact",
+    }),
+    onRegrant: () => undefined,
+  },
+};
 export const Empty: Story = { args: { entries: [] } };
 export const MissingMetadataDark360: Story = {
   args: { ...WarningAndOnChainRevoke.args, assets: {} },
