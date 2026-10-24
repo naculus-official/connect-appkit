@@ -41,7 +41,7 @@
   "devDependencies": {
     "@naculus/connect-core": "^0.13.0",
     "@naculus/wallet-engine": "^0.13.0",
-    "tsup": "^8.5.1",
+    "tsup": "^9.0.0",
     "typescript": "^6.0.3",
     "@naculus/connect-appkit-react": "workspace:*",
     "@naculus/connect-appkit-core": "workspace:*"
