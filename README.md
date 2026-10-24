@@ -16,7 +16,7 @@ naculus/
 |---------|-------------|
 | `@naculus/connect-appkit-react` | React hooks + providers + components |
 | `@naculus/connect-appkit-ui` | shadcn UI components + ComponentRegistry |
-| `@naculus/connect-appkit-vanilla` | Web Components (`<appkit-button>`) |
+| `@naculus/connect-appkit-wc` | Web Components (`<appkit-button>`) |
 | `@naculus/connect-appkit-vue` | Vue wrappers |
 
 ## Quick start
