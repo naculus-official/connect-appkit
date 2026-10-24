@@ -42,7 +42,7 @@ describe("useDelegationPolicy (Vue)", () => {
       }),
     );
 
-    const policy = await api.createPolicy({ allowedContracts: [CONTRACT] });
+    const policy = await api.createPolicy({ allowedContracts: [CONTRACT], rails: ["transfer"] });
     expect(signMessage).toHaveBeenCalledWith(
       buildDelegationPolicyMessage(policy, "https://app.test"),
     );
@@ -87,7 +87,7 @@ describe("useDelegationPolicy (Vue)", () => {
       }),
     );
     await expect(
-      api.createPolicy({ allowedContracts: [CONTRACT] }),
+      api.createPolicy({ allowedContracts: [CONTRACT], rails: ["transfer"] }),
     ).rejects.toMatchObject({
       code: "wallet_unavailable",
     });
@@ -140,6 +140,7 @@ describe("useDelegationPolicy (Vue)", () => {
       allowedContracts: [USDC],
       allowedMethods: ["0xa9059cbb"],
       tokenAllowances: { [USDC]: 1_000n },
+      rails: ["transfer"],
     });
     expect(signTypedData).toHaveBeenCalledTimes(1);
     expect(policy.authorized).toBe(true);
@@ -153,6 +154,7 @@ describe("useDelegationPolicy (Vue)", () => {
         allowedContracts: [USDC],
         allowedMethods: ["0xa9059cbb"],
         tokenAllowances: { [USDC]: 1_000n },
+        rails: ["transfer"],
       }),
     ).rejects.toMatchObject({ code: "wallet_unavailable" });
   });

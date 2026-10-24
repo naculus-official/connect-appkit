@@ -82,6 +82,7 @@ const scope = {
   maxTxCount: 5,
   allowedContracts: [SIGNER],
   allowedChainIds: [11155111],
+  rails: ["transfer" as const],
 };
 
 beforeEach(() => {
