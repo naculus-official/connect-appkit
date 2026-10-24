@@ -6,7 +6,7 @@ const scope = (rails?: SessionKeyScope["rails"]): SessionKeyScope => ({
   expiry: 2_000_000_000,
   mode: "offchain",
   rails,
-});
+} as SessionKeyScope);
 
 describe("checkSessionKeyRailGrant", () => {
   it.each([

@@ -37,7 +37,7 @@ describe("session-key composables (Vue)", () => {
     expect(list.sessions.value).toEqual([]);
 
     const info = await create.createSessionKey(
-      { allowedContracts: [CONTRACT] },
+      { allowedContracts: [CONTRACT], rails: ["transfer"] },
       SIGNER,
     );
     expect(create.lastCreated.value?.id).toBe(info.id);
@@ -61,7 +61,7 @@ describe("session-key composables (Vue)", () => {
     ).api;
     const send = inScope(() => useSendWithSession(undefined, { manager })).api;
     const info = await create.createSessionKey(
-      { allowedContracts: [CONTRACT] },
+      { allowedContracts: [CONTRACT], rails: ["transfer"] },
       SIGNER,
     );
 

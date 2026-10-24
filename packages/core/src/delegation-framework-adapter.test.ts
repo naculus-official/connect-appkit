@@ -2,6 +2,7 @@ import {
   DELEGATION_FRAMEWORK,
   MemoryStorageAdapter,
   SessionKeyManager,
+  type SessionKeyRail,
   sessionKeyAddress,
 } from "@naculus/connect-core";
 import {
@@ -49,7 +50,7 @@ const scope = {
   allowedMethods: ["0xa9059cbb"],
   tokenAllowances: { [USDC]: 1_000n },
   allowedRecipients: [PAYEE],
-  rails: ["transfer", "x402-exact", "mpp-charge"],
+  rails: ["transfer", "x402-exact", "mpp-charge"] as SessionKeyRail[],
 };
 
 function transfer(to: string, amount: bigint) {

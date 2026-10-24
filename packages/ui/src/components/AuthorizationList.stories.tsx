@@ -140,7 +140,11 @@ function listed(
     raw: {
       id: keyId,
       publicKey: "0x04aa",
-      scope: { expiry: authorization.expiresAt, mode: "offchain" },
+      scope: {
+        expiry: authorization.expiresAt,
+        mode: "offchain",
+        rails: ["transfer"],
+      },
       status: "active",
       createdAt: periodStart * 1_000,
       expiresAt: authorization.expiresAt * 1_000,

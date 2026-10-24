@@ -111,6 +111,7 @@ describe("useSessionKeys browser persistence", () => {
           mode: "offchain",
           allowedContracts: ["0x1234567890123456789012345678901234567890"],
           allowedChainIds: [11155111],
+          rails: ["transfer"],
         },
         "0x1234567890123456789012345678901234567890",
       );
