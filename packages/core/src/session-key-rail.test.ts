@@ -40,6 +40,13 @@ describe("checkSessionKeyRailGrant", () => {
     ).toEqual({ status: "needs-regrant", missingRail: "x402-exact" });
   });
 
+  it("fails closed when rails contain a duplicate", () => {
+    expect(checkSessionKeyRailGrant(scope(["x402-exact", "x402-exact"]), "x402-exact")).toEqual({
+      status: "needs-regrant",
+      missingRail: "x402-exact",
+    });
+  });
+
   it("fails closed for a sparse rails array", () => {
     const rails = ["x402-exact"] as SessionKeyScope["rails"] & unknown[];
     rails.length = 2;

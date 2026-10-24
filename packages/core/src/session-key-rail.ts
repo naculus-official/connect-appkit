@@ -31,6 +31,7 @@ export function checkSessionKeyRailGrant(
   if (
     !Array.isArray(rails) ||
     rails.length === 0 ||
+    new Set(rails).size !== rails.length ||
     !Array.from(rails).every(
       (candidate): candidate is SessionKeyRail =>
         typeof candidate === "string" &&
