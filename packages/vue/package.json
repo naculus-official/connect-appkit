@@ -23,7 +23,7 @@
   "dependencies": {
     "@naculus/connect-appkit-wc": "workspace:*",
     "@naculus/payments-x402": "^0.13.0",
-    "@stencil/vue-output-target": "^0.14.3"
+    "@stencil/vue-output-target": "^0.14.6"
   },
   "peerDependencies": {
     "@naculus/connect-appkit-core": "^0.13.0",

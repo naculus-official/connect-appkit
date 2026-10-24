@@ -269,8 +269,8 @@ importers:
         specifier: ^0.13.0
         version: 0.13.0
       '@stencil/vue-output-target':
-        specifier: ^0.14.3
-        version: 0.14.3(@stencil/core@4.45.1)(vue@3.5.43(typescript@6.0.3))
+        specifier: ^0.14.6
+        version: 0.14.6(@stencil/core@4.45.1)(vue@3.5.43(typescript@6.0.3))
     devDependencies:
       '@naculus/connect-appkit-core':
         specifier: workspace:*
@@ -301,8 +301,8 @@ importers:
         specifier: ^1.6.2
         version: 1.6.2(@stencil/core@4.45.1)(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@stencil/vue-output-target':
-        specifier: ^0.14.3
-        version: 0.14.3(@stencil/core@4.45.1)(vue@3.5.43(typescript@6.0.3))
+        specifier: ^0.14.6
+        version: 0.14.6(@stencil/core@4.45.1)(vue@3.5.43(typescript@6.0.3))
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -3565,10 +3565,10 @@ packages:
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
-  '@stencil/vue-output-target@0.14.3':
-    resolution: {integrity: sha512-2/u1rP+6ob3ymvIWGAYZKIm9LlpaJCgmoWHGchkOBOVoReCHfyK7wvQ0xtatOgrS7PCMVhKpTRwzine1xm9gjA==}
+  '@stencil/vue-output-target@0.14.6':
+    resolution: {integrity: sha512-IkgRf6UjoZg83CWguSxiRMqNLIRI29C0SBDj3m6OuB5ShVDqt2idV+kROdHhzR9DQFEPbKZqp7XNJIfrYN1zhg==}
     peerDependencies:
-      '@stencil/core': '>=2.0.0 || >=3 || >=4.0.0 || ^5.0.0 || >=5.0.0-alpha.17 <5.0.0-next.0'
+      '@stencil/core': '>=2.0.0 || >=3 || >=4.0.0 || ^5.0.0 || >=5.0.0-beta.18'
       vue: ^3.4.38
       vue-router: ^4.5.0 || ^5.0.0
     peerDependenciesMeta:
@@ -10501,7 +10501,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@stencil/vue-output-target@0.14.3(@stencil/core@4.45.1)(vue@3.5.43(typescript@6.0.3))':
+  '@stencil/vue-output-target@0.14.6(@stencil/core@4.45.1)(vue@3.5.43(typescript@6.0.3))':
     dependencies:
       vue: 3.5.43(typescript@6.0.3)
     optionalDependencies:
