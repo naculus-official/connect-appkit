@@ -49,6 +49,7 @@ const scope = {
   allowedMethods: ["0xa9059cbb"],
   tokenAllowances: { [USDC]: 1_000n },
   allowedRecipients: [PAYEE],
+  rails: ["transfer", "x402-exact", "mpp-charge"],
 };
 
 function transfer(to: string, amount: bigint) {

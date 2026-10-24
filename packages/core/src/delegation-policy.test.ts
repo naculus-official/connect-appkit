@@ -55,6 +55,7 @@ describe("buildDelegationPolicyMessage", () => {
           expiry: 1_800_000_000,
           mode: "offchain",
           allowedContracts: contracts,
+          rails: ["transfer", "x402-exact", "mpp-charge"],
         },
       }) as never;
     expect(buildDelegationPolicyMessage(policy([CONTRACT, SIGNER]), "o")).toBe(
@@ -117,7 +118,10 @@ describe("createDelegationPolicyFlow", () => {
   it("creates, signs, persists and verifies an off-chain policy", async () => {
     const { deps: d, manager } = deps();
     const flow = createDelegationPolicyFlow(d);
-    const policy = await flow.createPolicy({ allowedContracts: [CONTRACT] });
+    const policy = await flow.createPolicy({
+      allowedContracts: [CONTRACT],
+      rails: ["transfer", "x402-exact", "mpp-charge"],
+    });
     expect(policy.authorized).toBe(true);
     expect(policy.authorizationMessage).toBe(
       buildDelegationPolicyMessage(policy, "https://app.test"),
@@ -142,6 +146,7 @@ describe("createDelegationPolicyFlow", () => {
       await expect(
         createDelegationPolicyFlow(d).createPolicy({
           allowedContracts: [CONTRACT],
+          rails: ["transfer", "x402-exact", "mpp-charge"],
         }),
       ).rejects.toMatchObject({ code });
       expect(d.signMessage).not.toHaveBeenCalled();
@@ -151,6 +156,7 @@ describe("createDelegationPolicyFlow", () => {
       createDelegationPolicyFlow(d).createPolicy({
         mode: "eip7702",
         allowedContracts: [CONTRACT],
+        rails: ["transfer", "x402-exact", "mpp-charge"],
       }),
     ).rejects.toMatchObject({ code: "method_not_allowed" });
     // Executions here sign raw digests, which connect-core refuses while
@@ -159,6 +165,7 @@ describe("createDelegationPolicyFlow", () => {
       createDelegationPolicyFlow(d).createPolicy({
         allowedContracts: [CONTRACT],
         allowedRecipients: [CONTRACT],
+        rails: ["transfer", "x402-exact", "mpp-charge"],
       }),
     ).rejects.toMatchObject({ code: "method_not_allowed" });
     expect(d.signMessage).not.toHaveBeenCalled();
@@ -169,6 +176,7 @@ describe("createDelegationPolicyFlow", () => {
     await expect(
       createDelegationPolicyFlow(d).createPolicy({
         allowedContracts: [CONTRACT],
+        rails: ["transfer", "x402-exact", "mpp-charge"],
       }),
     ).rejects.toThrow(/does not recover/);
     const sessions = await manager.listSessions();
@@ -197,7 +205,10 @@ describe("createDelegationPolicyFlow", () => {
     };
     const { deps: d } = deps({ adapter });
     const flow = createDelegationPolicyFlow(d);
-    const policy = await flow.createPolicy({ allowedContracts: [CONTRACT] });
+    const policy = await flow.createPolicy({
+      allowedContracts: [CONTRACT],
+      rails: ["transfer", "x402-exact", "mpp-charge"],
+    });
     await expect(
       flow.executePolicy(policy.id, { to: CONTRACT }),
     ).rejects.toThrow(/changed the requested target/);
