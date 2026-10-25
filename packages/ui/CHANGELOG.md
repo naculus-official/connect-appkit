@@ -1,5 +1,12 @@
 # @naculus/connect-appkit-ui
 
+## 0.14.0
+
+### Minor Changes
+
+- Require connect-lib 0.14: `@naculus/connect-core` range moves from `^0.13.0` to `^0.14.0`.
+  Breaking changes are inherited from connect-lib 0.14.0: wallet storage requires an `encryptionPassphrase` in every runtime, and session-key scopes and grants must list valid, distinct `rails`. See connect-lib `docs/MIGRATION-0.14.md`.
+
 ## 0.13.0
 
 ### Minor Changes
