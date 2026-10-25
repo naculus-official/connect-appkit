@@ -1,6 +1,6 @@
 {
   "name": "@naculus/connect-appkit-vue",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -27,7 +27,7 @@
   },
   "peerDependencies": {
     "@naculus/connect-appkit-core": "^0.13.0",
-    "@naculus/connect-core": "^0.13.0",
+    "@naculus/connect-core": "^0.14.0",
     "vue": "^3.5.0"
   },
   "publishConfig": {
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@naculus/connect-appkit-core": "workspace:*",
-    "@naculus/connect-core": "^0.13.0",
+    "@naculus/connect-core": "^0.14.0",
     "vitest": "^5.0.0",
     "vue": "^3.5.43"
   },
