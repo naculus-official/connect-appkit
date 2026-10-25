@@ -1,6 +1,6 @@
 {
   "name": "@naculus/connect-appkit-react",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -28,7 +28,7 @@
   "dependencies": {
     "@naculus/connect-appkit-core": "workspace:*",
     "@naculus/connect-appkit-wc": "workspace:*",
-    "@naculus/connect-core": "^0.13.0",
+    "@naculus/connect-core": "^0.14.0",
     "@naculus/connector-embedded": "^0.13.0",
     "@naculus/connector-evm-injected": "^0.13.0",
     "@naculus/connector-passkeys": "^0.13.0",

@@ -7,6 +7,12 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## 0.14.0 — 2026-10-25
+
+- **Breaking, inherited from connect-lib 0.14.0:** a passphrase is required for wallet storage in every runtime; `rails` are required in session key scopes and grants. See connect-lib `docs/MIGRATION-0.14.md`.
+- Dependency move to `@naculus/connect-core` `^0.14.0`; this release follows connect-lib 0.14.0.
+- All six packages release in lockstep at 0.14.0.
+
 ## [0.13.0] - 2026-10-19
 
 - **Breaking, inherited from connect-lib 0.13.0:** a session-key scope that should sign x402 exact or MPP charge payments must list them in `rails`; a scope without `rails` refuses EIP-3009 signing. The shared session-key manager in `@naculus/connect-appkit-core` passes scopes through unchanged, so apps must re-create affected grants. See the connect-lib 0.13.0 changelog for the security fixes in this line.
