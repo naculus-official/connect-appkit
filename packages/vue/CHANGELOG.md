@@ -1,5 +1,11 @@
 # @naculus/connect-appkit-vue
 
+## 0.14.1 — 2026-10-25
+
+### Patch Changes
+
+- Depend on connect-lib 0.14 everywhere: all @naculus/* dependencies move from ^0.13.0 to ^0.14.0. 0.14.0 shipped with connector, wallet-engine, siwx and payment packages still on ^0.13.0, which mixed 0.13 and 0.14 code.
+
 ## 0.14.0
 
 ### Minor Changes
